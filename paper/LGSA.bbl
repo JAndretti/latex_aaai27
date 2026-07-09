@@ -1,0 +1,37 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Correia, Worrall, and Bondesan(2023)}]{correia_neural_2023}
+Correia, A. H.~C.; Worrall, D.~E.; and Bondesan, R. 2023.
+\newblock Neural {Simulated} {Annealing}.
+\newblock In \emph{Proceedings of {The} 26th {International} {Conference} on
+  {Artificial} {Intelligence} and {Statistics}}, 4946--4962. PMLR.
+\newblock ISSN: 2640-3498.
+
+\bibitem[{Kirkpatrick, Gelatt, and
+  Vecchi(1983)}]{kirkpatrick_optimization_1983}
+Kirkpatrick, S.; Gelatt, C.~D.; and Vecchi, M.~P. 1983.
+\newblock Optimization by {Simulated} {Annealing}.
+\newblock 220.
+
+\bibitem[{Ma et~al.(2021)Ma, Li, Cao, Song, Zhang, Chen, and
+  Tang}]{ma_learning_2021}
+Ma, Y.; Li, J.; Cao, Z.; Song, W.; Zhang, L.; Chen, Z.; and Tang, J. 2021.
+\newblock Learning to {Iteratively} {Solve} {Routing} {Problems} with
+  {Dual}-{Aspect} {Collaborative} {Transformer}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~34, 11096--11107. Curran Associates, Inc.
+
+\bibitem[{Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and
+  Klimov}]{schulman_proximal_2017}
+Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and Klimov, O. 2017.
+\newblock Proximal {Policy} {Optimization} {Algorithms}.
+\newblock ArXiv:1707.06347 [cs].
+
+\bibitem[{Vidal(2016)}]{vidal_technical_2016}
+Vidal, T. 2016.
+\newblock Technical note: {Split} algorithm in {O}(n) for the capacitated
+  vehicle routing problem.
+\newblock \emph{Computers \& Operations Research}, 69: 40--47.
+
+\end{thebibliography}

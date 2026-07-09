@@ -1,0 +1,6 @@
+\babel@toc {english}{}\relax 
+\beamer@sectionintoc {1}{Background}{2}{0}{1}
+\beamer@sectionintoc {2}{Learning-Guided Simulated Annealing (LG-SA): Method}{5}{0}{2}
+\beamer@sectionintoc {3}{Design Choices}{11}{0}{3}
+\beamer@sectionintoc {4}{Results}{12}{0}{4}
+\beamer@sectionintoc {5}{Conclusion}{14}{0}{5}
