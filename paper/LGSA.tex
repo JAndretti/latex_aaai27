@@ -50,6 +50,16 @@
               minimum width=0.9cm, minimum height=0.55cm, font=\footnotesize},
   score/.style={draw=figgreen!60!black, fill=figgreen!15, rounded corners=2pt,
                 minimum width=0.9cm, minimum height=0.45cm, font=\footnotesize},
+  % operator-figure styles
+  dep/.style={rectangle, draw=figred!80!black, fill=figred!15,
+              minimum size=0.4cm, inner sep=0pt, font=\scriptsize\bfseries},
+  nd/.style={circle, draw=figblue, fill=figblue!12,
+             minimum size=0.4cm, inner sep=0pt, font=\scriptsize},
+  ii/.style={circle, draw=figorange!85!black, fill=figorange!30, line width=0.9pt,
+             minimum size=0.42cm, inner sep=0pt, font=\scriptsize\bfseries},
+  jj/.style={circle, draw=figgreen!60!black, fill=figgreen!20, line width=0.9pt,
+             minimum size=0.42cm, inner sep=0pt, font=\scriptsize\bfseries},
+  rt/.style={thick, gray},
 }
 
 \title{Learning-Guided Simulated Annealing for the Capacitated Vehicle Routing Problem}
@@ -341,110 +351,272 @@ Our implementation departs from standard PPO in three ways, all aimed at stabili
 % ============================================================================
 
 \subsection{Experimental Setup}
-% TODO: benchmarks (Nazari uniform test set, CVRPLIB Set X / Uchoa,
-% Queiroga Set XML), hardware, training protocol, stability analysis,
-% baselines (LKH3, OR-Tools, neural construction and improvement methods).
+
+\paragraph{Benchmark.}
+All experiments reported in this section use the uniform benchmark distribution of \citet{nazari_reinforcement_2018}: depot and customer coordinates drawn uniformly in $[0,1]^2$, demands drawn uniformly in $\{1, \dots, 9\}$, and a size-dependent vehicle capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$). For each size we pre-generate a fixed test set of $10{,}000$ instances that is reused by every configuration, so that all comparisons are paired at the instance level. Unless stated otherwise, results are reported at $N = 100$.
+% TODO: extend the evaluation to CVRPLIB Set X (Uchoa) and Queiroga Set XML
+% once the Nazari protocol is complete (eval/run.py --dataset X / XML).
+
+\paragraph{Evaluation protocol.}
+A trained model is evaluated by running the LG-SA loop over the full test set in parallel on a single GPU, starting from random feasible solutions and running $10{,}000$ SA steps per instance with half-precision inference. We report the mean final routing cost over the $10{,}000$ instances and the wall-clock time of the whole batch. Classical (blind) SA --- uniform proposals with the same operator, step budget, and cooling schedule --- is evaluated under the identical protocol, as is an OR-Tools baseline with a fixed per-instance time limit \citep{ortools_routing}.
+% TODO: pin the OR-Tools time limit; add literature numbers for the neural
+% baselines (NLNS, DACT / LIH, CDCP, ...) in the headline comparison.
+
+\paragraph{Statistical protocol.}
+Every configuration is trained under $3$ random seeds ($5$ for confirmation and headline runs), and we report means over seeds. The seed-to-seed spread of the reference configuration, measured once by repeated training and evaluation of the baseline, serves as the empirical noise floor: differences below this threshold are treated as ties.
+% TODO: report the measured noise floor (P0_baseline batch, 5 seeds).
+
+\paragraph{Sequential validation protocol.}
+The design space of LG-SA --- operator, feasibility strategy, features, architecture, reward, annealing parameters, initialization, optimization budget, curriculum --- is far too large for a full factorial study. We therefore validate it by coordinate descent: the axes are swept one at a time in order of expected leverage, and the winner of each sweep is frozen into the configuration before the next axis is examined, so later sweeps inherit all earlier decisions. Targeted follow-up batches probe the interactions we consider most at risk (e.g., the construction of the minimal feature set and the curriculum mechanism ablation), and the complete winning configuration is re-trained from scratch with $5$ seeds as a final confirmation.
+% TODO: hardware paragraph (CPU/GPU model, training wall-clock, epochs to
+% convergence) + training convergence figure.
 
 \subsection{Local Search Operators and Feasibility Strategies}
-% TODO: cross-evaluation of {insertion, swap, 2-opt} x {proactive, reactive,
-% indirect}; adopted configuration.
-%
-% --- Material moved from the method section (operators) -------------------
-% We consider three standard neighborhood operators defined over a pair of
-% nodes (i, j). The operator is fixed for a given model: the policy is
-% trained to propose moves for one operator.
-% \begin{itemize}
-%     \item \textit{Swap:} exchanges the positions of nodes $i$ and $j$,
-%           within a route or across routes;
-%     \item \textit{Insertion (relocation):} removes node $i$ from its
-%           current position and reinserts it immediately after node $j$;
-%     \item \textit{2-opt / 2-opt*:} reverses the path segment between $i$
-%           and $j$ for intra-route moves, and exchanges the route suffixes
-%           following $i$ and $j$ for inter-route moves.
-% \end{itemize}
-%
-% --- Material moved from the method section (feasibility strategies) ------
-% Under capacity constraints, many actions produce an infeasible neighbor
-% $H(s,a) \notin \mathcal{F}$, which is the central obstacle in extending
-% neural SA from unconstrained problems to the CVRP. We consider three
-% strategies to keep the search within $\mathcal{F}$.
-%
-% \paragraph{Proactive feasibility filtering (action masking).}
-% Let $\mathcal{A}_f(s) = \{ a \in \mathcal{A}(s) : H(s, a) \in \mathcal{F} \}$
-% denote the feasible action subset. The policy is restricted to it by
-% masking infeasible actions with zero probability before sampling. This
-% strategy exploits the conditional factorization of the policy: the first
-% node $i$ is selected freely, and only then are the feasible partners
-% $\{ j : H(s, (i,j)) \in \mathcal{F} \}$ computed and used to mask the
-% second stage. Feasibility therefore requires only $\mathcal{O}(N)$ checks
-% per step instead of $\mathcal{O}(N^2)$. Every proposed neighbor is feasible
-% by construction; since the fleet is unlimited, a node can always open a new
-% route, so the feasible set is never empty.
-%
-% \paragraph{Reactive rejection.}
-% The policy samples any action from its learned distribution, and the
-% resulting neighbor is checked afterwards: if $s' \notin \mathcal{F}$, the
-% move is rejected and the current solution is retained. This avoids the
-% overhead of explicit filtering but can waste both compute and learning
-% signal when many sampled moves are infeasible.
-%
-% \paragraph{Indirect representation with greedy reconstruction.}
-% Feasibility can be delegated to the representation itself: the solution is
-% encoded as an unconstrained permutation of the customers, the policy
-% modifies the permutation, and a deterministic \textit{greedy split}
-% heuristic packs the permutation back into capacity-feasible routes
-% \citep{vidal_technical_2016}. Every state is feasible by construction and
-% the policy never handles constraints, but the reconstruction runs at every
-% search step and its cost grows with the problem size.
-% ---------------------------------------------------------------------------
 
-\subsection{Ablation Studies}
-% TODO: feature ablations (LOO, thematic, isolation), reward formulations,
-% network size, Metropolis on/off, greedy vs sampling, initialization,
-% curriculum depth.
-%
-% --- Material moved from the method section (stochastic inference) --------
-% \paragraph{Stochastic proposals at inference.}
-% In standard RL applications, trained policies are often exploited greedily
-% by selecting the most probable action. Our framework deviates from this
-% practice: since the policy acts as the proposal distribution of an SA step,
-% we retain stochastic sampling, $a_t \sim \pi_\theta(\cdot \mid s_t)$, at
-% inference as well. A greedy policy would repeatedly propose the same
-% ``best'' move, collapsing the diversity that the Metropolis criterion needs
-% to balance exploration and exploitation; sampling from the full
-% distribution provides SA with a stream of varied, high-quality candidates.
-%
-% --- Material moved from the method section (diverse initializations) -----
-% \paragraph{Diverse initializations.}
-% Each training episode starts from an initial solution produced by a
-% constructive heuristic drawn from a pool (random assignment, nearest
-% neighbor, sweep, and single-customer routes). Mixing initializations
-% exposes the policy to qualitatively different regions of the solution space
-% and prevents it from overfitting to the basin of a single construction
-% heuristic; the pool can be introduced progressively over training.
-%
-% --- Material moved from the method section (curriculum) ------------------
-% \paragraph{Curriculum over the search horizon.}
-% Training episodes are much shorter than the search budgets used at
-% deployment. To expose the policy to the later, fine-grained phase of the
-% search --- states near local optima that a short episode started from a raw
-% construction rarely reaches --- we use a curriculum on the starting point:
-% before collection, each batch of instances is first \textit{warmed up} by
-% the current policy for a number of steps that grows over the course of
-% training according to a monotone schedule. Early in training the policy
-% thus learns to repair poor solutions, and later it increasingly learns to
-% improve already-refined ones. Optionally, each instance is warmed to its
-% own randomly drawn depth, so that a single batch covers the entire spectrum
-% from raw initializations to deeply improved solutions.
-% ---------------------------------------------------------------------------
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[>=Stealth]
 
-\subsection{Comparison with Baselines}
-% TODO: main results table at N=100 (cost / time vs classical and neural
-% baselines), guided vs blind SA curves.
+  % ───────────── Panel 1: SWAP ─────────────
+  \begin{scope}[shift={(0,0)}]
+    \node[font=\small\bfseries, figblue] at (1.35, 1.8) {Swap};
+    % before
+    \node[dep] (s1a0) at (0,1.1) {0}; \node[nd] (s1aa) at (0.9,1.1) {$a$};
+    \node[ii]  (s1ai) at (1.8,1.1) {$i$}; \node[nd] (s1ab) at (2.7,1.1) {$b$};
+    \draw[rt] (s1a0)--(s1aa)--(s1ai)--(s1ab);
+    \node[dep] (s1b0) at (0,0.35) {0}; \node[jj] (s1bj) at (0.9,0.35) {$j$};
+    \node[nd]  (s1bc) at (1.8,0.35) {$c$};
+    \draw[rt] (s1b0)--(s1bj)--(s1bc);
+    % arrow
+    \draw[arr, figorange] (1.35,0.02) -- node[right, font=\scriptsize]{$i \leftrightarrow j$} (1.35,-0.55);
+    % after
+    \node[dep] (s1c0) at (0,-0.95) {0}; \node[nd] (s1ca) at (0.9,-0.95) {$a$};
+    \node[jj]  (s1cj) at (1.8,-0.95) {$j$}; \node[nd] (s1cb) at (2.7,-0.95) {$b$};
+    \draw[rt] (s1c0)--(s1ca)--(s1cj)--(s1cb);
+    \node[dep] (s1d0) at (0,-1.7) {0}; \node[ii] (s1di) at (0.9,-1.7) {$i$};
+    \node[nd]  (s1dc) at (1.8,-1.7) {$c$};
+    \draw[rt] (s1d0)--(s1di)--(s1dc);
+  \end{scope}
+
+  % ───────────── Panel 2: INSERTION ─────────────
+  \begin{scope}[shift={(5.9,0)}]
+    \node[font=\small\bfseries, figblue] at (1.35, 1.8) {Insertion};
+    % before
+    \node[dep] (s2a0) at (0,1.1) {0}; \node[nd] (s2aa) at (0.9,1.1) {$a$};
+    \node[ii]  (s2ai) at (1.8,1.1) {$i$}; \node[nd] (s2ab) at (2.7,1.1) {$b$};
+    \draw[rt] (s2a0)--(s2aa)--(s2ai)--(s2ab);
+    \node[dep] (s2b0) at (0,0.35) {0}; \node[jj] (s2bj) at (0.9,0.35) {$j$};
+    \node[nd]  (s2bc) at (1.8,0.35) {$c$};
+    \draw[rt] (s2b0)--(s2bj)--(s2bc);
+    % arrow
+    \draw[arr, figorange] (1.35,0.02) -- node[right, font=\scriptsize]{$i$ after $j$} (1.35,-0.55);
+    % after
+    \node[dep] (s2c0) at (0,-0.95) {0}; \node[nd] (s2ca) at (0.9,-0.95) {$a$};
+    \node[nd]  (s2cb) at (1.8,-0.95) {$b$};
+    \draw[rt] (s2c0)--(s2ca)--(s2cb);
+    \node[dep] (s2d0) at (0,-1.7) {0}; \node[jj] (s2dj) at (0.9,-1.7) {$j$};
+    \node[ii]  (s2di) at (1.8,-1.7) {$i$}; \node[nd] (s2dc) at (2.7,-1.7) {$c$};
+    \draw[rt] (s2d0)--(s2dj)--(s2di)--(s2dc);
+  \end{scope}
+
+  % ───────────── Panel 3: 2-OPT* ─────────────
+  \begin{scope}[shift={(11.8,0)}]
+    \node[font=\small\bfseries, figblue] at (1.35, 1.8) {2-opt* (inter-route)};
+    % before
+    \node[dep] (s3a0) at (0,1.1) {0}; \node[nd] (s3aa) at (0.9,1.1) {$a$};
+    \node[ii]  (s3ai) at (1.8,1.1) {$i$}; \node[nd] (s3ab) at (2.7,1.1) {$b$};
+    \draw[rt] (s3a0)--(s3aa)--(s3ai)--(s3ab);
+    \node[dep] (s3b0) at (0,0.35) {0}; \node[jj] (s3bj) at (0.9,0.35) {$j$};
+    \node[nd]  (s3bc) at (1.8,0.35) {$c$};
+    \draw[rt] (s3b0)--(s3bj)--(s3bc);
+    % arrow
+    \draw[arr, figorange] (1.35,0.02) -- node[right, font=\scriptsize]{tail swap} (1.35,-0.55);
+    % after
+    \node[dep] (s3c0) at (0,-0.95) {0}; \node[nd] (s3ca) at (0.9,-0.95) {$a$};
+    \node[ii]  (s3ci) at (1.8,-0.95) {$i$}; \node[nd] (s3cc) at (2.7,-0.95) {$c$};
+    \draw[rt] (s3c0)--(s3ca)--(s3ci)--(s3cc);
+    \node[dep] (s3d0) at (0,-1.7) {0}; \node[jj] (s3dj) at (0.9,-1.7) {$j$};
+    \node[nd]  (s3db) at (1.8,-1.7) {$b$};
+    \draw[rt] (s3d0)--(s3dj)--(s3db);
+  \end{scope}
+
+\end{tikzpicture}
+\caption{The three pairwise operators on two route fragments (top: before, bottom: after). \textit{Swap} exchanges $i$ (orange) and $j$ (green). \textit{Insertion} removes $i$ and reinserts it immediately after $j$. \textit{2-opt*} exchanges the route suffixes following $i$ and $j$; when $i$ and $j$ belong to the same route, the operator instead reverses the path segment between them (standard 2-opt).}
+\label{fig:operators}
+\end{figure*}
+
+The first axis fixes the foundational search mechanics: the operator $H$ and the way capacity constraints are enforced.
+
+\paragraph{Operators.}
+We consider three standard pairwise operators, illustrated in Figure~\ref{fig:operators}:
+\begin{itemize}
+    \item \textit{Swap:} exchanges the positions of nodes $i$ and $j$, within a route or across routes;
+    \item \textit{Insertion (relocation):} removes node $i$ from its current position and reinserts it immediately after node $j$;
+    \item \textit{2-opt / 2-opt*:} for intra-route pairs, reverses the path segment between $i$ and $j$; for inter-route pairs, exchanges the route suffixes following $i$ and $j$ (tail swap).
+\end{itemize}
+The operator is fixed for a given model: the policy is trained to propose moves for one operator, and learns a distribution tailored to it.
+
+\paragraph{Feasibility strategies.}
+Under capacity constraints, many actions produce an infeasible neighbor $H(s,a) \notin \mathcal{F}$ --- the central obstacle in extending neural SA from unconstrained problems to the CVRP. We compare three ways of keeping the search inside $\mathcal{F}$:
+\begin{itemize}
+    \item \textit{Proactive filtering (action masking).} The policy is restricted to the feasible subset $\mathcal{A}_f(s) = \{ a : H(s, a) \in \mathcal{F} \}$ by masking infeasible actions before sampling. The conditional factorization makes this cheap: the first node $i$ is selected freely, and only then are the feasible partners $\{ j : H(s, (i,j)) \in \mathcal{F} \}$ computed and used to mask the second stage --- $\mathcal{O}(N)$ checks per step instead of $\mathcal{O}(N^2)$. Every proposal is feasible by construction; since the fleet is unlimited, a node can always open a new route, so the feasible set is never empty.
+    \item \textit{Reactive rejection.} The policy samples any action from its learned distribution and the resulting neighbor is checked afterwards: if $s' \notin \mathcal{F}$, the move is rejected and the current solution retained. This avoids the filtering overhead but can waste both compute and learning signal when many sampled moves are infeasible.
+    \item \textit{Indirect representation.} Feasibility is delegated to the representation: the solution is encoded as an unconstrained permutation of the customers, the policy modifies the permutation, and a deterministic \textit{greedy split} heuristic packs it back into capacity-feasible routes \citep{vidal_technical_2016}. Every state is feasible by construction and the policy never handles constraints, but the reconstruction runs at every step and its cost grows with the problem size.
+\end{itemize}
+
+We train one policy for each of the nine operator--strategy combinations under the common protocol; the winning pairing is carried unchanged through all subsequent experiments.
+% TODO: 3x3 results table (mean final cost / eval time per cell); analysis of
+% which pairings work and why (failure modes of the losing cells); statement
+% of the adopted configuration.
+%   sweep: V1_heur_feas (HEURISTIC x UPDATE_METHOD, 3 seeds)
+%   eval:  uv run eval/run.py --dataset random --FOLDER V1_heur_feas --dim 100
+%          --DATA nazari --OUTER_STEPS 10000 --dtype float16 --no-baseline
+
+\subsection{State Feature Ablation}
+
+The node representation is validated with three complementary protocols, all trained on the winning operator--feasibility pairing and all operating on the feature groups defined in the appendix. \textit{Leave-one-out} removes a single group from the full set and measures the degradation; \textit{thematic} ablations remove a whole correlated cluster at once (e.g., all three density scales, or all capacity signals), exposing groups whose members are individually redundant but collectively useful; \textit{isolation} adds a single group to a minimal base containing only the static and meta features, measuring its standalone value. From these measurements we construct candidate minimal feature sets --- keeping groups whose removal hurts, dropping those that fail both the leave-one-out and the isolation test, and keeping one representative per correlated cluster --- and confirm the candidates seed-paired against the full set. Finally, the conditional pair descriptors of the second stage (edge distance-ranks and exact insertion cost, defined in the appendix) are evaluated on top of the chosen set, individually and combined.
+% TODO: LOO + thematic table; isolation table; best-set confirmation table
+% (candidate sets vs all-on, 5 seeds); conditional-descriptor table
+% (COND_RANK / COND_DETOUR / 2x2 combo).
+% TODO: computational analysis: share of inference time spent on feature
+% extraction; cost/benefit per group.
+%   sweeps: V2_feat_all, V2_loo_*, V2_thematic_*, V2_iso_*, V2_best_*,
+%           V2_cond_rank, V2_cond_detour, V2_cond_combo
+
+\subsection{Policy and Critic Architecture}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[>=Stealth, thick]
+  \node[fvec, minimum width=0.9cm] (x) at (0,0) {$\{\mathbf{x}_i\}$};
+  \node[mlp, minimum width=1.4cm, minimum height=0.7cm] (enc) at (1.55,0) {encoder};
+  \node[fvec, minimum width=0.9cm] (h) at (3.15,0) {$\{\mathbf{h}_i\}$};
+
+  \node[mlp, minimum width=2.0cm, font=\scriptsize] (h1) at (5.55,0.9) {stage-1 head};
+  \node[mlp, minimum width=2.0cm, align=center, font=\scriptsize] (h2) at (5.55,-0.9)
+    {stage-2 head\\concat / bilinear};
+
+  \node[draw=gray!70, dashed, fill=gray!5, rounded corners=2pt,
+        font=\scriptsize, align=center] (g) at (2.3,1.55)
+    {pooled context $g$\\$[\mathrm{mean} \,|\, \mathrm{max} \,|\, \mathrm{std}]$};
+
+  \draw[arr] (x) -- (enc);
+  \draw[arr] (enc) -- (h);
+  \draw[arr] (h.east) -- ++(0.25,0) |- (h1.west);
+  \draw[arr] (h.east) -- ++(0.25,0) |- node[pos=0.75, below, font=\scriptsize]
+    {$\mathbf{h}_j, \mathbf{h}_i$} (h2.west);
+  \draw[arr, dashed, gray!60!black] (h.north) |- (g.east);
+  \draw[arr, dashed, gray!60!black] (g.north) -- ++(0,0.25) -| ($(h1.north)+(-0.4,0)$);
+  \draw[arr, dashed, gray!60!black] (g.south) -- ++(0,-1.9) -| ($(h2.south)+(-0.9,0)$);
+
+  \node[score, minimum width=0.7cm] (z1) at (7.35,0.9) {$z_i$};
+  \node[score, minimum width=0.7cm] (z2) at (7.35,-0.9) {$z_{ij}$};
+  \draw[arr] (h1) -- (z1);
+  \draw[arr] (h2) -- (z2);
+\end{tikzpicture}
+\caption{Shared-encoder actor variant. Each node is encoded once into an embedding $\mathbf{h}_i$; two lightweight heads then score the two stages over the shared embeddings, either by concatenation or as a bilinear compatibility between the selected node and each candidate. An optional pooled summary $g$ of all node embeddings (dashed) is appended to both heads' inputs, giving every score access to instance-level context.}
+\label{fig:sharedactor}
+\end{figure}
+
+The architecture axis is swept in four steps, each inheriting the previous winner.
+
+\paragraph{Critic.}
+The baseline critic scores each node with a small MLP and averages the scalar outputs into the value estimate, which makes $V_\phi$ a linear functional of the mean node representation. The alternative is the multi-statistic variant of the training section: nodes are encoded into embeddings, pooled with mean, max, and standard deviation, and mapped to the value by a nonlinear head --- so dispersion information (clustered against scattered instances) survives the pooling.
+
+\paragraph{Capacity.}
+The embedding width and the number of hidden layers of the scoring networks are swept jointly, trading representational capacity against per-step inference cost.
+
+\paragraph{Structure.}
+The incumbent actor applies two independent MLPs directly to the raw feature vectors (Figure~\ref{fig:twostage}). We compare it with a \textit{shared-encoder} variant (Figure~\ref{fig:sharedactor}): each node is encoded once into an embedding $\mathbf{h}_i$, and both stages are lightweight heads over the shared embeddings, the conditional score being computed either by a concatenation head over $[\mathbf{h}_j \,|\, \mathbf{h}_i]$ or as a bilinear compatibility $\mathbf{q}^\top \mathbf{k} / \sqrt{d}$ between a query built from the selected node and a key per candidate. Orthogonally, a \textit{global context} option pools the node representations into a summary $g$ (mean, max, and standard deviation) appended to the input of both stages --- the cheapest way to give the per-node scores access to instance-level information, at one pooling operation per step.
+
+\paragraph{Distribution shaping.}
+Finally, two flags tame the proposal distribution without adding capacity: \textit{logit clipping}, which bounds the logits to $C \tanh(z)$ before the softmax so the distribution cannot collapse to a near-deterministic choice \citep{kool_attention_2019}, and a \textit{learnable softmax temperature} per stage. These are judged on policy entropy and update stability in addition to final cost.
+% TODO: architecture tables (critic variants; EMBEDDING_DIM x NUM_H_LAYERS;
+% global context / shared encoder / bilinear; logit shaping) + retained
+% configuration and parameter count of the final policy.
+%   sweeps: V3_critic, V3_arch, V3b_ctx, V3c_seq_ref + V3c_shared, V3d_stab
+
+\subsection{Reward, Annealing, and Acceptance}
+
+We then validate the remaining components of the search loop.
+
+\paragraph{Reward shaping.}
+Let $\Delta_t$ denote the cost improvement realized by the executed transition (zero when the move is rejected) and $B_t$ the best cost found so far. The compared variants are: \textit{immediate}, $r_t = \Delta_t$ with a fixed penalty for infeasible proposals; \textit{acceptance-aligned}, which rewards accepted improving moves by $\Delta_t$ but deliberately assigns zero to accepted worsening moves (exploration is SA's responsibility, not the policy's fault) and a small constant penalty to rejected proposals; \textit{best-so-far}, $r_t = \max(0, B_{t-1} - B_t)$, which only rewards new records; \textit{terminal}, a single end-of-episode reward equal to the relative improvement over the initial cost; \textit{mixtures}, either a fixed convex combination of the immediate and best-so-far signals or a scheduled interpolation that starts from the dense acceptance-aligned signal early in training and shifts toward the sparser best-so-far or terminal signals; and \textit{step-penalty}, a negative per-step reward proportional to the current best cost, pressuring fast descent.
+
+\paragraph{Annealing.}
+We compare cooling schedule families (geometric decay $T_{k+1} = \alpha T_k$ against step decay) and sweep the temperature range $(T_0, T_{\mathrm{final}})$, which controls how much worsening SA tolerates at the start and how strict it becomes at the end.
+
+\paragraph{Acceptance.}
+A $2 \times 2$ ablation enables or disables the Metropolis criterion independently at training and at test time (its ``off'' arm accepts every proposed move), quantifying whether the learned proposal replaces the stochastic acceptance or complements it.
+
+\paragraph{Proposal mode at inference.}
+In standard RL applications, trained policies are often exploited greedily by selecting the most probable action. Our framework deviates from this practice: since the policy acts as the proposal distribution of an SA step, we retain stochastic sampling, $a_t \sim \pi_\theta(\cdot \mid s_t)$, at inference as well. A greedy policy would repeatedly propose the same ``best'' move, collapsing the diversity that the Metropolis criterion needs to balance exploration and exploitation; the ablation compares sampling against greedy arg-max exploitation.
+
+\paragraph{Initialization.}
+Each training episode starts from an initial solution produced by a constructive heuristic: random assignment, nearest neighbor, sweep, or single-customer routes. We compare training from each single heuristic against a progressively introduced mixture of all four --- mixing exposes the policy to qualitatively different regions of the solution space and prevents it from overfitting to the basin of one construction heuristic. Every trained policy is additionally cross-tested from all initialization types, measuring how much the final quality depends on the starting point.
+% TODO: reward table; schedule + temperature-range table; Metropolis 2x2
+% table (train x test); sampling-vs-greedy comparison; init cross-table
+% (train init x test init).
+%   sweeps: V5_reward, V6_sched, X4_temp_range, V7_metro (+ --no-metro eval),
+%           V8_init_single / V8_init_multi (+ --INIT <type> eval)
+
+\subsection{Optimization Hyperparameters}
+
+The optimization knobs --- actor and critic learning rates, entropy coefficient, and the rollout length (the number of SA steps collected per PPO update, which sets the horizon over which advantages are estimated) --- are swept on the frozen configuration. The number of PPO epochs per collected batch is examined last and re-visited jointly with the curriculum in the final model, since the two interact.
+% TODO: brief results (winners + sensitivity); note which knobs sit on a
+% plateau vs which matter.
+%   sweeps: X1_lr, X2_entropy, X3_rollout, V9_ppo_epochs
+
+\subsection{Curriculum Learning}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[>=Stealth, x=3.9cm, y=2.1cm]
+  % axes
+  \draw[->, thick] (0,0) -- (1.42,0) node[below left, font=\footnotesize] {epoch};
+  \draw[->, thick] (0,0) -- (0,1.2) node[right, font=\footnotesize] {$t_{\mathrm{init}}$};
+  % guides
+  \draw[dashed, gray] (0,1) node[left, font=\footnotesize, black] {$\xi_{\mathrm{CL}}$} -- (1.3,1);
+  \draw[dashed, gray] (1,0) node[below, font=\footnotesize, black] {$E$} -- (1,1);
+  % linear ramp
+  \draw[figorange, very thick] (0,0) -- (1,1) -- (1.3,1);
+  % sigmoid ramp
+  \draw[figblue, very thick] plot[smooth] coordinates
+    {(0,0) (0.1,0.02) (0.2,0.06) (0.3,0.15) (0.4,0.3) (0.5,0.5)
+     (0.6,0.7) (0.7,0.85) (0.8,0.94) (0.9,0.98) (1,1)} -- (1.3,1);
+  % legend
+  \node[font=\footnotesize, figblue]   at (0.78,0.62) {sigmoid};
+  \node[font=\footnotesize, figorange] at (0.32,0.45) {linear};
+\end{tikzpicture}
+\caption{Curriculum ramp: the warm-up depth $t_{\mathrm{init}}$ grows from $0$ to the warm-up strength $\xi_{\mathrm{CL}}$ over $E$ training epochs, following a linear or sigmoid schedule, and stays saturated afterwards.}
+\label{fig:ramp}
+\end{figure}
+
+Training episodes are much shorter than the search budgets used at deployment, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \textit{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ grows over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs, following a linear or sigmoid ramp (Figure~\ref{fig:ramp}). Early in training the policy thus learns to repair poor solutions; later it increasingly learns to improve already-refined ones. A further variant draws a per-instance depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$ instead of warming every instance to the same depth, so that a single batch covers the entire spectrum from raw initializations to deeply improved solutions.
+
+The curriculum is validated with its own sequential protocol: (0) a multi-seed no-curriculum baseline, which also provides the noise floor used throughout this section; (1) a go/no-go comparison of a neutral mid-range curriculum against that baseline; (2) schedule shape (sigmoid against linear); (3) warm-up strength $\xi_{\mathrm{CL}}$; (4) ramp duration $E$; (5) sigmoid steepness; (6) a mechanism ablation opposing the ramped warm-up to a constant warm-up of equal budget, separating the contribution of the progression itself; and (7) the per-instance random depth, hypothesized to pay off in robustness and out-of-distribution behavior more than in the in-distribution headline. The winning curriculum is confirmed against the baseline with $5$ seeds.
+% TODO: curriculum results (gate outcome; winning schedule/strength/ramp;
+% mechanism ablation conclusion: ramp vs constant warmup; random-depth
+% outcome incl. out-of-distribution eval + cost-vs-step curves).
+%   sweeps: P0_baseline ... P9_random_depth (+ P7_best / P8 confirmations)
+
+\subsection{Final Model and Comparison with Baselines}
+
+All component winners, the best curriculum, and the tuned PPO budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. We compare it against blind SA under matched conditions (same operator, budget, and schedule) and against the OR-Tools baseline, and we report the mean cost as a function of the SA step budget from $10^2$ to $10^6$ steps to characterize the anytime behavior of the guided search.
+% TODO: headline table at N=100 (cost / time at 10^4 steps; long-budget 10^6
+% row; x8 instance-augmentation row); guided-vs-blind cost-vs-steps curves
+% (log-x); literature rows for neural baselines.
+%   sweep: V10_final (5 seeds); evals: headline, --augment 8, steps
+%   {100..1e6}, dims {10,20,50,100}
 
 \subsection{Generalization and Scalability}
-% TODO: cross-distribution generalization, larger N without retraining,
-% runtime scaling.
+
+Finally, we probe how far the node-centric representation carries across problem scales: models trained at each size are cross-tested at every other size, and the final model is evaluated on instances well beyond its training size with the same checkpoint, reporting both solution quality and runtime scaling.
+% TODO: cross-dimension table (train dim x test dim, {50,100,500}); runtime
+% scaling over N; discussion of capacity conventions per dim (Q=40/50).
+%   sweep: V12_dim50 / V12_dim100 / V12_dim500 (cross-test loop)
+% TODO (later, needs non-Nazari test data): cross-distribution table --
+% train on Nazari vs Uchoa/Queiroga, test on both (V11_dist, --DATA uchoa).
 
 % ============================================================================
 \section{Conclusion}

@@ -3,46 +3,48 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: LGSA.aux
 The style file: aaai2027.bst
 Database file #1: bib.bib
+Warning--entry type for "ortools_routing" isn't style-file defined
+--line 44 of file bib.bib
 Warning--empty journal in kirkpatrick_optimization_1983
-You've used 5 entries,
+You've used 8 entries,
             2840 wiz_defined-function locations,
-            617 strings with 5540 characters,
-and the built_in function-call counts, 3754 in all, are:
-= -- 308
-> -- 202
-< -- 1
-+ -- 73
-- -- 69
-* -- 264
-:= -- 597
-add.period$ -- 23
-call.type$ -- 5
-change.case$ -- 45
-chr.to.int$ -- 6
-cite$ -- 6
-duplicate$ -- 250
-empty$ -- 238
-format.name$ -- 80
-if$ -- 740
+            632 strings with 5970 characters,
+and the built_in function-call counts, 5543 in all, are:
+= -- 444
+> -- 307
+< -- 2
++ -- 110
+- -- 103
+* -- 390
+:= -- 897
+add.period$ -- 35
+call.type$ -- 8
+change.case$ -- 70
+chr.to.int$ -- 9
+cite$ -- 9
+duplicate$ -- 377
+empty$ -- 355
+format.name$ -- 123
+if$ -- 1081
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 57
-newline$ -- 30
-num.names$ -- 20
-pop$ -- 129
+missing$ -- 85
+newline$ -- 44
+num.names$ -- 32
+pop$ -- 208
 preamble$ -- 1
-purify$ -- 39
+purify$ -- 60
 quote$ -- 0
-skip$ -- 122
+skip$ -- 177
 stack$ -- 0
-substring$ -- 166
-swap$ -- 135
-text.length$ -- 1
+substring$ -- 199
+swap$ -- 193
+text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 45
+type$ -- 72
 warning$ -- 1
-while$ -- 28
+while$ -- 40
 width$ -- 0
-write$ -- 71
-(There was 1 warning)
+write$ -- 107
+(There were 2 warnings)
