@@ -660,11 +660,41 @@ In standard RL applications, trained policies are often exploited greedily by se
 
 \paragraph{Initialization.}
 Each training episode starts from an initial solution produced by a constructive heuristic: random assignment, nearest neighbor, sweep, or single-customer routes. We compare training from each single heuristic against a progressively introduced mixture of all four --- mixing exposes the policy to qualitatively different regions of the solution space and prevents it from overfitting to the basin of one construction heuristic. Every trained policy is additionally cross-tested from all initialization types, measuring how much the final quality depends on the starting point.
-% TODO: reward table; schedule + temperature-range table; Metropolis 2x2
-% table (train x test); sampling-vs-greedy comparison; init cross-table
-% (train init x test init).
-%   sweeps: V5_reward, V6_sched, X4_temp_range, V7_metro (+ --no-metro eval),
-%           V8_init_single / V8_init_multi (+ --INIT <type> eval)
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Variant} & \textbf{Cost} & \textbf{$\Delta$ (paired)} & \textbf{Time (s)} \\
+\midrule
+\multicolumn{4}{l}{\textit{Reward --- reference: immediate, $16.459$, $173$\,s}} \\
+\quad fixed mixture & $16.460$ & $+0.001 \pm 0.042$ & $176$ \\
+\quad other dense variants & $16.50$--$16.53$ & $+0.04$ to $+0.07$ & $173$--$177$ \\
+\quad step-penalty & $17.20$--$17.55$ & $+0.74$ to $+1.09$ & $176$ \\
+\quad terminal & $19.411$ & $+2.952 \pm 0.983$ & $174$ \\
+\midrule
+\multicolumn{4}{l}{\textit{Cooling schedule --- reference: geometric, $16.460$, $179$\,s}} \\
+\quad step decay & $16.473$ & $+0.013 \pm 0.034$ & $181$ \\
+\midrule
+\multicolumn{4}{l}{\textit{Metropolis --- reference: on at train and test, $16.459$}} \\
+\quad off at test time & $16.578$ & $+0.119 \pm 0.025$ & --- \\
+\quad off at train time & $16.432$ & $-0.027 \pm 0.045$ & --- \\
+\quad off at both & $16.526$ & $+0.068 \pm 0.050$ & --- \\
+\bottomrule
+\end{tabular}
+\caption{Reward, annealing, and acceptance summary ($3$ seeds per cell; $\Delta$ = mean $\pm$ std of the per-seed difference against the reference of its block, negative = better). All three axes confirm the incumbent configuration; the one effect that clears its noise floor unanimously is the cost of disabling the Metropolis acceptance at test time. Full rankings, per-seed diagnostics, and plots are given in the appendix.}
+\label{tab:v567summary}
+\end{table}
+
+\paragraph{Results.}
+Table~\ref{tab:v567summary} summarizes the three completed axes; as before, every comparison is seed-paired and judged against its batch's pooled-seed-std noise floor. The reward sweep splits its nine candidates into two regimes. Every reward built on dense per-step improvement lands in a band only $0.07$ wide: the incumbent immediate reward is best at $16.459$, the fixed mixture is a statistical tie ($+0.001 \pm 0.042$, floor $0.042$), and the acceptance-aligned, best-so-far, and scheduled variants trail by at most $0.07$ --- the actor is largely insensitive to the exact shaping as long as the signal is dense. Removing the per-step credit is catastrophic: the terminal reward loses $2.95$ routing units with seed swings of almost a full unit, and the step-penalty schemes lose $0.7$ to $1.1$ with similarly unstable training --- the penalty fights the improvement signal instead of complementing it. The cooling-schedule comparison is a tie: the seed-paired gap between geometric and step decay is $-0.013 \pm 0.034$ against a floor of $0.044$, with the per-seed sign split, so the loop is insensitive to the shape of the cooling curve once its endpoints are fixed. The Metropolis cross gives the sharpest verdict: the criterion earns its keep at deployment, not at training. Removing the acceptance at test time costs $+0.119 \pm 0.025$ over the incumbent-trained actor and $+0.094 \pm 0.009$ over the greedy-trained one --- several times the $0.034$ floor and unanimous across seeds --- whereas the training-time flag is within noise at the standard test-on deployment ($+0.027 \pm 0.045$, sign split). Only when deploying greedily does greedy training pay ($+0.052 \pm 0.050$), a mild train/test-consistency effect outside the regime we deploy in.
+
+\paragraph{Confirmed configuration.}
+All three batches confirm the incumbent --- immediate reward, geometric cooling, Metropolis acceptance kept during experience collection --- so no configuration change is adopted, and they fix the deployment rule: the solver always runs with the Metropolis criterion on. The learned proposal complements the stochastic acceptance rather than replacing it; a greedy descent over the learned moves gets stuck in worse local optima, whatever trajectories the actor was trained on.
+% TODO: temperature-range table (X4_temp_range); sampling-vs-greedy
+% comparison; init cross-table (train init x test init).
+%   sweeps: X4_temp_range, V8_init_single / V8_init_multi (+ --INIT <type> eval)
 
 \subsection{Optimization Hyperparameters}
 
@@ -1144,6 +1174,99 @@ off      & fixed   & 16.630 & 175 & ref \\
 \includegraphics[width=0.9\textwidth]{v3_stab_compare.png}
 \caption{Distribution shaping (Table~\ref{tab:v3stab}). Left: $2 \times 2$ grid of mean final cost and time (green = better); the clipping-on, fixed-temperature cell is the best. Right: seed-paired $\Delta$ against the both-off incumbent --- only logit clipping escapes the noise band, and stacking the learnable temperature on top of it does not help.}
 \label{fig:v3stab}
+\end{figure*}
+
+% ============================================================================
+\section{Appendix: Reward, Annealing, and Acceptance, Full Results}
+\label{app:v567}
+% ============================================================================
+
+This appendix collects the full rankings and per-seed diagnostics behind Table~\ref{tab:v567summary}. All three batches follow the standard protocol ($3$ seeds, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set, initial cost $57.87$); the incumbent configuration reproduces at $16.459$--$16.460$ across the three batches, matching the adopted cell of the architecture study (Table~\ref{tab:v3stab}). In the plot labels, the internal reward names map to the paper terminology as \texttt{immediate} = immediate, \texttt{sa\_aligned} = acceptance-aligned, \texttt{global\_best} = best-so-far, \texttt{hybrid} = the fixed mixture ($\alpha = 0.5$) of the immediate and best-so-far signals, \texttt{curriculum} and \texttt{curriculum\_terminal} = the scheduled interpolations from acceptance-aligned toward best-so-far and terminal respectively, and \texttt{step\_penalty\_init} and \texttt{step\_penalty\_16} = the per-step penalty normalized by the initial cost and by a fixed constant close to the typical final cost.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Reward} & \textbf{Cost} & \textbf{$\Delta$ (paired)} \\
+\midrule
+immediate (incumbent)     & $\mathbf{16.459} \pm 0.039$ & ref \\
+fixed mixture             & $16.460 \pm 0.017$ & $+0.001 \pm 0.042$ \\
+sched.\ $\to$ best-so-far & $16.503 \pm 0.078$ & $+0.043 \pm 0.053$ \\
+best-so-far               & $16.510 \pm 0.014$ & $+0.051 \pm 0.049$ \\
+acceptance-aligned        & $16.516 \pm 0.010$ & $+0.057 \pm 0.035$ \\
+sched.\ $\to$ terminal    & $16.531 \pm 0.050$ & $+0.072 \pm 0.023$ \\
+\midrule
+step-penalty (const.)     & $17.198 \pm 0.386$ & $+0.739 \pm 0.425$ \\
+step-penalty (init)       & $17.549 \pm 0.716$ & $+1.090 \pm 0.707$ \\
+terminal                  & $19.411 \pm 0.955$ & $+2.952 \pm 0.983$ \\
+\bottomrule
+\end{tabular}
+\caption{Full reward ranking, sorted by mean cost; $\Delta$ is seed-paired against the incumbent. The horizontal rule separates the stable cluster (six rewards within $0.15$ of the incumbent) from the broken sparse and penalty-based rewards. Wall-clock is flat across all arms ($173$--$177$\,s). The noise floor is the pooled seed std over the stable cluster, $\approx 0.042$; the global pooled std ($0.420$) is inflated by the unstable training of the broken arms and is not used as a threshold.}
+\label{tab:v5reward}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Schedule} & \textbf{Cost} & \textbf{Time (s)} \\
+\midrule
+geometric (incumbent) & $16.460 \pm 0.040$ & 179 \\
+step decay            & $16.473 \pm 0.048$ & 181 \\
+\bottomrule
+\end{tabular}
+\caption{Cooling-schedule comparison. Both schedules share the same temperature range and differ only in the shape of the decay: geometric, $T_{k+1} = \alpha T_k$, against a piecewise-constant schedule dropping $T$ at one half, two thirds, and three quarters of the horizon. The seed-paired $\Delta$ (geometric $-$ step) is $-0.013 \pm 0.034$ against a noise floor of $0.044$, with one of three seeds favoring step decay --- a statistical tie, and wall-clock is identical within jitter.}
+\label{tab:v6sched}
+\end{table}
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrr}
+\toprule
+& \textbf{Test on (default)} & \textbf{Test off} \\
+\midrule
+train on (incumbent) & $16.459 \pm 0.040$ & $16.578 \pm 0.050$ \\
+train off (greedy)   & $16.432 \pm 0.010$ & $16.526 \pm 0.020$ \\
+\midrule
+\multicolumn{3}{l}{\textit{test-time effect (off $-$ on):} $+0.119 \pm 0.025$ / $+0.094 \pm 0.009$} \\
+\multicolumn{3}{l}{\textit{training effect (on $-$ off):} $+0.027 \pm 0.045$ / $+0.052 \pm 0.050$} \\
+\bottomrule
+\end{tabular}
+\caption{Metropolis $2 \times 2$ cross (mean $\pm$ seed std). Effects are seed-paired: the test-time effect is reported at train-on / train-off and the training effect at test-on / test-off. Against the $0.034$ noise floor, both test-time effects are unanimous across seeds and several times the floor; the training effect at the standard test-on deployment is a tie (sign split across seeds), and only under greedy deployment does greedy training clear the floor --- a mild train/test-consistency effect. The greedy-trained arms also show markedly lower seed variance ($0.010$/$0.020$ against $0.040$/$0.050$).}
+\label{tab:v7metro}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{v5_reward_rank.png}
+\caption{Full reward ranking (Table~\ref{tab:v5reward}; mean $\pm$ seed std, best at top). Gold = incumbent, green = the stable cluster within $0.15$ of it, red = degraded. The three red bars (terminal and the two step-penalty schemes) are a different regime entirely: they fail to train a useful actor and carry runaway seed variance.}
+\label{fig:v5rank}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{v5_reward_cluster.png}
+\caption{Zoom on the stable reward cluster. Left: per-seed final cost (black bars = means); the arms overlap heavily. Right: seed-paired $\Delta$ against the incumbent immediate reward --- the fixed mixture sits inside the noise band (a tie), the remaining dense variants are marginally but consistently above zero.}
+\label{fig:v5cluster}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{v6_sched_compare.png}
+\caption{Cooling-schedule comparison (Table~\ref{tab:v6sched}). Left: per-seed final cost for the two schedules (black bars = means); the clusters overlap heavily. Right: per-seed paired $\Delta$ (geometric $-$ step) --- every bar lies inside the noise band and the sign is not consistent, the signature of a tie rather than an effect.}
+\label{fig:v6sched}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{v7_metro_cross.png}
+\caption{Metropolis train $\times$ test cross (Table~\ref{tab:v7metro}). Left: $2 \times 2$ heatmap of mean final cost (greener = better). Center: cost of removing test-time Metropolis (off $-$ on) at each training setting --- both bars are well past the noise band, the dominant effect. Right: training-flag effect (on $-$ off) at each deployment --- the test-on bar sits inside the band (a tie), test-off just clears it.}
+\label{fig:v7cross}
 \end{figure*}
 
 \bibliography{bib}

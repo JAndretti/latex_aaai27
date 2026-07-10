@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex LGSA"] 1783672905.22659 "LGSA.aux" "LGSA.bbl" "LGSA" 1783672953.23407 0
+["bibtex LGSA"] 1783721188.60354 "LGSA.aux" "LGSA.bbl" "LGSA" 1783721261.31944 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
   "./bib.bib" 1783608818.74741 54241 0b753106345064f8854303580622e8ba ""
-  "LGSA.aux" 1783672953.09566 2966 33a1f63a2e9464ea366d4f8cf610dceb "pdflatex"
+  "LGSA.aux" 1783721261.18377 3321 37f006578b21429c9ac987090e789b36 "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1783672951.68933 "LGSA.tex" "LGSA.pdf" "LGSA" 1783672953.23416 0
+["pdflatex"] 1783721259.59634 "LGSA.tex" "LGSA.pdf" "LGSA" 1783721261.31954 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -212,9 +212,13 @@
   "Figures/v3_ctx_compare.png" 1783672663.06109 42165 ac5b1af2d20350e2baa025be6c03439b ""
   "Figures/v3_shared_compare.png" 1783672663.06152 70247 40f027d47c9958ec325334bdb9962986 ""
   "Figures/v3_stab_compare.png" 1783672663.06199 71073 168b075e76da27b4146bc11b14eebd25 ""
-  "LGSA.aux" 1783672953.09566 2966 33a1f63a2e9464ea366d4f8cf610dceb "pdflatex"
-  "LGSA.bbl" 1783672905.27198 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
-  "LGSA.tex" 1783672941.34428 84772 f63c4647fd5ad563fdc4a8ee297df3f2 ""
+  "Figures/v5_reward_cluster.png" 1783721004.49552 80487 d88b17cd1e31f75e8869b44f86f602e6 ""
+  "Figures/v5_reward_rank.png" 1783721004.49505 47890 0906a07d2c3e8e9bdaf4b8a8f8277d57 ""
+  "Figures/v6_sched_compare.png" 1783721004.49606 46058 09559a2b96b4b381a21d8073ab70a2bb ""
+  "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
+  "LGSA.aux" 1783721261.18377 3321 37f006578b21429c9ac987090e789b36 "pdflatex"
+  "LGSA.bbl" 1783721188.64278 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
+  "LGSA.tex" 1783721250.0856 94986 0d3efce701d4c21d0137bf394222c0f1 ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"
