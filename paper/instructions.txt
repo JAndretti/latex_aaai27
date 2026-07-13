@@ -20,10 +20,29 @@ Each individual author is limited to no more than a combined limit of 10 submiss
 Guidelines for Changes to Titles/Authors after Submissions
 MODIFICATIONS TO SUBMISSIONS ARE ONLY ALLOWED UNTIL THE FULL PAPER DEADLINE (July 28 for Phase 1 submissions). No exceptions will be granted. Please see the full policy on Paper Modification Guidelines.
 
-Policy Concerning Multiple Submissions to Conferences or Journals
-AAAI-27 will not consider any paper that, at the time of submission, is under review or has already been published or accepted for publication in any archival venue such as a journal or a conference (workshops and preprint servers such as arXiv are acceptable). Authors are free to retract a submission from a venue with a concurrent review process (e.g., from NeurIPS-26) and submit the same work to AAAI-27 as a regular paper, provided that this retraction occurs before the AAAI-27 submission. Authors must confirm at the time of submission that the paper is not under review at another archival conference or journal.
+Policy Concerning Multiple Submissions and Scientific Integrity
+AAAI-27 is committed to maintaining a fair review process and the highest standards of scientific integrity. Each submission should represent a distinct scientific contribution that stands on its own merits.
 
-Once they have made a submission to AAAI-27, authors may not submit the same paper to another archival conference or journal until they receive an accept/reject decision from AAAI-27 or they withdraw their submission from AAAI-27. In some cases, it may require a judgment call to determine whether two concurrent submissions constitute a violation of AAAI’s multiple submission policy. If a concern is raised about the similarity of two non-identical submissions, at least three people will inspect whatever information is available about both submissions. If they all agree that the simultaneous submission has excessive technical overlap, the paper will be summarily rejected and the organizers of the other conference will be informed about AAAI’s decision. As with all summary rejects, such decisions are final.
+Simultaneous Submission to Other Archival Venues
+AAAI-27 will not consider any paper that, at the time of submission, is under review, accepted for publication, or previously published in another archival conference or journal. Preprint servers (such as arXiv) and non-archival workshops are permitted.
+
+Authors may withdraw a submission from another venue with a concurrent review process and submit that work to AAAI-27, provided the withdrawal is completed before the AAAI-27 submission. Authors must confirm at the time of submission that their paper is not simultaneously under review at another archival conference or journal.
+
+After submitting to AAAI-27, authors may not submit the same or substantially similar work to another archival conference or journal until they have received a decision from AAAI-27 or have withdrawn their AAAI-27 submission.
+
+Overlapping Submissions
+If concerns arise regarding overlapping submissions, papers involving an overlapping set of authors may be considered together in the assessment of novelty. If publishing one paper would render another paper (whether submitted to AAAI-27 or another archival conference or journal) insufficiently novel or incremental, the AAAI-27 submission may be summarily rejected as violating AAAI’s multiple-submission policy.
+
+Authors should not submit multiple papers that do not constitute distinct scientific contributions. This includes, but is not limited to:
+
+Submitting the same paper with cosmetic changes.
+“Thin slicing” a single contribution into multiple minimally different papers.
+Submitting multiple papers that, taken together, would more appropriately be presented as a single scientific contribution (for example, by splitting results across different methods, datasets, application domains, analyses, or presentations).
+Submitting obfuscated duplicates or “alternative universe” versions of substantially the same work.
+Authors should combine closely related ideas into a single, stronger submission whenever appropriate.
+
+Assessment of Overlap
+If concerns are raised regarding overlap between submissions, the program committee will review the available information about the submissions. If it concludes that the submissions have excessive technical overlap or otherwise violate the multiple-submission policy, the AAAI-27 submission may be summarily rejected. In cases involving another archival conference or journal, the organizers of that venue may also be informed. As with all summary rejection decisions, these determinations are final.
 
 Citation and Comparison
 Papers are expected to cite those refereed publications most relevant to their content, but authors are excused for not knowing about all non-refereed work (e.g, appearing on arXiv). Nevertheless, in cases where such prior work is widely known in the field, its existence may be considered by reviewers in assessing a submission’s novelty. Papers published less than two months before the regular paper submission deadline (July 28, 2026) are considered contemporaneous to all AAAI-27 submissions (whether submitted as regular or fast track submissions); authors are not obliged to address such papers (though, especially for the camera ready versions of accepted papers, authors are encouraged to do so).
@@ -37,48 +56,3 @@ Reviewers will evaluate the reproducibility of the reported results based on the
 
 Ethics Policy
 All AAAI authors and reviewers are required to honor the AAAI Publications Ethics and Malpractice Statement, as well as the AAAI Code of Professional Conduct. A paper may be rejected if an author is found to violate the AAAI Publications Ethics and Malpractice Statement or the AAAI Code of Professional Conduct.
-
-
-Supplementary Material
-Submissions must not contain pointers to supplementary material on the web, as this may violate both blind review and the policy that submissions cannot be changed after they are made available to reviewers. However, authors have the option of submitting supplementary material in support of their submissions. Authors must be very careful not to violate the double blind review requirements in any supplementary material to prevent their paper from being summarily rejected. All such material is due no later than July 31.
-
-Authors can include one or more of the following:
-
-A Supplementary Document (PDF) — Additional technical material supporting the paper, such as proofs, derivations, experimental details, dataset descriptions, or extended results.
-A Supplementary Media Archive (ZIP) — Images, audio, video demonstrations, animations, or other multimedia content supporting the paper.
-A Supplementary Code and Data Package (ZIP) — Source code, scripts, data, and instructions intended to help reviewers assess the reproducibility of the paper’s claims.
-During review, the purpose of supplementary material is to assist reviewers. Authors are encouraged to share the supplementary material upon paper acceptance.
-
-Supplementary Document
-The length of main submissions is strictly limited, as already described. Authors may optionally submit a supplementary document (PDF) containing additional supporting information such as proofs of theorems that are stated in the main paper; additional information needed to reproduce experiments; further experimental results; figures and examples to illustrate technical claims; etc. The main submission may reference the supplementary material, but should be self contained. Reviewers will be instructed to make their acceptance evaluations based on the main submission, and will not be obliged to consult the supplementary material. If proofs or other supplementary matter are an important part of the contribution, their essential elements should be included in the main paper.
-
-Review Process
-Two-Phase Review Process
-AAAI-27 will use a two-phase reviewing process, which will work as follows.
-
-The abstract deadline for AAAI submissions will be July 21, 2026,the deadline for full paper submissions will be July 28, 2026.
-
-Phase 1:
-
-Every paper will be allocated three reviewers.
-If a paper receives sufficiently negative reviews, it will be rejected without any opportunity for author feedback.
-Remaining papers will progress to Phase 2.
-Phase 2:
-
-Each paper will be allocated additional reviewers to receive up to five reviews.
-The new reviewers will not be given access to Phase 1 reviews until after submitting their own reviews.
-Discussion:
-
-A single author feedback phase will give authors of papers from Phase 2 an opportunity to address questions or factual mistakes in reviews (from both phases), running from October 19-25, 2026.
-The program committee and senior program committee will engage in a discussion phase, taking author feedback into account.
-Final decisions will be announced on November 30, 2026.
-
-Blind Review
-AAAI-27 reviews are double blind (i.e., neither reviewers nor authors should be able to identify each other). The first page, on which the paper body begins, should include the title, abstract, content areas, and ID number (if available), but not names or affiliations of the authors. Acknowledgments of funding or assistance should also be omitted. Ensure that no information is included that would identify the authors or their affiliations; papers including such information may be summarily rejected at the discretion of the program chairs.
-
-Submissions should include references to all published literature relevant to the paper. When the authors’ previous work is relevant, they have three options, in descending order of desirability.
-
-Use the third person, rather than the first person. For example, say “Previously, Hinton et al (2006) showed that…,” rather than “In our previous work (Hinton et al, 2006) we showed that…”.
-Avoid citing previous, unpublished work that would surely identify the authors (e.g., a previous technical report or PhD thesis which substantially overlaps with the current submission); such citations may be added to the camera-ready copy.
-When neither previous option is appropriate, cite as “Anonymous (2019)” to indicate that a citation has been suppressed.
-There are two cases where the existence of non-anonymous online material will not be considered a violation of AAAI-27’s blind review policy: it is acceptable for submitted work (1) to appear in a preliminary version as an unrefereed preprint (e.g., on arXiv.org, social media, personal websites) or in any workshop that does not have archival proceedings; or (2) to be discussed in research talks, even if abstracts or videos of such talks are made available online. In such cases, the AAAI-27 submission should not include citations or other pointers to the non-anonymous material and the non-anonymous online material should not reference the fact that the work was submitted to AAAI-27; violations may lead to summary rejection. Reviewers will be instructed not to actively seek out such previous publications or to share knowledge of them with other reviewers but will not be disqualified if they encounter such information.

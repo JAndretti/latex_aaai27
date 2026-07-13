@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex LGSA"] 1783721188.60354 "LGSA.aux" "LGSA.bbl" "LGSA" 1783721261.31944 0
+["bibtex LGSA"] 1783878382.51514 "LGSA.aux" "LGSA.bbl" "LGSA" 1783878384.22218 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
   "./bib.bib" 1783608818.74741 54241 0b753106345064f8854303580622e8ba ""
-  "LGSA.aux" 1783721261.18377 3321 37f006578b21429c9ac987090e789b36 "pdflatex"
+  "LGSA.aux" 1783878384.05448 3229 caa760af2614da93b6dc419ba1e96866 "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1783721259.59634 "LGSA.tex" "LGSA.pdf" "LGSA" 1783721261.31954 0
+["pdflatex"] 1783878382.55642 "LGSA.tex" "LGSA.pdf" "LGSA" 1783878384.22228 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -191,24 +191,18 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1775556116.32262 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1775556136 8213252 271ef74e4fe00124d89521022441020f ""
   "Figures/v1_cost_vs_time.png" 1783613394.39246 67901 50e1d3371c9c197cd4e36519cb65b3c9 ""
-  "Figures/v1_grouped_bar.png" 1783613394.39191 39412 c2efde236ec97c168477ff45350ea5ba ""
   "Figures/v1_heatmap_cost.png" 1783613394.39127 60846 b8e67292aa787d7749d5f56e6bbf40d3 ""
   "Figures/v1_seed_spread_top.png" 1783613394.39289 23512 8b10328f5f0e738cb82ccfc578bcb35a ""
-  "Figures/v2_best_cost_vs_nfeat.png" 1783613394.39732 63058 230d363661e97963cc04fbc80edcd4cf ""
-  "Figures/v2_best_cost_vs_time.png" 1783613394.39691 48642 b33801e0828da2f2b2d2e0d7d1596a52 ""
-  "Figures/v2_best_ranking.png" 1783613394.39612 53293 e6ee4d798ddd5f7842f4a1869510821e ""
   "Figures/v2_best_seed_spread.png" 1783613394.39651 76207 f79454170d432ee97d42d5fdf0fedfad ""
   "Figures/v2_cond_analysis.png" 1783613394.39836 82285 bd72ebe7e552f6aaa84119fd8780e206 ""
   "Figures/v2_isolation_ablation.png" 1783613394.39388 50216 901d7669b2e4fc5bfaff1dbdde24dd91 ""
   "Figures/v2_loo_ablation.png" 1783613394.39337 51537 b8ecdf3db529b46f4a14853daf6c9789 ""
-  "Figures/v2_loo_vs_isolation.png" 1783613394.39485 59973 a0df9e7daa5d8e95618743dbee26810e ""
   "Figures/v2_ranking_all_configs.png" 1783613394.39529 127431 22334cdaebc098d13a72cc08e3f42a35 ""
   "Figures/v2_refine_comparison.png" 1783613394.39782 52820 a2e20cecf15d7a68075c4292af534d8f ""
   "Figures/v2_seed_spread.png" 1783613394.39571 26412 f18156572362c6aabc3449befa2e3310 ""
   "Figures/v2_thematic_ablation.png" 1783613394.39439 42481 de89ec889685e92e4c8bfc50bbe29548 ""
   "Figures/v3_arch_grid.png" 1783672663.05964 80679 0df85d7a71cad32fc897f84cc7aec660 ""
   "Figures/v3_arch_pareto.png" 1783672663.06011 46453 3e8110d7645a2d19517b5020dd1a8dd9 ""
-  "Figures/v3_critic_compare.png" 1783672663.06064 46052 e85c35a820a25f836c796ba78073b309 ""
   "Figures/v3_ctx_compare.png" 1783672663.06109 42165 ac5b1af2d20350e2baa025be6c03439b ""
   "Figures/v3_shared_compare.png" 1783672663.06152 70247 40f027d47c9958ec325334bdb9962986 ""
   "Figures/v3_stab_compare.png" 1783672663.06199 71073 168b075e76da27b4146bc11b14eebd25 ""
@@ -216,9 +210,11 @@
   "Figures/v5_reward_rank.png" 1783721004.49505 47890 0906a07d2c3e8e9bdaf4b8a8f8277d57 ""
   "Figures/v6_sched_compare.png" 1783721004.49606 46058 09559a2b96b4b381a21d8073ab70a2bb ""
   "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
-  "LGSA.aux" 1783721261.18377 3321 37f006578b21429c9ac987090e789b36 "pdflatex"
-  "LGSA.bbl" 1783721188.64278 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
-  "LGSA.tex" 1783721250.0856 94986 0d3efce701d4c21d0137bf394222c0f1 ""
+  "Figures/v8_init_grid.png" 1783875258.91561 80223 73310ba0535fcdb05175cb5bf155760e ""
+  "Figures/v8_init_slices.png" 1783875258.91609 74565 47b3ab874d3c8ba7a608e80e58ecf862 ""
+  "LGSA.aux" 1783878384.05448 3229 caa760af2614da93b6dc419ba1e96866 "pdflatex"
+  "LGSA.bbl" 1783878382.5534 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
+  "LGSA.tex" 1783878380.79288 103331 93d08579c334b58ff05ecd2e0dba1f80 ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"
