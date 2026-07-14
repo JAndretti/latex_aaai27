@@ -596,9 +596,30 @@ step decay            & $16.473$ \\
 \label{tab:sched}
 \end{table}
 
-\paragraph{Results and conclusion.}
-The comparison is a statistical tie (Table~\ref{tab:sched}): the seed-paired gap is $-0.013 \pm 0.034$ against a noise floor of $0.044$, with the per-seed sign split and identical wall-clock (Figure~\ref{fig:v6sched}, appendix). Once its endpoints are fixed, the loop is insensitive to the shape of the cooling curve; the geometric schedule is kept.
-% TODO: temperature-range sweep (X4_temp_range) completes this axis.
+\paragraph{Results: shape.}
+The comparison is a statistical tie (Table~\ref{tab:sched}): the seed-paired gap is $-0.013 \pm 0.034$ against a noise floor of $0.044$, with the per-seed sign split and identical wall-clock (Figure~\ref{fig:v6sched}, appendix). Once its endpoints are fixed, the loop is insensitive to the shape of the cooling curve.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{$T_0 \backslash T_{\mathrm{final}}$} & \textbf{0.01} & \textbf{0.1} \\
+\midrule
+$0.5$ & $16.342$ & $16.475$ \\
+$1$   & $16.343$ & $\mathbf{16.508}$ \\
+$2$   & $16.354$ & $16.486$ \\
+\bottomrule
+\end{tabular}
+\caption{Temperature-range grid: mean final cost over $3$ seeds; rows = initial temperature $T_0$, columns = final temperature $T_{\mathrm{final}}$ (incumbent in bold).}
+\label{tab:temprange}
+\end{table}
+
+\paragraph{Results: range.}
+The endpoints, by contrast, hold the largest single-knob improvement of the whole validation. A $3 \times 2$ grid retrains the policy over $T_0 \in \{0.5, 1, 2\}$ and $T_{\mathrm{final}} \in \{0.01, 0.1\}$ (Table~\ref{tab:temprange}) and splits cleanly by final temperature: every $T_{\mathrm{final}} = 0.01$ cell beats every $T_{\mathrm{final}} = 0.1$ cell, and the incumbent $(1, 0.1)$ is in fact the worst cell of its own grid. Cooling deeper gains $-0.165 \pm 0.034$ at the incumbent $T_0$ --- four times the $0.041$ floor --- and the sign is unanimous across seeds at every starting temperature. The initial temperature is inert: at $T_{\mathrm{final}} = 0.01$ the three starting points are a three-way statistical tie. The reading is that the final low-temperature phase is precisely where the learned proposal performs its fine-grained refinement, and a floor of $0.1$ cuts that phase off early.
+
+\paragraph{Conclusion.}
+The range, not the shape, is the lever: the schedule stays geometric with $T_0 = 1$, and the final temperature drops to $T_{\mathrm{final}} = 0.01$. Since $0.01$ is the boundary of the tested grid, an even lower floor cannot be ruled out.
 
 \subsection{Metropolis Acceptance}
 
@@ -664,10 +685,58 @@ Training keeps purely random constructions; the deployment start is a free choic
 
 \subsection{Optimization Hyperparameters}
 
-The optimization knobs --- actor and critic learning rates, entropy coefficient, and the rollout length (the number of SA steps collected per PPO update, which sets the horizon over which advantages are estimated) --- are swept on the frozen configuration. The number of PPO epochs per collected batch is examined last and re-visited jointly with the curriculum in the final model, since the two interact.
-% TODO: brief results (winners + sensitivity); note which knobs sit on a
-% plateau vs which matter.
-%   sweeps: X1_lr, X2_entropy, X3_rollout, V9_ppo_epochs
+\paragraph{Motivation.}
+Every axis so far compared design alternatives; the plain numerical knobs of the optimizer were inherited, not tuned. With the architecture and search loop frozen, the remaining knobs are swept around the incumbent, one axis at a time: the actor and critic learning rates (a $3 \times 3$ grid), the entropy coefficient, and the rollout length --- the number of SA steps collected per PPO update, which sets both the horizon over which advantages are estimated and how far into the cooling schedule the collected experience reaches. Every incumbent lies strictly inside its grid, so each sweep is a proper local search around the default. The number of PPO epochs per collected batch is examined last and revisited jointly with the curriculum in the final model, since the two interact.
+% TODO: V9_ppo_epochs results.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Actor $\backslash$ Critic} & $\mathbf{3\!\times\!10^{-4}}$ & $\mathbf{10^{-3}}$ & $\mathbf{3\!\times\!10^{-3}}$ \\
+\midrule
+$3\!\times\!10^{-4}$ & $16.447$ & $16.435$ & $16.396$ \\
+$10^{-3}$            & $16.509$ & $\mathbf{16.460}$ & $16.466$ \\
+$3\!\times\!10^{-3}$ & $16.509$ & $16.502$ & $16.510$ \\
+\bottomrule
+\end{tabular}
+\caption{Learning-rate grid: mean final cost over $3$ seeds; rows = actor rate, columns = critic rate (incumbent in bold).}
+\label{tab:xlr}
+\end{table}
+
+\paragraph{Learning rates.}
+The actor learning rate is the axis that matters, and its effect is monotone (Table~\ref{tab:xlr}): the three worst cells all share the highest actor rate, the three best all share the lowest, and each grid step upward costs roughly $0.05$ on average over the critic axis. The critic rate is a weaker, second-order knob. The best cell --- actor $3 \times 10^{-4}$, critic $3 \times 10^{-3}$ --- improves on the incumbent by $-0.064 \pm 0.051$, unanimous across seeds against a $0.031$ floor.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Entropy coefficient} & \textbf{Cost} \\
+\midrule
+$0$    & $16.587$ \\
+$0.01$ (incumbent) & $\mathbf{16.459}$ \\
+$0.05$ & $17.242$ \\
+\midrule
+\textbf{Rollout length} & \\
+$50$  & $16.904$ \\
+$100$ (incumbent) & $\mathbf{16.460}$ \\
+$200$ & $16.404$ \\
+\bottomrule
+\end{tabular}
+\caption{Entropy-coefficient and rollout-length sweeps: mean final cost over $3$ seeds.}
+\label{tab:xknobs}
+\end{table}
+
+\paragraph{Entropy and rollout.}
+The entropy coefficient is a clean confirmation of the default (Table~\ref{tab:xknobs}, top): $0.01$ sits at the bottom of a U, with both neighbors unanimously worse --- removing the bonus costs $+0.128 \pm 0.021$ (the policy under-explores and collapses onto a narrow move set), over-weighting it costs $+0.783 \pm 0.036$ (near-uniform proposals). The rollout length is asymmetric (bottom): halving it to $50$ is a large unanimous regression ($+0.444 \pm 0.015$) --- the collected experience never reaches the cool end of the schedule where the hard moves live --- while doubling it to $200$ is a marginal, sign-split gain ($-0.056 \pm 0.053$) at twice the collection cost per update.
+
+\paragraph{Combined configuration.}
+The three wins --- lower actor rate, longer rollout, and the deeper cooling floor of the annealing study --- were each measured in isolation, so the joint configuration is retrained from scratch to test additivity. With the best-cell critic rate of $3 \times 10^{-3}$, five of six seeds land at $16.216 \pm 0.048$, matching the sum of the individual effects, but one seed diverges reproducibly: two independent retrains of the same seed blow up identically, although each knob was stable across all its seeds in isolation. The instability is an interaction --- a critic stepping $10\times$ faster than the actor overshoots on the sparse reward signal that deep cooling produces early in training (full analysis in the appendix). Reducing the critic rate back to the incumbent $10^{-3}$ removes the failure mode without giving up the gain: all seeds converge at $16.230 \pm 0.039$, a seed-paired $-0.223 \pm 0.016$ against the incumbent, unanimous.
+
+\paragraph{Conclusion.}
+The final configuration adopts the actor learning rate $3 \times 10^{-4}$ and the $200$-step rollout, and keeps the critic rate at $10^{-3}$ and the entropy coefficient at $0.01$; combined with $T_{\mathrm{final}} = 0.01$ these changes are additive and worth $-0.223$ over the incumbent --- more than any single design axis delivered. Two caveats: the two winning values (actor rate and cooling floor) both sit on the boundary of their grids, and the divergence episode shows that stacking individually-validated winners can create interactions none of them exhibits alone.
 
 \subsection{Curriculum Learning}
 
@@ -733,7 +802,7 @@ Finally, we probe how far the node-centric representation carries across problem
 
 \section{Appendix Overview}
 
-The appendices mirror the order of the experimental section. \emph{State Feature Definitions} gives the formal definition of every component of the node feature vector. The four \emph{Full Results} appendices then collect, for each validation axis of the main text --- operators and feasibility, features, architecture, and the search-loop components (reward, annealing, acceptance, initialization) --- the complete grids, secondary tables, and per-seed diagnostic plots behind the summary tables. Two conventions are shared throughout: every comparison is seed-paired (both arms are trained on the same seeds), and every delta plot shows the per-seed differences against a shaded band marking that batch's noise floor --- an effect is trusted only if it clears the band with a consistent sign across seeds. Each full-results appendix opens with the mapping from the internal configuration names appearing in the plot legends to the paper terminology.
+The appendices mirror the order of the experimental section. \emph{State Feature Definitions} gives the formal definition of every component of the node feature vector. The five \emph{Full Results} appendices then collect, for each validation axis of the main text --- operators and feasibility, features, architecture, the search-loop components (reward, annealing, acceptance, initialization), and the optimization hyperparameters (including the per-seed record and mechanism of the combined-configuration divergence) --- the complete grids, secondary tables, and per-seed diagnostic plots behind the summary tables. Two conventions are shared throughout: every comparison is seed-paired (both arms are trained on the same seeds), and every delta plot shows the per-seed differences against a shaded band marking that batch's noise floor --- an effect is trusted only if it clears the band with a consistent sign across seeds. Each full-results appendix opens with the mapping from the internal configuration names appearing in the plot legends to the paper terminology.
 
 \section{Appendix: State Feature Definitions}
 \label{app:features}
@@ -1341,5 +1410,39 @@ mixed              & $16.682$ & $16.663$ & $16.700$ & $16.357$ & $16.673$ \\
 \caption{Left: final cost by training construction at the standard random-start deployment --- random (gold) is far below the rest, with mixed (gray) a close second. Right: final cost of selected actors across the five test constructions: the random-trained actor (gold) is nearly flat and mostly inside the stable-floor band, the mixed actor (purple) sits uniformly a touch above it, and the matched train/test diagonal (green diamonds) climbs away --- ruling out a train/test-matching explanation for the training-construction effect.}
 \label{fig:v8slices}
 \end{figure*}
+
+% ============================================================================
+\section{Appendix: Optimization Hyperparameters, Full Results}
+\label{app:xknobs}
+% ============================================================================
+
+This appendix documents the combined-configuration validation behind the optimization-hyperparameter study, and in particular the reproducible divergence that fixed the final critic learning rate. All batches follow the standard protocol ($3$ seeds per configuration, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set); the per-batch noise floors are $0.031$ (learning rates), $0.046$ (entropy), $0.041$ (rollout), and $0.041$ (temperature range), and the incumbent reproduces at $16.459$--$16.508$ across the four batches.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Seed} & \textbf{Critic $3\!\times\!10^{-3}$} & \textbf{Critic $10^{-3}$} \\
+\midrule
+$0$ & $16.265$ & $16.257$ \\
+$1$ & $19.865$ / $19.872$ & $16.268$ \\
+$2$ & $16.219$ & $16.186$ \\
+$3$ & $16.258$ & $16.209$ \\
+$4$ & $16.152$ & --- \\
+$5$ & $16.186$ & --- \\
+\midrule
+mean (converged) & $16.216 \pm 0.048$ & $16.230 \pm 0.039$ \\
+\bottomrule
+\end{tabular}
+\caption{Per-seed final cost of the combined configuration (actor rate $3 \times 10^{-4}$, rollout $200$, $T_{\mathrm{final}} = 0.01$) under the two candidate critic learning rates. Seed $1$ under the $3 \times 10^{-3}$ critic was trained twice independently; both runs diverge into the same degenerate basin. The $10^{-3}$ critic converges on every seed.}
+\label{tab:xcombined}
+\end{table}
+
+\paragraph{Combined-configuration runs.}
+Table~\ref{tab:xcombined} lists every training run of the two combined configurations. The aggressive variant (critic rate $3 \times 10^{-3}$, the best single cell of the learning-rate grid) was extended from $3$ to $6$ seeds after the first divergence, and the failing seed was retrained a second time from scratch: both runs land at $19.86$--$19.87$, so the failure is deterministic given the seed, not a flaky run. The same seed trains without incident under the incumbent configuration ($16.473$) and under the final configuration ($16.268$), so the seed itself is not pathological --- the divergence is created only by the combination of knobs, each of which was stable across all its seeds in isolation.
+
+\paragraph{Failure mechanism.}
+The quantity that overflows is not the learning rate itself but the product of learning rate and advantage, and it is the fast critic that manufactures the oversized advantages. With a $200$-step rollout cooling to $T_{\mathrm{final}} = 0.01$, the long low-temperature tail of every collected episode is a regime where the Metropolis rule rejects nearly every non-improving move; a rejected move leaves the state unchanged and its immediate reward is exactly zero, so early in training --- when the near-random policy finds few improving moves --- the return signal is mostly zeros punctuated by rare spikes. A critic stepping $10\times$ faster than the policy it evaluates overshoots when fitting that target, and an occasional badly mis-scaled value estimate produces one outsized advantage, hence one outsized policy step; the updated policy then jumps far enough from the collection policy that the exponentiated log-ratio overflows in the backward pass and the run never recovers. The seed dependence is a race: a seed that lingers longer in the flat zero-reward regime gives the fast critic more opportunities to overshoot before the policy finds signal --- the failing seed spent roughly $50$ epochs there where a converging seed escaped in about $5$. Matching the critic rate to the incumbent $10^{-3}$ keeps the advantages bounded and closes the race at no measurable cost: the two variants are statistically indistinguishable on their common converged seeds (Table~\ref{tab:xcombined}).
 
 \end{document}
