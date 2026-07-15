@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex LGSA"] 1784067865.33485 "LGSA.aux" "LGSA.bbl" "LGSA" 1784067867.05423 0
+["bibtex LGSA"] 1784110919.21959 "LGSA.aux" "LGSA.bbl" "LGSA" 1784110997.84259 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
   "./bib.bib" 1783608818.74741 54241 0b753106345064f8854303580622e8ba ""
-  "LGSA.aux" 1784067866.8838 3418 e3bcb5590f00464dc2aefe11b6975273 "pdflatex"
+  "LGSA.aux" 1784110997.69894 3307 9396968752e3371254a2a455a35c4f4b "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1784067865.37926 "LGSA.tex" "LGSA.pdf" "LGSA" 1784067867.05432 0
+["pdflatex"] 1784110996.32547 "LGSA.tex" "LGSA.pdf" "LGSA" 1784110997.84265 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -15,8 +15,14 @@
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/courier/pcrr8r.tfm" 1136768653 1292 bd42be2f344128bff6d35d98474adfe3 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/courier/pcrr8t.tfm" 1136768653 1384 4632f5e54900a7dadbb83f555bc61e56 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecrm1000.tfm" 1136768653 3584 adb004a0c8e7c46ee66cad73671f37b4 ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy5.tfm" 1246382020 1120 1e8878807317373affa7f7bba4cf2f6a ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy6.tfm" 1246382020 1124 14ccf5552bc7f77ca02a8a402bea8bfb ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy9.tfm" 1246382020 1112 cbc11b646ccc26599775160605aaee3a ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex9.tfm" 1246382020 996 a18840b13b499c08ac2de96a99eda4bc ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib5.tfm" 1246382020 1496 c79f6914c6d39ffb3759967363d1be79 ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib6.tfm" 1246382020 1516 a3bf6a5e7ec4401b1f52092dfaaed242 ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib9.tfm" 1246382020 1528 159d57adcba064aab4277245c826577d ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1246382020 924 9904cf1d39e9767e7a3622f2a125a565 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm" 1246382020 928 2dc8d444221b7a635bb58038579b861a ""
@@ -55,6 +61,9 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb" 1248133631 32587 1788b0c1c5b39540c96f5e42ccd6dae8 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1248133631 32716 08e384dc442464e7285e891af9f45947 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb" 1248133631 32442 c975af247b6702f7ca0c299af3616b80 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy6.pfb" 1248133631 33380 604c4852f626e49716faf4efad40c9c2 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy9.pfb" 1248133631 27817 24c2fd675d684d30218eed425386b567 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib9.pfb" 1248133631 36510 24bd6e95867d9b5c2691bf9144a22cda ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmb.pfb" 1698694482 255251 958c6ad4e5518904a53cf1118c612893 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmr.pfb" 1698694482 286816 82db2bfe6920054b1a43661c07078412 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmri.pfb" 1698694482 248316 6c047e35119cde1bffb3263909816feb ""
@@ -196,8 +205,6 @@
   "Figures/v1_seed_spread_top.png" 1783613394.39289 23512 8b10328f5f0e738cb82ccfc578bcb35a ""
   "Figures/v2_best_seed_spread.png" 1783613394.39651 76207 f79454170d432ee97d42d5fdf0fedfad ""
   "Figures/v2_cond_analysis.png" 1783613394.39836 82285 bd72ebe7e552f6aaa84119fd8780e206 ""
-  "Figures/v2_isolation_ablation.png" 1783613394.39388 50216 901d7669b2e4fc5bfaff1dbdde24dd91 ""
-  "Figures/v2_loo_ablation.png" 1783613394.39337 51537 b8ecdf3db529b46f4a14853daf6c9789 ""
   "Figures/v2_ranking_all_configs.png" 1783613394.39529 127431 22334cdaebc098d13a72cc08e3f42a35 ""
   "Figures/v2_refine_comparison.png" 1783613394.39782 52820 a2e20cecf15d7a68075c4292af534d8f ""
   "Figures/v2_seed_spread.png" 1783613394.39571 26412 f18156572362c6aabc3449befa2e3310 ""
@@ -208,14 +215,13 @@
   "Figures/v3_shared_compare.png" 1783672663.06152 70247 40f027d47c9958ec325334bdb9962986 ""
   "Figures/v3_stab_compare.png" 1783672663.06199 71073 168b075e76da27b4146bc11b14eebd25 ""
   "Figures/v5_reward_cluster.png" 1783721004.49552 80487 d88b17cd1e31f75e8869b44f86f602e6 ""
-  "Figures/v5_reward_rank.png" 1783721004.49505 47890 0906a07d2c3e8e9bdaf4b8a8f8277d57 ""
   "Figures/v6_sched_compare.png" 1783721004.49606 46058 09559a2b96b4b381a21d8073ab70a2bb ""
   "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
   "Figures/v8_init_grid.png" 1783875258.91561 80223 73310ba0535fcdb05175cb5bf155760e ""
   "Figures/v8_init_slices.png" 1783875258.91609 74565 47b3ab874d3c8ba7a608e80e58ecf862 ""
-  "LGSA.aux" 1784067866.8838 3418 e3bcb5590f00464dc2aefe11b6975273 "pdflatex"
-  "LGSA.bbl" 1784067865.37741 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
-  "LGSA.tex" 1784067835.91912 113046 362fa282be427e30eb3049b522280229 ""
+  "LGSA.aux" 1784110997.69894 3307 9396968752e3371254a2a455a35c4f4b "pdflatex"
+  "LGSA.bbl" 1784110919.25901 2268 ba806a1ba356e24b85fa759c68f2c82c "bibtex LGSA"
+  "LGSA.tex" 1784110981.88396 108672 a7a444e660cc10cc37163d8a139a4989 ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"

@@ -283,7 +283,12 @@ INPUT /usr/share/texlive/texmf-dist/tex/latex/newtx/ts1ntxtlf.fd
 INPUT /usr/share/texlive/texmf-dist/tex/latex/newtx/ts1ntxtlf.fd
 INPUT /usr/share/texmf/fonts/tfm/public/tex-gyre/ts1-qtmr.tfm
 INPUT /usr/share/texmf/fonts/enc/dvips/tex-gyre/q-ts1.enc
-INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Italic-tlf-t1.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib9.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib6.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib5.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy9.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy6.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy5.tfm
 INPUT ./LGSA.bbl
 INPUT ./LGSA.bbl
 INPUT LGSA.bbl
@@ -307,14 +312,6 @@ INPUT ./Figures/v1_seed_spread_top.png
 INPUT ./Figures/v1_seed_spread_top.png
 INPUT ./Figures/v1_seed_spread_top.png
 INPUT ./Figures/v1_seed_spread_top.png
-INPUT ./Figures/v2_loo_ablation.png
-INPUT ./Figures/v2_loo_ablation.png
-INPUT ./Figures/v2_loo_ablation.png
-INPUT ./Figures/v2_loo_ablation.png
-INPUT ./Figures/v2_isolation_ablation.png
-INPUT ./Figures/v2_isolation_ablation.png
-INPUT ./Figures/v2_isolation_ablation.png
-INPUT ./Figures/v2_isolation_ablation.png
 INPUT ./Figures/v2_ranking_all_configs.png
 INPUT ./Figures/v2_ranking_all_configs.png
 INPUT ./Figures/v2_ranking_all_configs.png
@@ -359,10 +356,6 @@ INPUT ./Figures/v3_stab_compare.png
 INPUT ./Figures/v3_stab_compare.png
 INPUT ./Figures/v3_stab_compare.png
 INPUT ./Figures/v3_stab_compare.png
-INPUT ./Figures/v5_reward_rank.png
-INPUT ./Figures/v5_reward_rank.png
-INPUT ./Figures/v5_reward_rank.png
-INPUT ./Figures/v5_reward_rank.png
 INPUT ./Figures/v5_reward_cluster.png
 INPUT ./Figures/v5_reward_cluster.png
 INPUT ./Figures/v5_reward_cluster.png
@@ -384,6 +377,8 @@ INPUT ./Figures/v8_init_slices.png
 INPUT ./Figures/v8_init_slices.png
 INPUT ./Figures/v8_init_slices.png
 INPUT LGSA.aux
+INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy6.pfb
+INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy9.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx6.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb
@@ -394,6 +389,7 @@ INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb
+INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib9.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb
 INPUT /usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb

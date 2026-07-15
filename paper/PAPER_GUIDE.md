@@ -41,39 +41,107 @@ If you redesign a component (e.g. the curriculum), give the new batches new
 GROUP names (don't overwrite old `res/` folders) and re-derive the noise
 floor for the new batch — do not reuse an old batch's floor.
 
-## 3. The per-experiment skeleton (main text)
+## 3. Main-text ablation: one summary subsection
 
-One `\subsection` per design axis. Inside it, exactly this structure:
+The whole ablation study (§5.1) is a **single `\subsection`** —
+`Design Choices` (or `Ablation Summary`) — budgeted at **~1.25 pages**. There
+is **no `\subsection` per axis** and **no per-axis
+Motivation/Candidates/Results/Conclusion skeleton in the main text**; that
+skeleton now lives once per axis in the **appendix** (§7). The main text states
+*which* setting was adopted on each axis and *why*, backed by one summary
+table, and defers all evidence (candidate lists, per-seed diagnostics, full
+tables, plots) to the appendix.
+
+### 3.1 Structure
 
 ```latex
-\subsection{<Axis Name>}
+\subsection{Design Choices}   % or "Ablation Summary"
 
-\paragraph{Motivation.}   % why this experiment exists; what question it answers
-\paragraph{Candidates.}   % the compared variants, each defined in 1-2 lines.
-                          % If a component is complex (like the curriculum),
-                          % explain it globally here and push details/figures
-                          % to the appendix.
-<the results table>       % see table rules below
-\paragraph{Results.}      % read the table: effect sizes vs. the batch's noise
-                          % floor, seed-paired deltas quoted in prose,
-                          % pointer to appendix diagnostics
-\paragraph{Conclusion.}   % the adopted setting + the one-sentence takeaway
+% Opening: state the design space and validation protocol ONCE, in symbols
+% (coordinate descent over an ordered axis tuple; per-batch noise floor;
+%  seed counts). Do NOT restate the protocol per axis.
+
+<master summary table>        % one row per design axis; see 3.1 + §4
+
+\paragraph{Search operators.}      % operator + feasibility: adopted + 1 takeaway
+\paragraph{Node representation.}   % feature set + conditional pair descriptors
+\paragraph{Policy and learning.}   % architecture + reward + optimization budget
+\paragraph{Annealing search.}      % schedule + Metropolis + initialization
+\paragraph{Curriculum.}            % adopted curriculum + whether the ramp matters
+
+% optional: 1-2 headline result tables for the highest-leverage axes only
+% (operator x feasibility; final feature set). Every other axis -> appendix.
 ```
 
-- **At most one plot per experiment in the main text** (zero is fine — most
-  axes have none; the tables carry the numbers). Illustrations of methods
-  that were *not* adopted go to the appendix (cf. the shared-encoder figure).
-- Schematic/explanatory figures (like the curriculum ramp, Fig. 3) count as
-  the axis's one figure.
+- **One `\paragraph{}` per thematic group, not per axis:** 2–4 sentences each,
+  giving the adopted setting, the seed-paired effect size against the batch's
+  noise floor, and a pointer to the appendix
+  (`Table~\ref{...} / Fig.~\ref{...} (appendix)`). The grouping above is the
+  default; move an axis only if it genuinely doesn't fit.
+- **Master summary table (required):** one row per design axis. Columns —
+  *Axis*, *Adopted setting*, *\# cand.*, *Effect vs.\ floor* (signed
+  seed-paired $\Delta$ + a significance mark, or "tie"), *Appendix*. This one
+  object shows every decision at a glance and replaces the nine per-axis body
+  tables. See §4 for its exact form.
+- **Headline tables (0–2):** full result tables only for the highest-leverage
+  axes (operator $\times$ feasibility; final feature set). A non-headline
+  axis's table lives *only* in the appendix — never duplicate it in the body.
+- **At most one figure in the entire ablation subsection** (the curriculum
+  ramp schematic, Fig. 3, is the natural candidate). Everything else — including
+  any illustration of a method that was *not* adopted (e.g. the shared-encoder
+  figure) — goes to the appendix.
+
+### 3.2 Define every object before you use it
+
+The main text must read as a mathematical argument, not a lab log. A symbol or
+term must be defined *before* it appears in any claim — preferably once, in
+*Experimental Setup*, then reused verbatim (same symbol in body and appendix):
+
+- **Design space** as an ordered tuple of axes
+  $\mathcal{A} = (a_1,\dots,a_K)$, each axis $a_k$ ranging over a finite
+  candidate set $\mathcal{C}_k$. Coordinate descent = fixing $a_{<k}$ at their
+  winners while sweeping $\mathcal{C}_k$.
+- **Objective**: final tour cost $c(\cdot)$ (state the cost convention, cf.
+  `eval/costs.py`), reported as the seed-mean $\bar c$.
+- **Seed-paired delta**
+  $\Delta_k = \bar c(\text{variant}) - \bar c(\text{incumbent})$ over shared
+  seeds, and the **per-batch noise floor** $\sigma_{\mathrm{floor}}$ (pooled
+  seed-to-seed std of the stable arms). Define "significant" once as
+  $|\Delta| > \sigma_{\mathrm{floor}}$ and cite that inequality thereafter.
+- Every axis-specific object (feature groups, operators, reward function,
+  temperature schedule, warm-up strength $\xi_{\mathrm{CL}}$, ramp duration
+  $E$, …) is defined at first mention, with its symbol.
+
+No undefined acronyms, no "we tuned $X$" without stating what $X$ ranges over.
+Prefer "$\Delta = -0.173 \pm 0.059$ against $\sigma_{\mathrm{floor}} = 0.072$"
+to "clearly better".
 
 ## 4. Table rules (main text)
+
+Two kinds of table live in the body: the **master summary table** (exactly one,
+§3.1) and **headline tables** (0–2, §3.1). Everything else is appendix (§7).
+
+**Master summary table** — one row per design axis:
+
+- Columns: *Axis*, *Adopted setting*, *\# cand.*, *Effect vs.\ floor*,
+  *Appendix*. The effect column is a compact **signed seed-paired $\Delta$ + a
+  significance mark** (e.g. `-0.173**`, or `tie` when
+  $|\Delta| \le \sigma_{\mathrm{floor}}$) — this is the one place a $\Delta$
+  appears in the body, and it is a single number, not a `Δ ± std` column.
+- Define the significance marks in the caption
+  ("`**` $= |\Delta| > 2\sigma_{\mathrm{floor}}$", etc.) and state the floor(s)
+  the effects are measured against, plus the per-axis appendix labels.
+- Bold the adopted setting. Rows follow the coordinate-descent order (= the
+  paragraph order in §3.1).
+
+**Headline tables** (highest-leverage axes only):
 
 - Columns: **variant + cost only**. Add a Time (s) column *only* when the
   variant changes deployment compute (operators, feature count, actor size).
   Never for the critic or anything training-only.
-- **No `Δ ± std` columns, no seed columns** in the table body. Significance
-  lives in the Results prose ("seed-paired $-0.173 \pm 0.059$ against a floor
-  of $0.072$") and in the appendix.
+- **No `Δ ± std` columns, no seed columns** in the body. Significance lives in
+  the Results prose ("seed-paired $-0.173 \pm 0.059$ against a floor of
+  $0.072$") and in the appendix.
 - Bold = best / adopted. Reference row first (or marked "(incumbent)").
 - Costs with 3 decimals (16.459); times as integers.
 - `booktabs` only (`\toprule/\midrule/\bottomrule`), `\small` or
@@ -130,8 +198,13 @@ every new experiment must follow it, not restate a different one:
 The appendix mirrors the main-text order. To add a "Full Results" section
 for a new axis:
 
-1. `\section{Appendix: <Axis>, Full Results}` + `\label{app:<slug>}`,
-   inserted at the position matching the main-text order.
+1. `\appsection{<Axis>, Full Results}` + `\label{app:<slug>}` on the next
+   line, inserted at the position matching the main-text order. Do **not**
+   use a plain `\section{Appendix: ...}`: AAAI headings are unnumbered
+   (`secnumdepth 0`), so `\ref{app:...}` would render empty. `\appsection`
+   (defined in the preamble) steps a manual letter counter, so headings read
+   "Appendix B: ..." and `\ref` resolves to the letter — and all letters
+   shift automatically when a new appendix is inserted.
 2. Opening paragraph: what it collects + the **mapping from internal config
    names (plot legends, `HP_sweep.yaml` keys) to paper terminology** (e.g.
    `sig`/`lin` = sigmoid/linear ramp, `MAX_OUTER_STEPS_CL` = warm-up strength
@@ -179,17 +252,21 @@ When the redesigned curriculum results are in:
 
 1. New GROUP names in `HP_sweep.yaml` (e.g. `Q0_baseline`, `Q1_gate`, …),
    comment block explaining the redesigned mechanism and protocol.
-2. Update the *Curriculum Learning* subsection: the mechanism description and
-   ramp figure (Fig. 3) if the mechanism changed; then fill the skeleton —
-   Motivation (train/test horizon gap) is already written; Candidates =
-   schedule shape / strength / ramp / mechanism ablation; **one** results
-   table: mean cost per protocol stage with the baseline row first (cost
-   only; the gate, the winner, and the 5-seed confirmation); Results prose
-   with the P0-derived floor; Conclusion = adopted curriculum + whether the
-   ramp (vs. constant warm-up of equal budget) is what matters.
-3. Add `Appendix: Curriculum Study, Full Results` (between the search-loop
-   components appendix and — later — the final-model material), with the
-   name mapping and the per-stage diagnostics; ≤ 1 plot in the main text
-   (best candidate: gate + confirmation as one paired-delta plot).
+2. Update the **`Curriculum.` paragraph** of the single `Design Choices`
+   subsection (§3.1) — not a subsection of its own. State the adopted
+   curriculum, the seed-paired effect vs.\ the P0-derived floor, and whether
+   the ramp (vs. a constant warm-up of equal budget) is what matters; end with
+   a pointer to the appendix. Add its row to the master summary table (axis =
+   curriculum; adopted setting; \# candidates across the protocol; effect vs.
+   floor; appendix label). The curriculum ramp schematic (Fig. 3) may be the
+   subsection's single figure if the mechanism changed.
+3. Put **all** stage-by-stage evidence in `Appendix: Curriculum Study, Full
+   Results` (between the search-loop components appendix and — later — the
+   final-model material): the name mapping, the P0 baseline as the section
+   floor, the go/no-go gate, schedule shape / strength / ramp duration /
+   steepness sweeps, the mechanism ablation, the random-depth study, and the
+   5-seed confirmation — full tables with `± std` and paired-Δ columns. The
+   whole ablation subsection carries at most one plot total (§3.1); the
+   curriculum's diagnostics plots live here.
 4. Remove the TODO comments in the subsection, update the Appendix Overview
    sentence listing the appendices, run the §9 checklist.
