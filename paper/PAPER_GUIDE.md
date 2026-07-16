@@ -104,7 +104,7 @@ term must be defined *before* it appears in any claim — preferably once, in
 - **Objective**: final tour cost $c(\cdot)$ (state the cost convention, cf.
   `eval/costs.py`), reported as the seed-mean $\bar c$.
 - **Seed-paired delta**
-  $\Delta_k = \bar c(\text{variant}) - \bar c(\text{incumbent})$ over shared
+  $\Delta_k = \bar c(\text{variant}) - \bar c(\text{reference})$ over shared
   seeds, and the **per-batch noise floor** $\sigma_{\mathrm{floor}}$ (pooled
   seed-to-seed std of the stable arms). Define "significant" once as
   $|\Delta| > \sigma_{\mathrm{floor}}$ and cite that inequality thereafter.
@@ -142,7 +142,7 @@ Two kinds of table live in the body: the **master summary table** (exactly one,
 - **No `Δ ± std` columns, no seed columns** in the body. Significance lives in
   the Results prose ("seed-paired $-0.173 \pm 0.059$ against a floor of
   $0.072$") and in the appendix.
-- Bold = best / adopted. Reference row first (or marked "(incumbent)").
+- Bold = best / adopted. Reference row first (or marked "(reference)" — never "incumbent").
 - Costs with 3 decimals (16.459); times as integers.
 - `booktabs` only (`\toprule/\midrule/\bottomrule`), `\small` or
   `\footnotesize` + `\setlength{\tabcolsep}{...}` if width is tight. A row
@@ -198,13 +198,14 @@ every new experiment must follow it, not restate a different one:
 The appendix mirrors the main-text order. To add a "Full Results" section
 for a new axis:
 
-1. `\appsection{<Axis>, Full Results}` + `\label{app:<slug>}` on the next
-   line, inserted at the position matching the main-text order. Do **not**
-   use a plain `\section{Appendix: ...}`: AAAI headings are unnumbered
-   (`secnumdepth 0`), so `\ref{app:...}` would render empty. `\appsection`
-   (defined in the preamble) steps a manual letter counter, so headings read
-   "Appendix B: ..." and `\ref` resolves to the letter — and all letters
-   shift automatically when a new appendix is inserted.
+1. `\section{<Axis>, Full Results}` + `\label{app:<slug>}` on the next
+   line, inserted at the position matching the main-text order. The preamble
+   sets `secnumdepth` to 2 and the appendix block starts with `\appendix`,
+   so plain `\section`s after it are lettered A, B, ... automatically and
+   `\ref{app:...}` resolves to the letter (subsections to A.1, A.2, ...) —
+   all letters shift automatically when a new appendix is inserted. The
+   "Appendix Overview" heading is `\section*` (unnumbered) so lettering
+   starts at the Model Details appendix.
 2. Opening paragraph: what it collects + the **mapping from internal config
    names (plot legends, `HP_sweep.yaml` keys) to paper terminology** (e.g.
    `sig`/`lin` = sigmoid/linear ramp, `MAX_OUTER_STEPS_CL` = warm-up strength

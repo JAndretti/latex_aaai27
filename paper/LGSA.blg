@@ -5,46 +5,46 @@ The style file: aaai2027.bst
 Database file #1: bib.bib
 Warning--entry type for "ortools_routing" isn't style-file defined
 --line 44 of file bib.bib
-Warning--empty journal in kirkpatrick_optimization_1983
-You've used 8 entries,
+Warning--I didn't find a database entry for "AndrettiEtAl26"
+You've used 6 entries,
             2840 wiz_defined-function locations,
-            632 strings with 5970 characters,
-and the built_in function-call counts, 5543 in all, are:
-= -- 444
-> -- 307
-< -- 2
-+ -- 110
-- -- 103
-* -- 390
-:= -- 897
-add.period$ -- 35
-call.type$ -- 8
-change.case$ -- 70
-chr.to.int$ -- 9
-cite$ -- 9
-duplicate$ -- 377
-empty$ -- 355
-format.name$ -- 123
-if$ -- 1081
+            623 strings with 5632 characters,
+and the built_in function-call counts, 3832 in all, are:
+= -- 309
+> -- 204
+< -- 1
++ -- 73
+- -- 68
+* -- 263
+:= -- 634
+add.period$ -- 26
+call.type$ -- 6
+change.case$ -- 50
+chr.to.int$ -- 7
+cite$ -- 6
+duplicate$ -- 264
+empty$ -- 251
+format.name$ -- 82
+if$ -- 741
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 85
-newline$ -- 44
-num.names$ -- 32
-pop$ -- 208
+missing$ -- 58
+newline$ -- 34
+num.names$ -- 24
+pop$ -- 144
 preamble$ -- 1
-purify$ -- 60
+purify$ -- 42
 quote$ -- 0
-skip$ -- 177
+skip$ -- 120
 stack$ -- 0
-substring$ -- 199
-swap$ -- 193
-text.length$ -- 2
+substring$ -- 129
+swap$ -- 129
+text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 72
-warning$ -- 1
-while$ -- 40
+type$ -- 54
+warning$ -- 0
+while$ -- 29
 width$ -- 0
-write$ -- 107
+write$ -- 80
 (There were 2 warnings)

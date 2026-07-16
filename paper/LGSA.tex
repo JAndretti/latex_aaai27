@@ -18,7 +18,7 @@
 
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric}
-
+ 
 %
 % Keep the \pdfinfo as shown here. There's no need
 % for you to add the /Title and /Author tags.
@@ -26,15 +26,13 @@
 /TemplateVersion (2027.1)
 }
 
-\setcounter{secnumdepth}{0}
+\setcounter{secnumdepth}{2} % 0 -> 2
 
 % ── Appendix sections ─────────────────────────────────────────────────────────
-% AAAI headings are unnumbered (secnumdepth 0), so \ref to a plain \section
-% label is empty. \appsection steps a manual letter counter before the
-% heading, so \label{app:...} placed right after it resolves to A, B, ...
-\newcounter{appsec}
-\renewcommand{\theappsec}{\Alph{appsec}}
-\newcommand{\appsection}[1]{\refstepcounter{appsec}\section{Appendix \theappsec: #1}}
+% With secnumdepth 2, headings are numbered, so the standard \appendix switch
+% (which restyles \thesection to A, B, ...) makes \ref{app:...} resolve to the
+% letter (and \ref to a \subsection to A.1, A.2, ...). Use plain \section /
+% \subsection after \appendix; no manual counter is needed.
 
 % ── Figure colours (figures only; no colour in text) ─────────────────────────
 \definecolor{figblue}{RGB}{30,70,120}
@@ -79,6 +77,25 @@
 \affiliations{
 }
 
+
+
+
+
+
+
+% PLAN                                      =>  7   pages
+% 0. Abstract, 1. Intro, 2. Related Works   ->  1.5 pages
+% 3. CVRP                                   ->  0.5 pages
+% 4. Model                                  ->  1.5 - 2 pages    (JC)
+% 5. Results
+% - 5.1 Ablation study                      ->  1.5  page
+% - 5.2 Comparison with Baselines           ->  1.25 page
+% 6. Conclusion                             ->  0.25 pages
+
+
+
+
+
 \begin{document}
 
 \maketitle
@@ -103,7 +120,7 @@
 %   - Paper organization paragraph.
 
 % ============================================================================
-\section{Background and Related Work}
+\section{Related Works}
 % ============================================================================
 % TODO: Related work.
 % Suggested coverage: exact methods and classical heuristics/metaheuristics
@@ -113,15 +130,15 @@
 % to CVRP is non-trivial (capacity constraints, feasibility).
 
 % ============================================================================
-\section{Problem Definition}
+\section{CVRP}
 \label{sec:problem_definition}
 % ============================================================================
 
 The \textit{Capacitated Vehicle Routing Problem (CVRP)} is defined on a complete undirected graph $G = (V, E)$, where $V = \{0\} \cup \mathcal{C}$ and $E = V \times V$ denote the sets of nodes and edges, respectively. Node $0$ corresponds to the central depot, and $\mathcal{C} = \{1, \dots, N\}$ represents the set of $N$ customers.
 
-Each edge $(i, j) \in E$ is associated with a travel cost $c_{ij} = \|\mathbf{p}_i - \mathbf{p}_j\|_2$, the Euclidean distance between the 2D coordinates $\mathbf{p}_i, \mathbf{p}_j \in [0,1]^2$, satisfying $c_{ij} = c_{ji}$. Each customer $i \in \mathcal{C}$ has a non-negative demand $q_i$, while the depot has zero demand ($q_0 = 0$). An unlimited fleet of identical vehicles, each with uniform capacity $Q$, is stationed at the depot; the number of routes $m$ is therefore a decision variable unconstrained from above.
+Each edge $(i, j) \in E$ is associated with a travel cost $c_{ij} = \|\mathbf{p}_i - \mathbf{p}_j\|_2$, the Euclidean distance between the 2D coordinates $\mathbf{p}_i, \mathbf{p}_j \in [0,1]^2$, satisfying $c_{ij} = c_{ji}$. Each customer $i \in \mathcal{C}$ has a non-negative demand $q_i$, while the depot has zero demand ($q_0 = 0$). An unlimited fleet of identical vehicles, each with uniform capacity $Q$, is stationed at the depot.
 
-A route $R_k = (0, v_1, v_2, \ldots, v_p, 0)$ is a simple cycle starting and ending at the depot, where $\{v_1, \ldots, v_p\} \subseteq \mathcal{C}$ denotes the subset of customers served by vehicle $k$. A \textit{solution} $s = \{R_1, \ldots, R_m\}$ consists of a set of $m$ routes. A solution $s$ is \textit{feasible} if and only if it satisfies the following conditions:
+A route $R_k = (0, v_1, v_2, \ldots, v_p, 0)$ is a simple cycle starting and ending at the depot, where $\{v_1, \ldots, v_p\} \subseteq \mathcal{C}$ denotes the subset of customers served by vehicle $k$. A \textit{solution} $s = \{R_1, \ldots, R_m\}$ consists of a set of $m$ routes, where the number of routes $m$ is unconstrained. A solution $s$ is \textit{feasible} if and only if it satisfies the following conditions:
 \begin{enumerate}
     \item Each customer is visited exactly once by a single vehicle,
     $$
@@ -139,93 +156,478 @@ $$
 s^* = \arg\min_{s \in \mathcal{F}} \Big\{ C(s) = \sum_{i \in V} \sum_{j \in V,\, i < j} c_{ij}\, x_{ij}(s) \Big\}.
 $$
 
+
+
 % ============================================================================
-\section{Proposed Method}
+%\clearpage
+\section{Model}
 % ============================================================================
 
-\subsection{Overview}
 
-We propose \emph{Learning-Guided Simulated Annealing} (LG-SA), a hybrid method that combines \textit{Simulated Annealing} (SA) with a lightweight neural policy trained by \textit{Reinforcement Learning} (RL). Following the Neural Simulated Annealing framework \citep{correia_neural_2023}, the SA component orchestrates the global exploration of the solution space through its acceptance criterion and cooling schedule, while the neural network replaces the single blind component of SA --- the uniform move proposal --- with a learned, state-dependent proposal distribution. This design contrasts with ``heavyweight'' improvement architectures such as the Dual-Aspect Collaborative Transformer \citep{ma_learning_2021}, which replace the heuristic logic entirely with a deep encoder: our policy remains deliberately small, so that the guided search retains a per-step cost close to that of classical SA and can be batched over thousands of instances on a single GPU.
+% 1. Overview of LG-SA
+% hybrid SA + RL
+% contribution of this paper
 
-\textit{Simulated Annealing} \citep{kirkpatrick_optimization_1983} iteratively explores the neighborhood of a current solution. Given a solution $s$, SA samples a neighboring solution $s' \in \mathcal{N}(s)$ and accepts it according to the \textit{Metropolis criterion}: improving moves are always accepted, while worsening moves are accepted with probability $\exp(-\Delta C / T)$, where $\Delta C = C(s') - C(s)$ is the cost difference and $T$ the current temperature. The temperature decays from an initial value $T_0$ to a final value $T_{\mathrm{final}}$ over the search horizon according to a monotone cooling schedule, which regulates the transition from exploration to exploitation.
+% 2. Learning-guided search
+% SA
+% neighborhood
+% action
+% acceptance
 
-Neighboring solutions are produced by a \textit{neighborhood operator} $H: \mathcal{S} \times \mathcal{A} \to \mathcal{S}$ that maps a solution $s$ and an action $a \in \mathcal{A}(s)$ to the neighbor $s' = H(s, a)$, so that
+% 3. State representation
+% node features
+
+% 4. Policy
+% action = node pair
+% two-stage factorization
+% feasibility
+% neighborhood operators
+
+% 5. Reinforcement learning formulation
+% MDP
+% actor
+% critic
+% reward
+% PPO
+
+% 5. Training methodology
+% initialization
+% curriculum learning
+% implementation details
+
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
+We introduce an improved version of the \emph{Learning-Guided Simulated Annealing (LG-SA)} algorithm \citep{AndrettiEtAl26,correia_neural_2023}, a hybrid framework combining Simulated Annealing (SA) with a lightweight neural policy trained with PPO. Our model is tailored to the CVRP by means of a dedicated state representation, an efficient two-stage policy, and an optimized RL training procedure. The resulting algorithm preserves the computational efficiency of classical simulated annealing while significantly improving search effectiveness.
+
+\paragraph{Overview.}
+LG-SA starts from an initial feasible solution $s_0 \in \mathcal{F}$ and follows the standard simulated annealing search procedure. At iteration $t$, the current solution $s_t$ is encoded into a node-centric representation $\bar s_t$ (described next). Then, an action $a_t$, which is a pair of nodes $(i,j)$, is sampled from the learned policy $\pi_\theta$
 $$
-\mathcal{N}(s) = \left\{ H(s, a) : a \in \mathcal{A}(s) \right\}.
+a_t = (i,j) \sim \pi_\theta(\cdot\mid \bar s_t)
 $$
-In our setting, an action designates a pair of nodes $a = (i, j)$, and $H$ applies a standard pairwise local search move to them (e.g., relocating node $i$ next to node $j$). The operator is a modular component of the framework; the candidate operators and their comparison are presented in the experimental section.
+and passed to a neighborhood operator $H$, which transforms the current solution $s_t$ into the candidate solution
+$$
+s_t' = H(s_t, a_t) \,.
+$$
+This solution is accepted as the next solution $s_{t+1}$ according to the classical Metropolis criterion. Consequently, LG-SA learns only the proposal distribution $\pi_\theta$, while the neighborhood operator, Metropolis acceptance criterion, and cooling schedule remain those of standard SA. The overall search procedure is summarized in Algorithm~\ref{alg:lgsa}.
 
-Whereas classical SA draws $a$ uniformly over $\mathcal{A}(s)$, LG-SA samples it from a policy $\pi_\theta$ conditioned on the current solution:
-\begin{equation*}
-a \sim \pi_\theta(\cdot \mid s) \quad \text{ and } \quad s' = H(s, a) \in \mathcal{N}(s).
-\end{equation*}
-Everything else --- the operator, the Metropolis acceptance, the cooling schedule --- is kept from classical SA. The overall procedure is summarized in Algorithm~\ref{alg:lgsa} and illustrated in Figure~\ref{fig:pipeline}.
 
-\begin{figure*}[t]
-\centering
-\begin{tikzpicture}[>=Stealth, thick]
-  \node[bxC=2.0cm] (s)    at (0,0)    {\textbf{Solution}\\$s_t$};
-  \node[bxL=2.0cm] (feat) at (2.9,0)  {\textbf{Node features}\\$\{\mathbf{x}_i\}$};
-  \node[bxL=2.0cm] (pi)   at (5.8,0)  {\textbf{Policy} $\pi_\theta$\\{\footnotesize (learned)}};
-  \node[bxC=2.0cm] (H)    at (9.3,0)  {\textbf{Operator} $H$\\$s' = H(s_t, a_t)$};
-  \node[bxC=2.0cm] (M)    at (12.4,0) {\textbf{Metropolis}\\{\footnotesize accept / reject}};
-  \node[bxC=2.0cm] (sn)   at (15.3,0) {\textbf{Next state}\\$s_{t+1}$};
-
-  \draw[arr] (s)    -- (feat);
-  \draw[arr] (feat) -- (pi);
-  \draw[arr] (pi)   -- node[midway, above, font=\small] {$a_t = (i,j)$} (H);
-  \draw[arr] (H)    -- (M);
-  \draw[arr] (M)    -- node[midway, above, font=\footnotesize] {update $T$} (sn);
-  \draw[arr, dashed] (sn.south) -- ++(0,-0.75) -| (s.south);
-
-  \node[font=\footnotesize, anchor=west] at (5.2,-1.35)
-    {\tikz{\fill[figorange!15, draw=figorange!80!black, line width=0.6pt] (0,0) rectangle (0.28,0.28);}~learned
-     \hspace{1.2em}
-     \tikz{\fill[gray!10, draw=gray!70, line width=0.6pt] (0,0) rectangle (0.28,0.28);}~classical SA};
-\end{tikzpicture}
-\caption{The LG-SA loop. Classical SA components (gray) are kept unchanged: the operator $H$, the Metropolis acceptance, and the cooling schedule. The only modified block is the move proposal (orange): the current solution is encoded into per-node feature vectors and a learned policy samples the node pair $a_t = (i,j)$, replacing the uniform sampling of classical SA.}
-\label{fig:pipeline}
-\end{figure*}
-
-\begin{algorithm}[tb]
-\caption{Learning-Guided Simulated Annealing}
+\begin{algorithm}[h!]
+\caption{LG-SA}
 \label{alg:lgsa}
-\textbf{Input}: instance, initial solution $s$, policy $\pi_\theta$, operator $H$\\
-\textbf{Output}: best solution found $s^*$
+\footnotesize
 \begin{algorithmic}[1]
-\STATE Initialize $s^* \gets s$ and temperature $T \gets T_0$
-\WHILE{termination criterion not met}
-\STATE Encode $s$ into per-node feature vectors
-\STATE Sample action $a \sim \pi_\theta(\cdot \mid s)$ \hfill (guided proposal)
-\STATE Generate candidate $s' \gets H(s, a)$
-\STATE $s \gets s'$ with probability $\min\!\left(1, e^{-\Delta C / T}\right)$ \hfill (Metropolis)
-\STATE Update $s^*$ if $C(s) < C(s^*)$; cool $T$
-\ENDWHILE
-\STATE \textbf{return} $s^*$
+\STATE Initialize solution $s_0$ and temperature $T_0$
+\FOR{$t = 0,1,\ldots$ until the stopping criterion is met}
+    \STATE Encode current solution $s_t$ as $\bar s_t$
+    \STATE Sample action $a_t \sim \pi_\theta(\cdot\mid \bar s_t)$
+    \STATE Generate candidate solution $s_t' \gets H(s_t, a_t)$
+    \STATE Accept $s_t'$ as $s_{t+1}$ according to the Metropolis criterion
+    \STATE Update the temperature
+\ENDFOR
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{The Guided Search as a Markov Decision Process}
 
-To learn the proposal distribution with RL, we frame the SA loop as a Markov Decision Process. At step $t$, the \textit{state} $s_t$ is the current feasible solution together with the search meta-information (current temperature and remaining budget), encoded as a set of per-node feature vectors described below. The \textit{action} $a_t = (i, j)$ is the node pair handed to the operator $H$. The \textit{transition} is the composition of the operator and the stochastic Metropolis acceptance: the next state is $H(s_t, a_t)$ if the move is accepted and $s_t$ otherwise, so the environment dynamics include the acceptance randomness of SA.
+\paragraph{Solution encoding.}
+A solution $s_t$ consists of an ordered sequence of customer nodes separated by depot visits. At each iteration $t$, LG-SA computes a node-centric representation 
+$\bar{s}_t = \{ \mathbf{x}_k \}_{k \in \mathcal C}$ of $s_t$, 
+where each $\mathbf{x}_k$ is a feature vector that encodes both static and dynamic information associated with customer $i$ in the current solution and search state. The encoded representation $\bar{s}_t$ constitutes the input to the neural policy $\pi_\theta$.
 
-The \textit{reward} is derived from the evolution of the solution cost along the search: a move that is accepted and improves the solution receives a positive reward proportional to the (normalized) cost reduction, a rejected move yields no improvement signal, and proposals leading to infeasible neighbors can be penalized. Reward variants that instead emphasize improvements of the best solution found so far, or the final solution quality at the end of the horizon, fit the same framework; the precise shaping is a design choice studied experimentally. The agent thus maximizes the expected cumulative discounted reward over the SA horizon, which aligns the learned proposal with the overall goal of driving the annealing process toward low-cost solutions rather than with any single greedy step.
+Our feature representation combines static geometric information, dynamic descriptors of the node's position within the current solution (e.g., predecessor and successor, local detour cost, and distance to the route centroid), route capacity statistics, and search meta-features such as the current temperature and remaining search budget. Unlike conventional geometric encodings, it also includes quality-related signals that explicitly characterize the local quality of the current solution around each node. Importantly, the feature dimensionality is independent of the instance size, making the representation scalable to instances with arbitrary numbers of customers. The complete feature definitions are provided in Appendix~\ref{app:features}.
 
-\subsection{Node-Centric State Representation}
 
-To be applicable to any problem size $N$ and to remain \textit{scale-invariant}, the state is encoded in a \textit{node-centric} fashion: each node $i$ carries its own local feature vector $\mathbf{x}_i$, and no fixed-size global descriptor is used. The features fall into four groups:
-\begin{itemize}
-    \item \textit{Static instance features:} node coordinates, polar coordinates relative to the depot, a depot indicator, and the normalized demand $q_i / Q$;
-    \item \textit{Solution topology and local geometry:} the coordinates of the node's current predecessor and successor in its route, together with local quality signals such as the detour cost incurred by the node at its current position, its distance to the route centroid, and local density statistics of the instance;
-    \item \textit{Capacity status:} the load ratio and remaining slack of the node's current route, and the node's own contribution to that load;
-    \item \textit{Search meta-features:} the current (normalized) SA temperature and the fraction of the search budget remaining, which let the policy adapt its behavior to the phase of the annealing schedule.
-\end{itemize}
-All features are local to a node and standardized, so the same trained model can be deployed on instances of arbitrary size without retraining. The complete list of features, with their formal definitions, is given in the appendix; their individual contribution is analyzed in the experimental section.
+\paragraph{Two-stage policy.}
+For every solution representation $\bar{s}_t = \{\mathbf{x}_k\}_{k\in\mathcal C}$, the learned policy defines a distribution over node pairs, from which an action $a_t = (i,j)$ is sampled:
+$$
+a_t = (i,j) \sim \pi_\theta(\cdot \mid \bar{s}_t) \,.
+$$
+Directly parameterizing this joint distribution over all $\mathcal{O}(N^2)$ node pairs is computationally expensive and unnecessary. We therefore factorize the policy as
+$$
+\pi_\theta \big( a_t=(i,j)\mid\bar{s}_t \big)
+=
+\pi_\theta^{(1)}(i\mid\bar{s}_t)
+\cdot
+\pi_\theta^{(2)}(j\mid i,\bar{s}_t) \,,
+$$
+where the two conditional distributions are parameterized by lightweight neural networks. The first network $f_\theta$ receives all node features $\{\mathbf{x}_k\}_{k\in\mathcal C}$ in parallel, computes a score for each node independently, and samples the first node $i$. Conditioned on this selection, the second network $g_\theta$ receives the pair representations $\{[\mathbf{x}_i,\mathbf{x}_k]\}_{k\in\mathcal C}$ in parallel also, computes a score for each candidate partner, and samples the second node $j$. The neural networks $f_\theta$ and $g_\theta$ are illustrated in Figure~\ref{fig:twostage} (Appendix~\ref{app:policy}).
 
-\subsection{Two-Stage Conditional Policy}
-\label{sec:policy}
+Hence, each action sampling step requires only $\mathcal{O}(N)$ pair evaluations instead of $\mathcal{O}(N^2)$. All computations are expressed as batched tensor operations, enabling efficient parallel execution on a GPU.
 
-\begin{figure*}[t]
+
+\paragraph{Neighborhood operator.}
+The action $a_t=(i,j)$ sampled from $\pi_\theta(\cdot\mid\bar{s}_t)$ is interpreted by a neighborhood operator $H$, which transforms the current solution $s_t$ into the candidate solution
+$$
+s_t' = H(s_t,a_t)
+$$
+by applying the corresponding local-search move. 
+Here, we consider the three following standard pairwise operators: (i) \textit{Swap}, (ii) \textit{Insertion}, and (iii) \textit{2-opt/2-opt}, illustrated in Figure~\ref{fig:operators} (see Appendix~\ref{app:operators}). The neighborhood operator is fixed for a given model. Consequently, the policy learns a proposal distribution specialized for the selected operator.
+
+Under capacity constraints, many actions can generate infeasible solutions, i.e., $H(s_t,a_t) \notin \mathcal{F}$. We investigate three strategies to preserve feasibility: (i) \textit{proactive filtering}, which restricts the policy to feasible actions before sampling; (ii) \textit{reactive rejection}, which discards infeasible moves after sampling; and (iii) \textit{indirect representation} based on unconstrained permutations decoded into feasible routes using a greedy split procedure. Full details are given in Appendix~\ref{app:feasibility}. The full LG-SA iteration loop is summarized in Figure~\ref{fig:lgsa-loop}.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[baseline=(eq.base)]
+\node (eq) {$
+s_t
+\;\xrightarrow{\text{encode}}\;
+\bar s_t
+\;\xrightarrow{\pi_\theta(\cdot \mid \bar s_t)}\;
+a_t=(i,j)
+\;\xrightarrow{H}\;
+s_t'
+\;\xrightarrow{\text{Metropolis}}\;
+s_{t+1}
+$};
+
+\coordinate (L) at ([xshift=0.8em,yshift=-3mm]eq.west);
+\coordinate (R) at ([xshift=-0.8em,yshift=-3mm]eq.east);
+
+\draw[->,>=Stealth,line width=0.5pt]
+(R) -- ++(0,-5mm)
+    -- ([yshift=-5mm]L)
+    -- (L);
+
+\end{tikzpicture}
+\caption{The LG-SA iteration loop. The current solution $s_t$ is encoded into a node-centric representation $\bar s_t$, from which the learned policy $\pi_\theta(\cdot \mid \bar s_t)$ samples a node pair $a_t = (i, j)$. The neighborhood operator $H$ generates a candidate solution $H(s_t, a_t)$ which is either accepted or rejected according to the Metropolis criterion.}
+\label{fig:lgsa-loop}
+\end{figure}
+
+
+\paragraph{Reinforcement learning.}
+The LG-SA search process is formulated as a Markov Decision Process (MDP). The encoded solution $\bar{s}_t$ constitutes the state, the sampled node pair $a_t=(i,j)$ the action, and the transition combines the neighborhood operator with the stochastic Metropolis acceptance criterion. The reward is derived from the normalized improvement in solution quality, encouraging proposals that improve the search trajectory rather than individual moves.
+
+
+The policy is trained using Proximal Policy Optimization (PPO) \citep{schulman_proximal_2017}. The \textit{actor} is the two-stage policy described above, while the \textit{critic} is a separate permutation-invariant network operating on the encoded state $\bar s_t$. Compared with standard PPO, our implementation incorporates an adaptive KL-regularized clipped objective, KL-driven learning-rate adaptation, and a regularized critic to improve training stability over the long stochastic SA horizon. Further details are given in Appendix~\ref{app:ppo}.
+
+
+
+
+
+
+\paragraph{Training methodology.}
+Beyond the PPO optimization itself, we introduce a dedicated training methodology combining diverse \textit{initialization strategies} with \textit{curriculum learning}. 
+
+Training instances are initialized using diverse constructive heuristics, including \textit{random assignment}, \textit{nearest neighbor}, \textit{sweep}, \textit{Clarke--Wright savings} (greedy route merging based on distance savings), and \textit{isolate} (single-customer routes), exposing the policy to qualitatively different regions of the solution space. 
+
+We employ curriculum learning to progressively improve the initial solutions encountered during training. Before each collection phase, every instance is first improved by the current policy for a limited number of LG-SA iterations, and this warm-up depth gradually increases throughout training. Consequently, early episodes focus on repairing poor initial solutions, whereas later episodes increasingly start from refined solutions and learn to perform the fine-grained improvements required near local optima. The construction heuristics are detailed in Appendix~\ref{app:init} and the curriculum mechanisms in Appendix~\ref{app:curriculum}.
+
+
+
+
+% ============================================================================
+\section{Experimental Results}
+\label{sec:experiments}
+% ============================================================================
+
+\subsection{Experimental Setup}
+
+\paragraph{Benchmark.}
+All experiments reported in this section use the uniform benchmark distribution of \citet{nazari_reinforcement_2018}: depot and customer coordinates drawn uniformly in $[0,1]^2$, demands drawn uniformly in $\{1, \dots, 9\}$, and a size-dependent vehicle capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$). For each size we pre-generate a fixed test set of $10{,}000$ instances that is reused by every configuration, so that all comparisons are paired at the instance level. Unless stated otherwise, results are reported at $N = 100$.
+% TODO: extend the evaluation to CVRPLIB Set X (Uchoa) and Queiroga Set XML
+% once the Nazari protocol is complete (eval/run.py --dataset X / XML).
+
+\paragraph{Evaluation protocol.}
+A trained model is evaluated by running the LG-SA loop over the full test set in parallel on a single GPU, starting from random feasible solutions and running $10{,}000$ SA steps per instance with half-precision inference. We report the mean final routing cost over the $10{,}000$ instances and the wall-clock time of the whole batch. Classical (blind) SA --- uniform proposals with the same operator, step budget, and cooling schedule --- is evaluated under the identical protocol, as is an OR-Tools baseline with a fixed per-instance time limit \citep{ortools_routing}.
+% TODO: pin the OR-Tools time limit; add literature numbers for the neural
+% baselines (NLNS, DACT / LIH, CDCP, ...) in the headline comparison.
+
+
+\paragraph{Statistical protocol.}
+Every configuration is trained under $3$ random seeds ($5$ for confirmations and headline runs). The objective is the mean final cost over the test set, averaged over seeds and denoted $\bar c$. Comparisons between configurations are \emph{seed-paired}: competing configurations are trained with the same random seeds, and we report the mean and standard deviation of the resulting per-seed differences $\Delta = \bar c(\text{variant}) - \bar c(\text{reference})$, together with their sign consistency. Significance is assessed relative to a per-batch \emph{noise floor} $\sigma_{\mathrm{floor}}$, estimated from the seed-to-seed variability of the stable configurations. Effects satisfying $|\Delta| > \sigma_{\mathrm{floor}}$ are considered significant; otherwise, they are reported as ties.
+
+\paragraph{Sequential validation protocol.}
+The design space of LG-SA is an ordered tuple of axes $\mathcal{A} = (a_1, \dots, a_K)$ --- operator and feasibility strategy, node features, architecture, reward, annealing parameters, acceptance, initialization, optimization budget, curriculum --- each axis $a_k$ ranging over a finite candidate set $\mathcal{C}_k$. This space is far too large for an exhaustive grid search, so we validate it by coordinate descent: the axes are swept one at a time in order of expected leverage, and the winner of each sweep is frozen into the configuration before the next axis is examined. Hence, later sweeps inherit all earlier decisions. 
+The complete winning configuration is retrained from scratch with $5$ seeds as a final confirmation.
+% TODO: hardware paragraph (CPU/GPU model, training wall-clock, epochs to
+% convergence) + training convergence figure.
+
+\subsection{Design Choices}
+\label{sec:design}
+
+Table~\ref{tab:summary} summarizes the outcome of the coordinate descent: fifteen design axes and $78$ candidate settings, validated under the above protocol. The following paragraphs state what was adopted on each axis and why. The per-axis candidate definitions, full grids, and per-seed diagnostics are collected in Appendices~\ref{app:v1}--\ref{app:xknobs}.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}llrlc@{}}
+\toprule
+\textbf{Axis} & \textbf{Adopted setting} & \textbf{\#} & \textbf{Effect} & \textbf{App.} \\
+\midrule
+Operator $\times$ feasibility & \textbf{insertion $+$ masking} & 9 & $+0.29^{**}$ & \ref{app:v1} \\
+Feature set & \textbf{all 13 groups} & 6 & $+0.34^{**}$ & \ref{app:v2} \\
+Pair descriptors & \textbf{none} & 4 & $+0.14^{*}$ & \ref{app:v2} \\
+Critic & \textbf{multi-statistic} & 2 & $+0.06^{**}$ & \ref{app:v3} \\
+Actor capacity & \textbf{\boldmath$32 \times 1$} & 6 & tie & \ref{app:v3} \\
+Actor structure & \textbf{indep.\ scorers} & 6 & $+0.51^{*}$ & \ref{app:v3} \\
+Distribution shaping & \textbf{\boldmath logit clip $C{=}10$} & 4 & $+0.17^{**}$ & \ref{app:v3} \\
+Reward & \textbf{immediate} & 9 & tie & \ref{app:v5678} \\
+Learning rates & \textbf{\boldmath$3{\times}10^{-4}$ / $10^{-3}$} & 9 & $+0.05^{*}$ & \ref{app:xknobs} \\
+Entropy coefficient & \textbf{\boldmath$0.01$} & 3 & $+0.13^{**}$ & \ref{app:xknobs} \\
+Rollout length & \textbf{\boldmath$200$} & 3 & tie & \ref{app:xknobs} \\
+Cooling shape & \textbf{geometric} & 2 & tie & \ref{app:v5678} \\
+Temperature range & \textbf{\boldmath$T_0{=}1$, $T_{\mathrm{final}}{=}0.01$} & 6 & $+0.17^{**}$ & \ref{app:v5678} \\
+Metropolis & \textbf{on (train $+$ test)} & 4 & $+0.12^{**}$ & \ref{app:v5678} \\
+Training construction & \textbf{random} & 5 & $+0.22^{**}$ & \ref{app:v5678} \\
+% TODO(curriculum): add row when Q0--Q6 results land:
+% Curriculum & \textbf{?} & ? & $?$ & \ref{app:curriculum} \\
+\midrule
+Combined confirmation & rates, rollout, $T_{\mathrm{final}}$ & --- & $+0.22^{**}$ & \ref{app:xknobs} \\
+\bottomrule
+\end{tabular}
+\caption{Master summary of the design validation, one row per design axis. \emph{Effect}: seed-paired margin (routing-cost units, two decimals) in favor of the adopted setting, measured against the previously adopted configuration. ``Tie'' denotes $|\Delta| \leq \sigma_{\mathrm{floor}}$, $^{*}$ denotes $|\Delta| > \sigma_{\mathrm{floor}}$, and $^{**}$ denotes $|\Delta| > 2\sigma_{\mathrm{floor}}$ (per-batch noise floors are reported in the appendix). The \# column reports the number of candidate settings evaluated on the corresponding axis (diagnostic runs excluded).}
+\label{tab:summary}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Operator} & \textbf{Masking} & \textbf{Indirect} & \textbf{Rejection} \\
+\midrule
+Insertion & $\mathbf{16.68 \pm 0.03}$ & $16.97 \pm 0.04$ & $26.36 \pm 0.71$ \\
+Swap      & $19.50 \pm 1.54$          & $22.82 \pm 1.36$ & $35.75 \pm 3.04$ \\
+2-opt(*)  & $18.93 \pm 0.09$          & $21.29 \pm 0.39$ & $25.84 \pm 0.42$ \\
+\bottomrule
+\end{tabular}
+\caption{Operator $\times$ feasibility study: mean final cost $\pm$ seed std at $N=100$ ($10^4$ SA steps, $10{,}000$ instances, $3$ seeds; all runs start from mean cost $57.87$). Insertion with proactive masking wins and is also the most stable cell. Definitions, main effects, compute, and per-seed diagnostics in Appendix~\ref{app:v1}.}
+\label{tab:v1grid}
+\end{table}
+
+
+\paragraph{Search operators.}
+The first sweep jointly fixes the operator $H$ (swap, insertion, 2-opt/2-opt*) and the constraint-handling strategy (proactive masking, reactive rejection, or indirect representation). Insertion with proactive masking emerges as the best-performing configuration (Table~\ref{tab:v1grid}), achieving both the lowest routing cost and the lowest seed variance. Insertion naturally matches the two-stage policy's node-pair formulation by relocating a selected node relative to another, whereas reactive rejection consistently performs worst, as discarded proposals waste both search budget and learning signal. The factorial main effects confirm that the winning cell is not an interaction artefact (Table~\ref{tab:v1main}, Appendix~\ref{app:v1}).
+
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Set} & \textbf{Groups} & \textbf{Cost} & \textbf{Time (s)} \\
+\midrule
+full set (adopted) & 13 & $\mathbf{16.683}$ & 173 \\
+no load ratio & 12 & 16.648 & 173 \\
+set7          & 7  & 17.020 & 129 \\
+nodepct6      & 6  & 17.088 & 121 \\
+centroid6     & 6  & 17.100 & 122 \\
+core5         & 5  & 17.162 & 115 \\
+\bottomrule
+\end{tabular}
+\caption{Best-set validation at $5$ seeds, seed-paired against the full set ($\sigma_{\mathrm{floor}} \approx 0.057$). \emph{core5} = static, meta, topology, neighbor ranks, detour; \emph{set7} adds centroid and load share. Every pruned set is significantly worse; the only quality-neutral trim is dropping the load ratio alone. Paired deltas and per-seed views in Appendix~\ref{app:v2}.}
+\label{tab:bestset}
+\end{table}
+
+
+\paragraph{Node representation.}
+The feature ablation study shows that individual group importance does not fully reflect joint contribution. Leave-one-out and isolation tests (Table~\ref{tab:looiso}, Appendix~\ref{app:v2}) identify only $6$ of the $13$ feature groups as individually useful, but training with only these groups degrades performance (Table~\ref{tab:bestset}). Removing multiple groups has a cumulative effect, showing that features such as density and capacity statistics provide complementary information (thematic ablation, Table~\ref{tab:thematic}). The only quality-neutral simplification is removing the `route load ratio' (tie: $-0.035 \pm 0.106$); other feature removals degrade solution quality while reducing computational cost (e.g., set7 loses $2\%$ quality for a $25\%$ speedup). Finally, the conditional pair descriptors used in the second policy stage (defined in Appendix~\ref{app:features}) degrade performance ($+0.14 \pm 0.11$ and $+0.18 \pm 0.07$, Figure~\ref{fig:v2cond}) and add computational overhead. The final model therefore uses the complete $13$-group node representation without pair descriptors.
+
+
+\paragraph{Policy and learning.}
+We first analyze the architecture of the actor $\pi_\theta$, studying three possible extensions of the original two-stage design: increasing the depth and width of the scoring networks $f_\theta$ and $g_\theta$, adding a pooled global instance context to their inputs, and replacing the independent scorers with a shared encoder. None of these modifications improves over the original factorized actor (Appendix~\ref{app:v3}): the width $\times$ depth capacity grid never clears the noise floor while wall-clock rises by up to $38\%$ (Table~\ref{tab:v3arch}), the signature of a capacity plateau (Figure~\ref{fig:v3archpareto}); the pooled global context degrades every seed at $+48\%$ compute; and the shared encoder loses $\approx 3$ routing units in every cell of its grid (Table~\ref{tab:v3shared}).
+
+We also study two stabilization mechanisms: a logit clipping in the actor (Table~\ref{tab:v3stab}) and a richer critic architecture (Table~\ref{tab:v3critic}), both in Appendix~\ref{app:v3}. Logit clipping at $C = 10$ provides a larger and more consistent gain, preventing the proposal distribution from collapsing while leaving the inference cost unchanged. The multi-statistic critic improves performance at no inference cost, since the critic is discarded after training.  At $N=100$, these results suggest that improving value estimation and maintaining proposal diversity are more important than further increasing actor capacity.
+
+We analyze the reward design by comparing several shaping strategies, ranging from dense per-step improvement rewards to sparse alternatives based on final outcomes or penalties (Table~\ref{tab:reward}, Appendix~\ref{app:v5678}). The results show that the precise formulation of the dense signal has limited impact: the six variants based on per-step improvements perform within a narrow band of $0.07$. In contrast, removing intermediate credit severely harms learning: the terminal reward degrades performance by $2.95$, while step-penalty variants lose between $0.7$ and $1.1$, with all sparse alternatives exhibiting unstable training. These results confirm that PPO benefits primarily from a dense improvement signal, which provides informative feedback throughout the long-horizon annealing process.
+
+We finally study the main PPO optimization parameters: actor and critic learning rates, entropy regularization, and rollout length (Tables~\ref{tab:xlr} and~\ref{tab:xknobs}, Appendix~\ref{app:xknobs}). The actor learning rate is the most influential axis, with a main effect of approximately $0.05$ against a noise floor of $0.031$. The entropy coefficient exhibits a clear U-shaped behavior, with a best setting at $0.01$. Rollout length has an asymmetric effect: shortening it ($50$) significantly degrades performance, whereas doubling ($200$) provides only a marginal and seed-dependent improvement, which is retained in the final configuration. 
+
+Finally, the joint retraining of all selected modifications yields a significant additive gain of $-0.223 \pm 0.016$ over the pre-sweep configuration across all seeds; the per-seed record, including a reproducible divergence that fixed the final critic learning rate, is given in Table~\ref{tab:xcombined} (Appendix~\ref{app:xknobs}).
+
+
+\paragraph{Annealing search.}
+We first study the cooling schedule, comparing its shape (geometric against a piecewise-constant step schedule) and its temperature range over a grid of endpoints (Table~\ref{tab:temprange}, Appendix~\ref{app:v5678}). The shape has no measurable effect, whereas the range gives the largest single-parameter gain of the whole validation: every configuration with a low final temperature ($T_{\mathrm{final}} = 0.01$) outperforms every configuration with a high one ($T_{\mathrm{final}} = 0.1$), at every starting temperature, while the starting temperature itself is inert. The low-temperature phase is precisely where the learned proposal performs its fine-grained refinement, and a high final temperature cuts this phase off early.
+
+We then study the role of the Metropolis acceptance, enabling or disabling it at training and at test time (Table~\ref{tab:metro}, Appendix~\ref{app:v5678}). Removing the acceptance at inference significantly degrades performance, regardless of how the actor was trained, while the training-time setting has no measurable impact and is kept on. For the same reason, the solver keeps sampling $a_t \sim \pi_\theta(\cdot \mid s_t)$ at inference rather than taking the greedy argmax, since a near-deterministic proposal would collapse the diversity the acceptance step relies on.
+% TODO: sampling-vs-greedy comparison at inference.
+
+We finally study the initial solution, comparing five construction heuristics (defined in Appendix~\ref{app:init}) at training and at inference (train $\times$ test cross in Table~\ref{tab:v8grid}, Appendix~\ref{app:v5678}). At inference, the choice is irrelevant: $10^4$ annealing steps wash out even a sixfold spread in initial cost. At training time, however, it is decisive: actors trained from random constructions dominate those trained from structured heuristics at every inference, and even mixing constructions during training degrades performance. Starting from the worst solutions exposes the policy to the widest state distribution, which is what makes it transfer across search regimes.
+
+\paragraph{Curriculum.}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[>=Stealth, x=3.9cm, y=2.1cm]
+  % axes
+  \draw[->, thick] (0,0) -- (1.42,0) node[below left, font=\footnotesize] {epoch};
+  \draw[->, thick] (0,0) -- (0,1.2) node[right, font=\footnotesize] {$t_{\mathrm{init}}$};
+  % guides
+  \draw[dashed, gray] (0,1) node[left, font=\footnotesize, black] {$\xi_{\mathrm{CL}}$} -- (1.3,1);
+  \draw[dashed, gray] (1,0) node[below, font=\footnotesize, black] {$E$} -- (1,1);
+  % linear ramp
+  \draw[figorange, very thick] (0,0) -- (1,1) -- (1.3,1);
+  % sigmoid ramp
+  \draw[figblue, very thick] plot[smooth] coordinates
+    {(0,0) (0.1,0.02) (0.2,0.06) (0.3,0.15) (0.4,0.3) (0.5,0.5)
+     (0.6,0.7) (0.7,0.85) (0.8,0.94) (0.9,0.98) (1,1)} -- (1.3,1);
+  % legend
+  \node[font=\footnotesize, figblue]   at (0.78,0.62) {sigmoid};
+  \node[font=\footnotesize, figorange] at (0.32,0.45) {linear};
+\end{tikzpicture}
+\caption{Curriculum ramp: the warm-up depth $t_{\mathrm{init}}$ grows from $0$ to the warm-up strength $\xi_{\mathrm{CL}}$ over $E$ training epochs, following a linear or sigmoid schedule, and stays saturated afterwards.}
+\label{fig:ramp}
+\end{figure}
+
+Training episodes are far shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation with out-of-distribution evaluations.
+% TODO(curriculum): Q protocol results — Q0 5-seed no-CL baseline (= floor),
+% Q1 warmup ramp, Q2 random depth, Q3 persistent chains, Q4 budget-matched
+% coverage ablation, Q5 5-seed confirmation + OOD evals, Q6 PPO-epochs
+% interaction. State the adopted mechanism + seed-paired effect vs the Q0
+% floor here, add the curriculum row to Table~\ref{tab:summary}, and write
+% "Appendix: Curriculum Study, Full Results" (insert after
+% Appendix~\ref{app:v5678}, cf. PAPER_GUIDE §10).
+
+\subsection{Final Model and Comparison with Baselines}
+\label{sec:baselines}
+
+\paragraph{Final model.}
+All component winners of Table~\ref{tab:summary}, the best curriculum, and the tuned optimization budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. We compare it against blind SA under matched conditions (same operator, budget, and schedule) and against the OR-Tools baseline, and we report the mean cost as a function of the SA step budget from $10^2$ to $10^6$ steps to characterize the anytime behavior of the guided search.
+% TODO: headline table at N=100 (cost / time at 10^4 steps; long-budget 10^6
+% row; x8 instance-augmentation row); guided-vs-blind cost-vs-steps curves
+% (log-x); literature rows for neural baselines.
+%   sweep: V10_final (5 seeds); evals: headline, --augment 8, steps
+%   {100..1e6}, dims {10,20,50,100}
+
+\paragraph{Generalization and scalability.}
+Finally, we probe how far the node-centric representation carries across problem scales: models trained at each size are cross-tested at every other size, and the final model is evaluated on instances well beyond its training size with the same checkpoint, reporting both solution quality and runtime scaling.
+% TODO: cross-dimension table (train dim x test dim, {50,100,500}); runtime
+% scaling over N; discussion of capacity conventions per dim (Q=40/50).
+%   sweep: V12_dim50 / V12_dim100 / V12_dim500 (cross-test loop)
+% TODO (later, needs non-Nazari test data): cross-distribution table --
+% train on Nazari vs Uchoa/Queiroga, test on both (V11_dist, --DATA uchoa).
+
+% ============================================================================
+\section{Conclusion}
+% ============================================================================
+% TODO: Conclusion and future work (LNS operators, GNN encoders, richer VRP
+% variants).
+
+% ============================================================================
+\bibliography{bib}
+
+\appendix
+
+\section*{Appendix Overview}
+
+The appendices mirror the organization of the main text. Appendix~\ref{app:model} expands the Model section component by component: the node feature definitions, the two-stage neural policy, the neighborhood operators, the feasibility strategies, the reinforcement-learning formulation with our PPO modifications, the constructive initialization heuristics, and the curriculum mechanisms. Appendices~\ref{app:v1}--\ref{app:xknobs} then carry the evidence behind the Design Choices subsection, one appendix per design axis in sweep order: operators and feasibility (\ref{app:v1}), node features (\ref{app:v2}), architecture (\ref{app:v3}), the search-loop components --- reward, annealing, acceptance, initialization --- (\ref{app:v5678}), and the optimization hyperparameters, including the per-seed record and mechanism of the combined-configuration divergence (\ref{app:xknobs}). Each full-results appendix collects the per-axis motivation and candidate definitions, the complete grids and secondary tables with paired deltas and per-batch noise floors, and the per-seed diagnostic plots behind the master summary (Table~\ref{tab:summary}) and the two headline tables, and opens with the mapping from the internal configuration names appearing in the plot legends to the paper terminology. Two conventions are shared throughout: every comparison is seed-paired (both arms are trained on the same seeds), and every delta plot shows the per-seed differences against a shaded band marking that batch's noise floor --- an effect is trusted only if it clears the band with a consistent sign across seeds.
+
+% ============================================================================
+\section{Model Details}
+\label{app:model}
+% ============================================================================
+
+This appendix expands the Model section of the main text, component by component and in the same order: the node feature representation (\ref{app:features}), the two-stage neural policy (\ref{app:policy}), the neighborhood operators (\ref{app:operators}), the feasibility strategies (\ref{app:feasibility}), the reinforcement-learning formulation and our PPO modifications (\ref{app:ppo}), the constructive initialization heuristics (\ref{app:init}), and the curriculum mechanisms (\ref{app:curriculum}).
+
+\subsection{Node Features}
+\label{app:features}
+
+This section defines every component of the node feature vector $\mathbf{x}_i$ used by the policy and the critic. For a given solution $s_t$, $\mathrm{prev}(i)$ and $\mathrm{succ}(i)$ denote the nodes immediately before and after $i$ in the current visiting order, $r(i)$ the route currently serving $i$, $Q_{r(i)}$ the total load of that route, and $d(\cdot, \cdot)$ the Euclidean distance. Figure~\ref{fig:features} illustrates the geometric quantities, and Table~\ref{tab:features} summarizes the groups and their dimensions. All features are normalized to comparable ranges, and each is computed locally at node $i$: the encoding contains no fixed-size global descriptor, which is what makes the representation applicable to any instance size.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[>=Stealth, thick, scale=1.05]
+  % depot
+  \node[rectangle, draw=figred!80!black, fill=figred!15, minimum size=0.42cm,
+        inner sep=0pt, font=\footnotesize\bfseries] (dep) at (0,0) {$0$};
+
+  % route nodes
+  \node[cnode] (a) at (0.9,1.5) {};
+  \node[cnode, label={[font=\footnotesize]left:$\mathrm{prev}(i)$}] (p) at (1.9,2.5) {};
+  \node[cnode, draw=figorange!85!black, fill=figorange!30, line width=1pt,
+        font=\footnotesize\bfseries] (i) at (3.4,3.0) {$i$};
+  \node[cnode, label={[font=\footnotesize]right:$\mathrm{succ}(i)$}] (sc) at (4.6,2.2) {};
+  \node[cnode] (b) at (4.3,0.9) {};
+
+  % route edges
+  \draw[gray, thick] (dep) -- (a) -- (p) -- (i) -- (sc) -- (b) -- (dep);
+
+  % detour (dashed shortcut)
+  \draw[dashed, figpurple!80!black] (p) -- (sc)
+    node[midway, below, font=\footnotesize, figpurple!80!black] {$\Delta_i$ (detour)};
+
+  % distance & angle to depot
+  \draw[dotted, thick, figblue] (dep) -- (i)
+    node[midway, above, sloped, font=\footnotesize, figblue] {$d_{i0}$};
+  \draw[figblue] (0.65,0) arc[start angle=0, end angle=41.5, radius=0.65]
+    node[font=\footnotesize, figblue] at (1.05,0.32) {$\theta_i$};
+  \draw[gray!60] (dep) -- (1.5,0);
+
+  % centroid
+  \node[star, star points=5, star point ratio=2.2, draw=figgreen!60!black,
+        fill=figgreen!25, inner sep=1.6pt] (cent) at (2.75,1.55) {};
+  \node[font=\footnotesize, figgreen!50!black, below=0.03cm of cent] {centroid of $r(i)$};
+  \draw[dotted, thick, figgreen!60!black] (i) -- (cent)
+    node[midway, right, font=\footnotesize] {$d_{i,\mathrm{cent}}$};
+\end{tikzpicture}
+\caption{Geometric features attached to a node $i$ (orange) within its current route. The detour $\Delta_i$ measures the extra length caused by visiting $i$ between its neighbors; $(\theta_i, d_{i0})$ locate $i$ in polar coordinates around the depot; $d_{i,\mathrm{cent}}$ measures how far $i$ lies from the center of gravity of its own route.}
+\label{fig:features}
+\end{figure}
+
+
+\paragraph{Static instance features (6).}
+The 2D coordinates $\mathbf{p}_i = (p_i^x, p_i^y) \in [0,1]^2$; a depot indicator $\mathbf{1}_{\{i = 0\}}$; the polar angle $\theta_i$ of the node around the depot; the distance to the depot $d_{i0}$, min--max normalized per instance; and the demand normalized by the vehicle capacity, $q_i / Q$. These features depend only on the instance, not on the current solution.
+
+\paragraph{Route topology (4).}
+The coordinates $\mathbf{p}_{\mathrm{prev}(i)}$ and $\mathbf{p}_{\mathrm{succ}(i)}$ of the node's current neighbors in the visiting order. They give the policy direct access to the local shape of the route around each node.
+
+\paragraph{Neighbor distance-ranks (2).}
+For each of $\mathrm{prev}(i)$ and $\mathrm{succ}(i)$, the rank of that neighbor in the list of all nodes sorted by distance from $i$, normalized to $[0,1]$ (the nearest node has rank $\approx 0$). A well-placed node is linked to low-rank neighbors; a high rank signals a locally poor connection, independently of the absolute scale of the instance.
+
+\paragraph{Relative demand (1).}
+The demand normalized by the largest demand in the instance, $q_i / \max_{j \in \mathcal{C}} q_j$, complementing $q_i / Q$ with a signal that is invariant to the capacity level.
+
+\paragraph{Spatial density (3).}
+The mean distance from $i$ to its $k$ nearest neighbors, evaluated at three scales: $k = 5$, $k = \lceil N/10 \rceil$, and $k = \lceil N/3 \rceil$. These static statistics distinguish nodes in dense clusters from isolated ones.
+
+\paragraph{Local solution quality (2).}
+The \emph{detour cost}
+$$
+\Delta_i = d(\mathrm{prev}(i), i) + d(i, \mathrm{succ}(i)) - d(\mathrm{prev}(i), \mathrm{succ}(i)),
+$$
+i.e., the extra length the tour pays for visiting $i$ at its current position (equivalently, the saving obtained by removing it); and the distance $d_{i,\mathrm{cent}}$ from $i$ to the centroid of the nodes of its route, which flags spatial outliers assigned to the wrong route.
+
+\paragraph{Capacity status (3).}
+The load ratio of the node's route, $L_{r(i)} = Q_{r(i)} / Q$; the remaining slack, $S_{r(i)} = (Q - Q_{r(i)}) / Q$; and the node's share of its route load, $\eta_i = q_i / Q_{r(i)}$. These dynamic signals indicate whether a route is nearly saturated and how much a given node contributes to that saturation.
+
+\paragraph{Search meta-features (2).}
+The current SA temperature, normalized to $[0,1]$ over the schedule range, and the fraction of the search budget remaining. They are identical across nodes of the same state and let the policy modulate its behavior along the annealing schedule (e.g., bolder restructuring at high temperature, fine repairs near the end).
+
+\paragraph{Conditional pair features (stage 2, optional).}
+In addition to the per-node vectors above, the second stage of the policy can receive descriptors of the candidate move itself, computed only for the selected first node $u$ and every candidate partner $v$: the exact insertion cost $d(v, u) + d(u, \mathrm{succ}(v)) - d(v, \mathrm{succ}(v))$ together with the net cost change of the full move (insertion cost minus the removal saving of $u$), and the normalized distance-ranks of the edges the move would create. Because they are evaluated for a single $u$, these descriptors preserve the $\mathcal{O}(N)$ per-step complexity. These optional descriptors are evaluated experimentally in Appendix~\ref{app:v2} and are not part of the final model.
+
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{l l c}
+\toprule
+\textbf{Group} & \textbf{Features} & \textbf{Dim} \\
+\midrule
+Static & $\mathbf{p}_i$, $\mathbf{1}_{\{i=0\}}$, $\theta_i$, $d_{i0}$, $q_i/Q$ & 6 \\
+Topology & $\mathbf{p}_{\mathrm{prev}(i)}$, $\mathbf{p}_{\mathrm{succ}(i)}$ & 4 \\
+Neighbor ranks & rank of $\mathrm{prev}(i)$, $\mathrm{succ}(i)$ & 2 \\
+Relative demand & $q_i / \max_j q_j$ & 1 \\
+Spatial density & $\mu_5$, $\mu_{N/10}$, $\mu_{N/3}$ & 3 \\
+Local quality & $\Delta_i$, $d_{i,\mathrm{cent}}$ & 2 \\
+Capacity status & $L_{r(i)}$, $S_{r(i)}$, $\eta_i$ & 3 \\
+Meta & temperature, remaining budget & 2 \\
+\midrule
+Total & & 23 \\
+\bottomrule
+\end{tabular}
+\caption{Summary of the node feature vector $\mathbf{x}_i$.}
+\label{tab:features}
+\end{table}
+
+
+\subsection{Two-Stage Neural Policy}
+\label{app:policy}
+
+The two-stage neural policy $\pi_\theta$, parametrized by the neural networks $f_\theta$ and $g_\theta$, is illustrated in Figure~\ref{fig:twostage}. Both networks are small multilayer perceptrons applied to every node (stage 1) or every candidate pair (stage 2) in parallel, as a single batched tensor operation: a linear input layer projecting to the embedding width, a stack of hidden layers of that width with LeakyReLU activations, and a bias-free linear output layer producing one scalar score per node. The adopted configuration uses an embedding width of $32$ with a single hidden layer; the capacity study of Appendix~\ref{app:v3} shows that larger networks bring no significant gain. The input of $f_\theta$ is the node feature vector $\mathbf{x}_k$ of Appendix~\ref{app:features}; the input of $g_\theta$ concatenates the feature vector of the selected node $i$ with that of each candidate partner, dropping the duplicated search meta-features, which are identical for all nodes of a given state. The output layers are initialized orthogonally with a small gain, so the initial proposal distribution is near-uniform and early training explores like blind SA rather than following an arbitrary initial policy. Following \citet{kool_attention_2019}, the scores of both stages are bounded by $C \tanh(\cdot)$ with $C = 10$ before the softmax, which prevents the proposal distribution from collapsing to a near-deterministic choice (validated in Appendix~\ref{app:v3}).
+
+
+\begin{figure*}[h!]
 \centering
 \begin{tikzpicture}[>=Stealth, thick]
 
@@ -323,330 +725,20 @@ All features are local to a node and standardized, so the same trained model can
 \label{fig:twostage}
 \end{figure*}
 
-The policy must define a distribution over the $\mathcal{O}(N^2)$ node pairs while remaining cheap enough to be evaluated at every SA step. We therefore factorize the joint selection as
-$$
-P(i, j \mid s) = P(i \mid s) \cdot P(j \mid i, s),
-$$
-and implement it with a lightweight two-stage architecture, illustrated in Figure~\ref{fig:twostage}. In the first stage, a small network $f_\theta$ maps each feature vector to a scalar score $z_i = f_\theta(\mathbf{x}_i)$, and the first node is sampled from the softmax distribution over these scores:
-$$
-i \sim P(\cdot \mid s) = \mathrm{softmax}\big( \{ z_i : i \in \mathcal{C} \} \big).
-$$
-In the second stage, the representation of the selected node $i$ is combined with that of every other node $j$, and a second network $g_\theta$ assigns a conditional score $z_{ij} = g_\theta(\mathbf{x}_i, \mathbf{x}_j)$ from which the partner is sampled:
-$$
-j \sim P(\cdot \mid i, s) = \mathrm{softmax}\big( \{ z_{ij} : j \in \mathcal{C} \} \big).
-$$
-Both stages are built from small multilayer perceptrons applied identically to every node, which makes the policy permutation-equivariant. The second stage can additionally be conditioned on cheap pairwise descriptors of the candidate move (e.g., the exact cost of the move joining $i$ and $j$), computed only for the selected $i$.
 
-This factorization also provides a natural hook for the capacity constraints: once $i$ is selected, the partners $j$ for which $H(s, (i,j))$ would be infeasible are masked out of the second-stage distribution, so every proposed neighbor is feasible at the price of $\mathcal{O}(N)$ feasibility checks per step. Alternative constraint-handling strategies are discussed and compared in the experimental section.
+\subsection{Neighborhood Operators}
+\label{app:operators}
 
-Since the conditional network is evaluated only for the single selected first node, each proposal costs $\mathcal{O}(N)$ --- as opposed to the $\mathcal{O}(N^2)$ cost of scoring all pairs jointly --- and the whole step is expressed as batched tensor operations, allowing thousands of instances to be advanced in parallel on one GPU.
-
-\subsection{Training with PPO}
-\label{sec:training}
-
-The policy is trained with \textit{Proximal Policy Optimization} (PPO) \citep{schulman_proximal_2017}, the standard on-policy actor-critic algorithm. Training alternates between a \textit{collection} phase, in which the current policy runs the full LG-SA loop of Algorithm~\ref{alg:lgsa} on a large batch of freshly generated instances in parallel and stores every transition $(s_t, a_t, r_t)$, and an \textit{update} phase, in which the stored episodes are replayed for several optimization epochs. Advantages are estimated with Generalized Advantage Estimation, and the actor maximizes the usual clipped surrogate objective with an entropy bonus; we refer to \citet{schulman_proximal_2017} for the standard formulation and only detail our departures from it.
-
-The critic $V_\phi$ is a separate permutation-invariant network: it encodes each node feature vector independently, pools the embeddings across nodes into a fixed-size summary, and maps this summary to a scalar value estimate. Keeping the actor and critic distinct prevents interference between the policy and value representations.
-
-Our implementation departs from standard PPO in three ways, all aimed at stabilizing training on the long and noisy SA horizon:
+We consider the following standard neighborhood operators:
 \begin{itemize}
-    \item \textit{Hybrid clipping--KL objective.} Rather than choosing between the clipped surrogate and the KL-penalized objective, we use both: an adaptive Kullback--Leibler penalty $\beta_{\text{KL}}\, D_{\text{KL}}(\pi_{\theta_{\text{old}}} \| \pi_\theta)$ is added to the clipped loss, and its coefficient is doubled or halved after each update epoch depending on whether the measured divergence leaves a band around a target value. This soft trust region allows many optimization epochs on each collected batch without catastrophic policy drift.
-    \item \textit{KL-coupled learning rate.} The same divergence signal modulates the actor's learning rate within fixed bounds --- gently decreased when the policy moves too fast, increased when it stalls --- so the effective step size tracks the trust region automatically.
-    \item \textit{Regularized critic.} The value loss is clipped, mirroring the actor's trust region, and augmented with a gradient penalty that encourages a smooth (near-Lipschitz) value landscape; we found this useful given that consecutive states differ by a single local move whose acceptance is itself stochastic.
+\item \textit{Swap:} exchanges the positions of nodes $i$ and $j$, either within the same route or across two routes;
+\item \textit{Insertion:} relocates node $i$ immediately after node $j$;
+\item \textit{2-opt / 2-opt*:} for intra-route pairs, reverses the segment between $i$ and $j$; for inter-route pairs, exchanges the route suffixes following $i$ and $j$.
 \end{itemize}
 
-% ============================================================================
-\section{Experimental Results}
-\label{sec:experiments}
-% ============================================================================
-
-\subsection{Experimental Setup}
-
-\paragraph{Benchmark.}
-All experiments reported in this section use the uniform benchmark distribution of \citet{nazari_reinforcement_2018}: depot and customer coordinates drawn uniformly in $[0,1]^2$, demands drawn uniformly in $\{1, \dots, 9\}$, and a size-dependent vehicle capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$). For each size we pre-generate a fixed test set of $10{,}000$ instances that is reused by every configuration, so that all comparisons are paired at the instance level. Unless stated otherwise, results are reported at $N = 100$.
-% TODO: extend the evaluation to CVRPLIB Set X (Uchoa) and Queiroga Set XML
-% once the Nazari protocol is complete (eval/run.py --dataset X / XML).
-
-\paragraph{Evaluation protocol.}
-A trained model is evaluated by running the LG-SA loop over the full test set in parallel on a single GPU, starting from random feasible solutions and running $10{,}000$ SA steps per instance with half-precision inference. We report the mean final routing cost over the $10{,}000$ instances and the wall-clock time of the whole batch. Classical (blind) SA --- uniform proposals with the same operator, step budget, and cooling schedule --- is evaluated under the identical protocol, as is an OR-Tools baseline with a fixed per-instance time limit \citep{ortools_routing}.
-% TODO: pin the OR-Tools time limit; add literature numbers for the neural
-% baselines (NLNS, DACT / LIH, CDCP, ...) in the headline comparison.
-
-\paragraph{Statistical protocol.}
-Every configuration is trained under $3$ random seeds ($5$ for confirmations and headline runs); the objective is the mean final cost over the test set, averaged over seeds and denoted $\bar c$. Comparisons are \emph{seed-paired}: competing configurations share their training seeds, and we report the mean and standard deviation of the per-seed differences $\Delta = \bar c(\text{variant}) - \bar c(\text{reference})$, together with their sign consistency. Significance is judged against a per-batch \emph{noise floor} $\sigma_{\mathrm{floor}}$ --- the pooled seed-to-seed standard deviation of the stable arms of the batch at hand --- rather than against a single global threshold, because the seed variance is itself configuration-dependent: unstable arms (e.g., sparse rewards or structured initializations) inflate the pooled spread and would mask real effects measured elsewhere. An effect is called significant only if $|\Delta| > \sigma_{\mathrm{floor}}$; below the floor it is reported as a tie.
-
-\paragraph{Sequential validation protocol.}
-The design space of LG-SA is an ordered tuple of axes $\mathcal{A} = (a_1, \dots, a_K)$ --- operator and feasibility strategy, node features, architecture, reward, annealing parameters, acceptance, initialization, optimization budget, curriculum --- each axis $a_k$ ranging over a finite candidate set $\mathcal{C}_k$. This space is far too large for a full factorial study, so we validate it by coordinate descent: the axes are swept one at a time in order of expected leverage, and the winner of each sweep is frozen into the configuration before the next axis is examined, so later sweeps inherit all earlier decisions. Targeted follow-up batches probe the interactions we consider most at risk, and the complete winning configuration is retrained from scratch with $5$ seeds as a final confirmation.
-% TODO: hardware paragraph (CPU/GPU model, training wall-clock, epochs to
-% convergence) + training convergence figure.
-
-\subsection{Design Choices}
-\label{sec:design}
-
-Table~\ref{tab:summary} summarizes the outcome of the coordinate descent: fifteen design axes and $78$ candidate settings, validated under the common protocol above. The paragraphs below state what was adopted on each axis and why; the per-axis candidate definitions, full grids, and per-seed diagnostics are collected in Appendices~\ref{app:v1}--\ref{app:xknobs}.
-
-\begin{table}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}llrlc@{}}
-\toprule
-\textbf{Axis} & \textbf{Adopted setting} & \textbf{\#} & \textbf{Effect} & \textbf{App.} \\
-\midrule
-Operator $\times$ feasibility & \textbf{insertion $+$ masking} & 9 & $+0.29^{**}$ & \ref{app:v1} \\
-Feature set & \textbf{all 13 groups} & 6 & $+0.34^{**}$ & \ref{app:v2} \\
-Pair descriptors & \textbf{none} & 4 & $+0.14^{*}$ & \ref{app:v2} \\
-Critic & \textbf{multi-statistic} & 2 & $+0.06^{**}$ & \ref{app:v3} \\
-Actor capacity & \textbf{\boldmath$32 \times 1$} & 6 & tie & \ref{app:v3} \\
-Actor structure & \textbf{indep.\ scorers} & 6 & $+0.51^{*}$ & \ref{app:v3} \\
-Distribution shaping & \textbf{\boldmath logit clip $C{=}10$} & 4 & $+0.17^{**}$ & \ref{app:v3} \\
-Reward & \textbf{immediate} & 9 & tie & \ref{app:v5678} \\
-Learning rates & \textbf{\boldmath$3{\times}10^{-4}$ / $10^{-3}$} & 9 & $+0.05^{*}$ & \ref{app:xknobs} \\
-Entropy coefficient & \textbf{\boldmath$0.01$} & 3 & $+0.13^{**}$ & \ref{app:xknobs} \\
-Rollout length & \textbf{\boldmath$200$} & 3 & tie & \ref{app:xknobs} \\
-Cooling shape & \textbf{geometric} & 2 & tie & \ref{app:v5678} \\
-Temperature range & \textbf{\boldmath$T_0{=}1$, $T_{\mathrm{final}}{=}0.01$} & 6 & $+0.17^{**}$ & \ref{app:v5678} \\
-Metropolis & \textbf{on (train $+$ test)} & 4 & $+0.12^{**}$ & \ref{app:v5678} \\
-Training construction & \textbf{random} & 5 & $+0.22^{**}$ & \ref{app:v5678} \\
-% TODO(curriculum): add row when Q0--Q6 results land:
-% Curriculum & \textbf{?} & ? & $?$ & \ref{app:curriculum} \\
-\midrule
-Combined confirmation & rates, rollout, $T_{\mathrm{final}}$ & --- & $+0.22^{**}$ & \ref{app:xknobs} \\
-\bottomrule
-\end{tabular}
-\caption{Master summary of the design validation, one row per axis in the paragraph order of this subsection. \emph{Effect}: seed-paired margin (routing-cost units, two decimals) in favor of the adopted setting --- measured against the previous incumbent when the sweep changed the configuration, and against the strongest meaningfully distinct alternative when it confirmed it; ``tie'' when no alternative cleared that batch's noise floor. $^{*}$: $|\Delta| > \sigma_{\mathrm{floor}}$; $^{**}$: $|\Delta| > 2\sigma_{\mathrm{floor}}$ (per-batch floors in the appendices). \#: candidate settings compared on the axis (diagnostic-only runs not counted). The rollout length is a standalone tie adopted for its contribution to the combined configuration, whose joint retrain (bottom row) confirms the adopted optimization changes are additive.}
-\label{tab:summary}
-\end{table}
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-\textbf{Operator} & \textbf{Masking} & \textbf{Indirect} & \textbf{Rejection} \\
-\midrule
-Insertion & $\mathbf{16.68 \pm 0.03}$ & $16.97 \pm 0.04$ & $26.36 \pm 0.71$ \\
-Swap      & $19.50 \pm 1.54$          & $22.82 \pm 1.36$ & $35.75 \pm 3.04$ \\
-2-opt(*)  & $18.93 \pm 0.09$          & $21.29 \pm 0.39$ & $25.84 \pm 0.42$ \\
-\bottomrule
-\end{tabular}
-\caption{Operator $\times$ feasibility study: mean final cost $\pm$ seed std at $N=100$ ($10^4$ SA steps, $10{,}000$ instances, $3$ seeds; all runs start from mean cost $57.87$). Insertion with proactive masking wins and is also the most stable cell. Definitions, main effects, compute, and per-seed diagnostics in Appendix~\ref{app:v1}.}
-\label{tab:v1grid}
-\end{table}
-
-\paragraph{Search operators.}
-The first sweep jointly fixes the operator $H$ and the constraint-handling strategy: the three pairwise operators (swap, insertion, 2-opt/2-opt*) are crossed with three ways of keeping the search feasible --- \emph{proactive masking} (the second-stage mask of Figure~\ref{fig:twostage}), \emph{reactive rejection} of infeasible neighbors, and an \emph{indirect representation} that repacks an unconstrained permutation into feasible routes at every step (definitions in Appendix~\ref{app:v1}). Insertion with masking dominates the grid (Table~\ref{tab:v1grid}): lowest cost, lowest seed variance, and among the cheapest cells, with both factors also winning marginally. Relocating a single node is the move that best matches a learned pointer to a node pair, whereas rejection is uniformly the worst strategy --- discarded proposals waste both search budget and learning signal. The decision is robust: the runner-up ($+0.29$, insertion with the indirect representation) points to the same operator.
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Set} & \textbf{Groups} & \textbf{Cost} & \textbf{Time (s)} \\
-\midrule
-full set (adopted) & 13 & $\mathbf{16.683}$ & 173 \\
-no load ratio & 12 & 16.648 & 173 \\
-set7          & 7  & 17.020 & 129 \\
-nodepct6      & 6  & 17.088 & 121 \\
-centroid6     & 6  & 17.100 & 122 \\
-core5         & 5  & 17.162 & 115 \\
-\bottomrule
-\end{tabular}
-\caption{Best-set validation at $5$ seeds, seed-paired against the full set ($\sigma_{\mathrm{floor}} \approx 0.057$). \emph{core5} = static, meta, topology, neighbor ranks, detour; \emph{set7} adds centroid and load share. Every pruned set is significantly worse; the only quality-neutral trim is dropping the load ratio alone. Paired deltas and per-seed views in Appendix~\ref{app:v2}.}
-\label{tab:bestset}
-\end{table}
-
-\paragraph{Node representation.}
-Single-group diagnostics mislead on this axis. Leave-one-out and isolation protocols (Table~\ref{tab:looiso}, appendix) flag only six of the $13$ feature groups of Table~\ref{tab:features} as individually useful, but retraining the candidate minimal sets head-to-head at $5$ seeds reverses the pruning rule (Table~\ref{tab:bestset}): every pruned set is significantly worse, degrading monotonically as groups are removed --- the smallest penalty ($+0.337 \pm 0.091$, set7) is already $6\times$ the floor of $0.057$ --- so the density and capacity groups that look redundant one at a time carry real joint value. The only quality-neutral trim is dropping the route load ratio (a tie, $-0.035 \pm 0.106$); pruning otherwise buys compute, not quality (set7 trades $2\%$ quality for a $25\%$ speedup). The two conditional pair descriptors of the second stage \emph{hurt} when enabled ($+0.14 \pm 0.11$ and $+0.18 \pm 0.07$, additive, at $\approx 20$\,s extra wall-clock each): the per-node features already encode the local geometry they summarize. The adopted representation is the full $13$-group set with both descriptors off (full diagnostics in Appendix~\ref{app:v2}).
-
-\paragraph{Policy and learning.}
-Nothing that enlarges or rewires the actor pays for itself: the capacity grid is a plateau (no cell clears the $0.053$ floor, at up to $+38\%$ wall-clock), appending a pooled instance summary to the scoring stages worsens every seed ($+0.508 \pm 0.496$, $+48\%$ wall-clock), and forcing both selection stages through a shared encoder is a cliff ($+3.20$ for its best cell, $18\times$ that batch's floor of $0.176$). The two adopted changes add no actor capacity: the multi-statistic critic ($-0.058$, twice the $0.027$ floor, and free at deployment since the critic is discarded after training) and logit clipping at $C = 10$ ($-0.173 \pm 0.059$ against a floor of $0.072$, unanimous, at unchanged compute) --- at $N = 100$ the leverage lies in the quality of the value estimate and in keeping the proposal distribution from collapsing, exactly the failure mode a near-deterministic policy induces inside a Metropolis loop (Appendix~\ref{app:v3}). The reward only needs to be \emph{dense}: the six variants built on per-step improvement tie within a band $0.07$ wide, while removing per-step credit is catastrophic --- the terminal reward loses $2.95$ and the step-penalty schemes $0.7$ to $1.1$, all with unstable training (Appendix~\ref{app:v5678}). Among the optimizer knobs, the actor learning rate is the axis that matters (monotone across the $3 \times 3$ grid, main effect $\approx 0.05$ per grid step against a floor of $0.031$), the entropy coefficient confirms its default at the bottom of a U ($0$ costs $+0.128 \pm 0.021$, $0.05$ costs $+0.783 \pm 0.036$), and the rollout length is asymmetric: halving it is a large regression ($+0.444 \pm 0.015$), doubling it a marginal, sign-split gain adopted for the combined configuration. Retrained jointly, the adopted changes are additive ($-0.223 \pm 0.016$ against the pre-sweep incumbent, unanimous --- more than any single axis delivered) after one reproducible divergence pinned the critic rate at $10^{-3}$: a critic stepping $10\times$ faster than the actor overshoots on the sparse advantages that deep cooling produces early in training (mechanism in Appendix~\ref{app:xknobs}).
-% TODO: V9_ppo_epochs results (PPO epochs per collected batch; revisited
-% jointly with the curriculum, cf. Q6).
-
-\paragraph{Annealing search.}
-The cooling \emph{shape} is a tie (geometric against a piecewise-constant step schedule: $-0.013 \pm 0.034$ against a floor of $0.044$, sign split), but the \emph{range} holds the largest single-knob gain of the validation: over a $3 \times 2$ grid of endpoints, every $T_{\mathrm{final}} = 0.01$ cell beats every $T_{\mathrm{final}} = 0.1$ cell, worth $-0.165 \pm 0.034$ at the incumbent $T_0$ ($4\times$ the $0.041$ floor, unanimous at every starting temperature, which is itself inert) --- the low-temperature endgame is precisely where the learned proposal performs its fine-grained refinement, and a high floor cuts that phase off early. The Metropolis criterion earns its keep at deployment, not at training: in a $2 \times 2$ train/test cross, removing the acceptance at test time costs $+0.119 \pm 0.025$ ($3.5\times$ the $0.034$ floor, unanimous, whichever way the actor was trained), while the training-time flag is a wash and stays on. For the same reason the solver keeps \emph{sampling} $a_t \sim \pi_\theta(\cdot \mid s_t)$ at inference rather than taking the greedy argmax: a near-deterministic proposal would collapse the diversity the acceptance step needs. Finally, the starting solution matters exactly where intuition says it should not: at deployment, $10^4$ annealing steps wash out even a $6\times$ spread in construction cost (final band $0.160$ wide across five constructions), but at training time random constructions are decisive --- actors trained from structured heuristics lose $1.1$ to $2.8$ at every deployment, and even mixing constructions dilutes coverage ($+0.222 \pm 0.084$ against the $0.063$ floor) --- because starting from the worst solutions exposes the policy to the widest state distribution (Appendix~\ref{app:v5678}).
-% TODO: sampling-vs-greedy comparison at inference.
-
-\paragraph{Curriculum.}
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[>=Stealth, x=3.9cm, y=2.1cm]
-  % axes
-  \draw[->, thick] (0,0) -- (1.42,0) node[below left, font=\footnotesize] {epoch};
-  \draw[->, thick] (0,0) -- (0,1.2) node[right, font=\footnotesize] {$t_{\mathrm{init}}$};
-  % guides
-  \draw[dashed, gray] (0,1) node[left, font=\footnotesize, black] {$\xi_{\mathrm{CL}}$} -- (1.3,1);
-  \draw[dashed, gray] (1,0) node[below, font=\footnotesize, black] {$E$} -- (1,1);
-  % linear ramp
-  \draw[figorange, very thick] (0,0) -- (1,1) -- (1.3,1);
-  % sigmoid ramp
-  \draw[figblue, very thick] plot[smooth] coordinates
-    {(0,0) (0.1,0.02) (0.2,0.06) (0.3,0.15) (0.4,0.3) (0.5,0.5)
-     (0.6,0.7) (0.7,0.85) (0.8,0.94) (0.9,0.98) (1,1)} -- (1.3,1);
-  % legend
-  \node[font=\footnotesize, figblue]   at (0.78,0.62) {sigmoid};
-  \node[font=\footnotesize, figorange] at (0.32,0.45) {linear};
-\end{tikzpicture}
-\caption{Curriculum ramp: the warm-up depth $t_{\mathrm{init}}$ grows from $0$ to the warm-up strength $\xi_{\mathrm{CL}}$ over $E$ training epochs, following a linear or sigmoid schedule, and stays saturated afterwards.}
-\label{fig:ramp}
-\end{figure}
-
-Training episodes are far shorter than the search budgets used at deployment, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation with out-of-distribution evaluations.
-% TODO(curriculum): Q protocol results — Q0 5-seed no-CL baseline (= floor),
-% Q1 warmup ramp, Q2 random depth, Q3 persistent chains, Q4 budget-matched
-% coverage ablation, Q5 5-seed confirmation + OOD evals, Q6 PPO-epochs
-% interaction. State the adopted mechanism + seed-paired effect vs the Q0
-% floor here, add the curriculum row to Table~\ref{tab:summary}, and write
-% "Appendix: Curriculum Study, Full Results" (insert after
-% Appendix~\ref{app:v5678}, cf. PAPER_GUIDE §10).
-
-\subsection{Final Model and Comparison with Baselines}
-\label{sec:baselines}
-
-\paragraph{Final model.}
-All component winners of Table~\ref{tab:summary}, the best curriculum, and the tuned optimization budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. We compare it against blind SA under matched conditions (same operator, budget, and schedule) and against the OR-Tools baseline, and we report the mean cost as a function of the SA step budget from $10^2$ to $10^6$ steps to characterize the anytime behavior of the guided search.
-% TODO: headline table at N=100 (cost / time at 10^4 steps; long-budget 10^6
-% row; x8 instance-augmentation row); guided-vs-blind cost-vs-steps curves
-% (log-x); literature rows for neural baselines.
-%   sweep: V10_final (5 seeds); evals: headline, --augment 8, steps
-%   {100..1e6}, dims {10,20,50,100}
-
-\paragraph{Generalization and scalability.}
-Finally, we probe how far the node-centric representation carries across problem scales: models trained at each size are cross-tested at every other size, and the final model is evaluated on instances well beyond its training size with the same checkpoint, reporting both solution quality and runtime scaling.
-% TODO: cross-dimension table (train dim x test dim, {50,100,500}); runtime
-% scaling over N; discussion of capacity conventions per dim (Q=40/50).
-%   sweep: V12_dim50 / V12_dim100 / V12_dim500 (cross-test loop)
-% TODO (later, needs non-Nazari test data): cross-distribution table --
-% train on Nazari vs Uchoa/Queiroga, test on both (V11_dist, --DATA uchoa).
-
-% ============================================================================
-\section{Conclusion}
-% ============================================================================
-% TODO: Conclusion and future work (LNS operators, GNN encoders, richer VRP
-% variants).
-
-% ============================================================================
-\bibliography{bib}
-
-\appendix
-
-\section{Appendix Overview}
-
-The appendices mirror the order of the design axes in the main text. \emph{State Feature Definitions} gives the formal definition of every component of the node feature vector. The five \emph{Full Results} appendices then carry the evidence behind the Design Choices subsection --- for operators and feasibility, features, architecture, the search-loop components (reward, annealing, acceptance, initialization), and the optimization hyperparameters (including the per-seed record and mechanism of the combined-configuration divergence): the per-axis motivation and candidate definitions, the complete grids and secondary tables with paired deltas and per-batch noise floors, and the per-seed diagnostic plots behind the master summary (Table~\ref{tab:summary}) and the two headline tables. Two conventions are shared throughout: every comparison is seed-paired (both arms are trained on the same seeds), and every delta plot shows the per-seed differences against a shaded band marking that batch's noise floor --- an effect is trusted only if it clears the band with a consistent sign across seeds. Each full-results appendix opens with the mapping from the internal configuration names appearing in the plot legends to the paper terminology.
-
-\appsection{State Feature Definitions}
-\label{app:features}
-% ============================================================================
-
-This appendix defines every component of the node feature vector $\mathbf{x}_i$ used by the policy and the critic. Throughout, $\mathrm{prev}(i)$ and $\mathrm{succ}(i)$ denote the nodes immediately before and after $i$ in the current visiting order, $r(i)$ the route currently serving $i$, $Q_{r(i)}$ the total load of that route, and $d(\cdot, \cdot)$ the Euclidean distance. Figure~\ref{fig:features} illustrates the geometric quantities, and Table~\ref{tab:features} summarizes the groups and their dimensions. All features are normalized to comparable ranges, and each is computed locally at node $i$: the encoding contains no fixed-size global descriptor, which is what makes the representation applicable to any instance size.
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[>=Stealth, thick, scale=1.05]
-  % depot
-  \node[rectangle, draw=figred!80!black, fill=figred!15, minimum size=0.42cm,
-        inner sep=0pt, font=\footnotesize\bfseries] (dep) at (0,0) {$0$};
-
-  % route nodes
-  \node[cnode] (a) at (0.9,1.5) {};
-  \node[cnode, label={[font=\footnotesize]left:$\mathrm{prev}(i)$}] (p) at (1.9,2.5) {};
-  \node[cnode, draw=figorange!85!black, fill=figorange!30, line width=1pt,
-        font=\footnotesize\bfseries] (i) at (3.4,3.0) {$i$};
-  \node[cnode, label={[font=\footnotesize]right:$\mathrm{succ}(i)$}] (sc) at (4.6,2.2) {};
-  \node[cnode] (b) at (4.3,0.9) {};
-
-  % route edges
-  \draw[gray, thick] (dep) -- (a) -- (p) -- (i) -- (sc) -- (b) -- (dep);
-
-  % detour (dashed shortcut)
-  \draw[dashed, figpurple!80!black] (p) -- (sc)
-    node[midway, below, font=\footnotesize, figpurple!80!black] {$\Delta_i$ (detour)};
-
-  % distance & angle to depot
-  \draw[dotted, thick, figblue] (dep) -- (i)
-    node[midway, above, sloped, font=\footnotesize, figblue] {$d_{i0}$};
-  \draw[figblue] (0.65,0) arc[start angle=0, end angle=41.5, radius=0.65]
-    node[font=\footnotesize, figblue] at (1.05,0.32) {$\theta_i$};
-  \draw[gray!60] (dep) -- (1.5,0);
-
-  % centroid
-  \node[star, star points=5, star point ratio=2.2, draw=figgreen!60!black,
-        fill=figgreen!25, inner sep=1.6pt] (cent) at (2.75,1.55) {};
-  \node[font=\footnotesize, figgreen!50!black, below=0.03cm of cent] {centroid of $r(i)$};
-  \draw[dotted, thick, figgreen!60!black] (i) -- (cent)
-    node[midway, right, font=\footnotesize] {$d_{i,\mathrm{cent}}$};
-\end{tikzpicture}
-\caption{Geometric features attached to a node $i$ (orange) within its current route. The detour $\Delta_i$ measures the extra length caused by visiting $i$ between its neighbors; $(\theta_i, d_{i0})$ locate $i$ in polar coordinates around the depot; $d_{i,\mathrm{cent}}$ measures how far $i$ lies from the center of gravity of its own route.}
-\label{fig:features}
-\end{figure}
-
-\paragraph{Static instance features (6).}
-The 2D coordinates $\mathbf{p}_i = (p_i^x, p_i^y) \in [0,1]^2$; a depot indicator $\mathbf{1}_{\{i = 0\}}$; the polar angle $\theta_i$ of the node around the depot; the distance to the depot $d_{i0}$, min--max normalized per instance; and the demand normalized by the vehicle capacity, $q_i / Q$. These features depend only on the instance, not on the current solution.
-
-\paragraph{Route topology (4).}
-The coordinates $\mathbf{p}_{\mathrm{prev}(i)}$ and $\mathbf{p}_{\mathrm{succ}(i)}$ of the node's current neighbors in the visiting order. They give the policy direct access to the local shape of the route around each node.
-
-\paragraph{Neighbor distance-ranks (2).}
-For each of $\mathrm{prev}(i)$ and $\mathrm{succ}(i)$, the rank of that neighbor in the list of all nodes sorted by distance from $i$, normalized to $[0,1]$ (the nearest node has rank $\approx 0$). A well-placed node is linked to low-rank neighbors; a high rank signals a locally poor connection, independently of the absolute scale of the instance.
-
-\paragraph{Relative demand (1).}
-The demand normalized by the largest demand in the instance, $q_i / \max_{j \in \mathcal{C}} q_j$, complementing $q_i / Q$ with a signal that is invariant to the capacity level.
-
-\paragraph{Spatial density (3).}
-The mean distance from $i$ to its $k$ nearest neighbors, evaluated at three scales: $k = 5$, $k = \lceil N/10 \rceil$, and $k = \lceil N/3 \rceil$. These static statistics distinguish nodes in dense clusters from isolated ones.
-
-\paragraph{Local solution quality (2).}
-The \emph{detour cost}
-$$
-\Delta_i = d(\mathrm{prev}(i), i) + d(i, \mathrm{succ}(i)) - d(\mathrm{prev}(i), \mathrm{succ}(i)),
-$$
-i.e., the extra length the tour pays for visiting $i$ at its current position (equivalently, the saving obtained by removing it); and the distance $d_{i,\mathrm{cent}}$ from $i$ to the centroid of the nodes of its route, which flags spatial outliers assigned to the wrong route.
-
-\paragraph{Capacity status (3).}
-The load ratio of the node's route, $L_{r(i)} = Q_{r(i)} / Q$; the remaining slack, $S_{r(i)} = (Q - Q_{r(i)}) / Q$; and the node's share of its route load, $\eta_i = q_i / Q_{r(i)}$. These dynamic signals indicate whether a route is nearly saturated and how much a given node contributes to that saturation.
-
-\paragraph{Search meta-features (2).}
-The current SA temperature, normalized to $[0,1]$ over the schedule range, and the fraction of the search budget remaining. They are identical across nodes of the same state and let the policy modulate its behavior along the annealing schedule (e.g., bolder restructuring at high temperature, fine repairs near the end).
-
-\paragraph{Conditional pair features (stage 2, optional).}
-In addition to the per-node vectors above, the second stage of the policy can receive descriptors of the candidate move itself, computed only for the selected first node $u$ and every candidate partner $v$: the exact insertion cost $d(v, u) + d(u, \mathrm{succ}(v)) - d(v, \mathrm{succ}(v))$ together with the net cost change of the full move (insertion cost minus the removal saving of $u$), and the normalized distance-ranks of the edges the move would create. Because they are evaluated for a single $u$, these descriptors preserve the $\mathcal{O}(N)$ per-step complexity.
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{l l c}
-\toprule
-\textbf{Group} & \textbf{Features} & \textbf{Dim} \\
-\midrule
-Static & $\mathbf{p}_i$, $\mathbf{1}_{\{i=0\}}$, $\theta_i$, $d_{i0}$, $q_i/Q$ & 6 \\
-Topology & $\mathbf{p}_{\mathrm{prev}(i)}$, $\mathbf{p}_{\mathrm{succ}(i)}$ & 4 \\
-Neighbor ranks & rank of $\mathrm{prev}(i)$, $\mathrm{succ}(i)$ & 2 \\
-Relative demand & $q_i / \max_j q_j$ & 1 \\
-Spatial density & $\mu_5$, $\mu_{N/10}$, $\mu_{N/3}$ & 3 \\
-Local quality & $\Delta_i$, $d_{i,\mathrm{cent}}$ & 2 \\
-Capacity status & $L_{r(i)}$, $S_{r(i)}$, $\eta_i$ & 3 \\
-Meta & temperature, remaining budget & 2 \\
-\midrule
-Total & & 23 \\
-\bottomrule
-\end{tabular}
-\caption{Summary of the node feature vector $\mathbf{x}_i$.}
-\label{tab:features}
-\end{table}
-
-% ============================================================================
-\appsection{Operator--Feasibility Study, Full Results}
-\label{app:v1}
-% ============================================================================
-
-This appendix collects the complete diagnostics of the operator $\times$ feasibility sweep summarized in Table~\ref{tab:v1grid}. In the plot legends, the internal configuration names map to the paper terminology as \texttt{valid} = proactive masking, \texttt{free} = indirect representation (greedy split), \texttt{rm\_depot} = reactive rejection.
-
-\paragraph{Operator definitions.}
 Figure~\ref{fig:operators} illustrates the three pairwise operators on two route fragments. The same action $a = (i,j)$ triggers a qualitatively different transformation under each operator, which is why a policy is trained for one fixed operator and learns a proposal distribution tailored to it.
 
-\begin{figure*}[t]
+\begin{figure*}[h!]
 \centering
 \begin{tikzpicture}[>=Stealth]
 
@@ -718,13 +810,67 @@ Figure~\ref{fig:operators} illustrates the three pairwise operators on two route
 \label{fig:operators}
 \end{figure*}
 
-\paragraph{Feasibility strategies.}
-Under capacity constraints, many actions produce an infeasible neighbor $H(s,a) \notin \mathcal{F}$ --- the central obstacle in extending neural SA from unconstrained problems to the CVRP. Three ways of keeping the search inside $\mathcal{F}$ are compared, one policy per operator--strategy cell ($3$ seeds per cell, $27$ runs):
+
+
+\subsection{Feasibility Strategies}
+\label{app:feasibility}
+
+Under capacity constraints, many actions produce an infeasible neighbor $H(s,a) \notin \mathcal{F}$ --- the central obstacle in extending neural SA from unconstrained problems to the CVRP. We compare three ways of keeping the search inside $\mathcal{F}$:
 \begin{itemize}
-    \item \textit{Proactive filtering (action masking).} The policy is restricted to the feasible subset $\mathcal{A}_f(s) = \{ a : H(s, a) \in \mathcal{F} \}$ by masking infeasible actions before sampling. The conditional factorization makes this cheap: the first node $i$ is selected freely, and only then are the feasible partners $\{ j : H(s, (i,j)) \in \mathcal{F} \}$ computed and used to mask the second stage --- $\mathcal{O}(N)$ checks per step instead of $\mathcal{O}(N^2)$. Every proposal is feasible by construction; since the fleet is unlimited, a node can always open a new route, so the feasible set is never empty.
-    \item \textit{Reactive rejection.} The policy samples any action from its learned distribution and the resulting neighbor is checked afterwards: if $s' \notin \mathcal{F}$, the move is rejected and the current solution retained. This avoids the filtering overhead but can waste both compute and learning signal when many sampled moves are infeasible.
-    \item \textit{Indirect representation.} Feasibility is delegated to the representation: the solution is encoded as an unconstrained permutation of the customers, the policy modifies the permutation, and a deterministic \textit{greedy split} heuristic packs it back into capacity-feasible routes \citep{vidal_technical_2016}. Every state is feasible by construction and the policy never handles constraints, but the reconstruction runs at every step and its cost grows with the problem size.
+\item \textit{Proactive filtering (action masking).} The policy is restricted to the feasible subset $\mathcal{A}_f(s) = \{ a : H(s, a) \in \mathcal{F} \}$ by masking infeasible actions before sampling. The conditional factorization makes this cheap: the first node $i$ is selected freely, and only then are the feasible partners $\{ j : H(s, (i,j)) \in \mathcal{F} \}$ computed and used to mask the second stage --- $\mathcal{O}(N)$ checks per step instead of $\mathcal{O}(N^2)$. Every proposal is feasible by construction; since the fleet is unlimited, a node can always open a new route, so the feasible set is never empty.
+\item \textit{Reactive rejection.} The policy samples any action from its learned distribution and the resulting neighbor is checked afterwards: if $s' \notin \mathcal{F}$, the move is rejected and the current solution retained. This avoids the filtering overhead but can waste both compute and learning signal when many sampled moves are infeasible.
+\item \textit{Indirect representation.} Feasibility is delegated to the representation: the solution is encoded as an unconstrained permutation of the customers, the policy modifies the permutation, and a deterministic \textit{greedy split} heuristic packs it back into capacity-feasible routes \citep{vidal_technical_2016}. Every state is feasible by construction and the policy never handles constraints, but the reconstruction runs at every step and its cost grows with the problem size.
 \end{itemize}
+
+\subsection{Reinforcement Learning and PPO}
+\label{app:ppo}
+
+The model is trained with Reinforcement Learning (RL) using \textit{Proximal Policy Optimization} (PPO), the standard on-policy actor-critic algorithm \citep{schulman_proximal_2017}. To this end, we frame the LG-SA loop as a Markov Decision Process (MDP). At step $t$, the \textit{state} is the encoded representation of the feasible solution $\bar s_t$. The \textit{action} is the node pair $a_t = (i, j)$ handed to the operator $H$. The \textit{transition} is the composition of the operator and the stochastic Metropolis acceptance: the next state is $H(s_t, a_t)$ if the move is accepted and $s_t$ otherwise, so the environment dynamics include the acceptance randomness of SA.
+
+The \textit{reward} is derived from the evolution of the solution cost along the search: a move that is accepted and improves the solution receives a positive reward proportional to the (normalized) cost reduction, a rejected move yields no improvement signal, and proposals leading to infeasible neighbors can be penalized. Reward variants that instead emphasize improvements of the best solution found so far, or the final solution quality at the end of the horizon, fit the same framework; the precise shaping is a design choice studied experimentally. The agent thus maximizes the expected cumulative discounted reward over the SA horizon, which aligns the learned proposal with the overall goal of driving the annealing process toward low-cost solutions rather than with any single greedy step.
+
+The policy is trained with PPO. Training alternates between a \textit{collection} phase, in which the current policy runs the full LG-SA loop of Algorithm~\ref{alg:lgsa} on a large batch of freshly generated instances in parallel and stores every transition $(s_t, a_t, r_t)$, and an \textit{update} phase, in which the stored episodes are replayed for several optimization epochs. Advantages are estimated with Generalized Advantage Estimation, and the actor maximizes the usual clipped surrogate objective with an entropy bonus; we refer to \citet{schulman_proximal_2017} for the standard formulation and only detail our departures from it.
+
+The critic $V_\phi$ is a separate permutation-invariant network: it encodes each node feature vector independently, pools the embeddings across nodes into a fixed-size summary, and maps this summary to a scalar value estimate. Keeping the actor and critic distinct prevents interference between the policy and value representations.
+
+Our implementation departs from standard PPO in three ways, all aimed at stabilizing training on the long and noisy SA horizon:
+\begin{itemize}
+    \item \textit{Hybrid clipping--KL objective.} Rather than choosing between the clipped surrogate and the KL-penalized objective, we use both: an adaptive Kullback--Leibler penalty $\beta_{\text{KL}}\, D_{\text{KL}}(\pi_{\theta_{\text{old}}} \| \pi_\theta)$ is added to the clipped loss, and its coefficient is doubled or halved after each update epoch depending on whether the measured divergence leaves a band around a target value. This soft trust region allows many optimization epochs on each collected batch without catastrophic policy drift.
+    \item \textit{KL-coupled learning rate.} The same divergence signal modulates the actor's learning rate within fixed bounds --- gently decreased when the policy moves too fast, increased when it stalls --- so the effective step size tracks the trust region automatically.
+    \item \textit{Regularized critic.} The value loss is clipped, mirroring the actor's trust region, and augmented with a gradient penalty that encourages a smooth (near-Lipschitz) value landscape; we found this useful given that consecutive states differ by a single local move whose acceptance is itself stochastic.
+\end{itemize}
+
+
+\subsection{Initialization Strategies}
+\label{app:init}
+
+Every training episode and every evaluation starts from a feasible solution produced by one of five constructive heuristics; the parenthesized numbers give their mean construction cost on the $N = 100$ test set, spanning a sixfold range:
+\begin{itemize}
+    \item \textit{Random assignment} ($57.9$): the customers are placed in a uniformly random order and the sequence is split greedily into routes, a depot return being inserted whenever the next customer would exceed the remaining capacity.
+    \item \textit{Nearest neighbor} ($19.0$): routes are built one at a time by repeatedly visiting the closest unvisited customer, returning to the depot when no remaining customer fits the residual capacity.
+    \item \textit{Sweep} ($30.5$): the customers are sorted by polar angle around the depot and inserted in angular order, a new route being opened whenever the capacity would be exceeded.
+    \item \textit{Clarke--Wright savings} ($16.4$): starting from one dedicated route per customer, pairs of routes are iteratively merged in decreasing order of the distance saving achieved by the merge, subject to capacity feasibility.
+    \item \textit{Single-customer routes} ($104.0$): each customer is served by its own dedicated route --- the simplest feasible construction, and by far the most expensive one.
+\end{itemize}
+The training-time construction fixes the state distribution the policy learns from, while the test-time construction is a free knob of the solver; the two roles are studied separately in Appendix~\ref{app:v5678}.
+
+\subsection{Curriculum Learning}
+\label{app:curriculum}
+
+Training episodes are much shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \textit{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ grows over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs, following a linear or sigmoid ramp (Figure~\ref{fig:ramp}). Early in training the policy thus learns to repair poor solutions; later it increasingly learns to improve already-refined ones. A further variant draws a per-instance depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$ instead of warming every instance to the same depth, so that a single batch covers the entire spectrum from raw initializations to deeply improved solutions.
+
+The curriculum is validated with its own sequential protocol: (0) a multi-seed no-curriculum baseline, which also provides the noise floor used throughout this section; (1) a go/no-go comparison of a neutral mid-range curriculum against that baseline; (2) schedule shape (sigmoid against linear); (3) warm-up strength $\xi_{\mathrm{CL}}$; (4) ramp duration $E$; (5) sigmoid steepness; (6) a mechanism ablation opposing the ramped warm-up to a constant warm-up of equal budget, separating the contribution of the progression itself; and (7) the per-instance random depth, hypothesized to pay off in robustness and out-of-distribution behavior more than in the in-distribution headline. The winning curriculum is confirmed against the baseline with $5$ seeds.
+% TODO: curriculum results (gate outcome; winning schedule/strength/ramp;
+% mechanism ablation conclusion: ramp vs constant warmup; random-depth
+% outcome incl. out-of-distribution eval + cost-vs-step curves).
+%   sweeps: P0_baseline ... P9_random_depth (+ P7_best / P8 confirmations)
+
+% ============================================================================
+\section{Operator--Feasibility Study, Full Results}
+\label{app:v1}
+% ============================================================================
+
+This appendix collects the complete diagnostics of the operator $\times$ feasibility sweep summarized in Table~\ref{tab:v1grid}; the operators and feasibility strategies themselves are defined in Appendices~\ref{app:operators} and~\ref{app:feasibility}. The sweep trains one policy per operator--strategy cell ($3$ seeds per cell, $27$ runs). In the plot legends, the internal configuration names map to the paper terminology as \texttt{valid} = proactive masking, \texttt{free} = indirect representation (greedy split), \texttt{rm\_depot} = reactive rejection.
 
 \paragraph{Main effects.}
 Table~\ref{tab:v1main} averages each factor level over the other factor. Insertion and masking win marginally as well as jointly, so the winning cell of Table~\ref{tab:v1grid} is not an interaction artefact: the best operator and the best feasibility strategy are individually best as well. Relocating a single node is the move that best matches a learned pointer to a promising node pair, whereas the value of a swap or a segment reversal depends more delicately on both endpoints simultaneously, making the credit assignment noisier --- visible in the swap column's large seed variance. Reactive rejection is uniformly the worst strategy for every operator: discarding infeasible proposals wastes both search budget and learning signal, and the policy must spend capacity learning the feasibility boundary instead of move quality. The indirect (greedy-split) representation is competitive in cost for insertion but pays the reconstruction at every step. The margin of the winning cell over the runner-up (insertion + indirect, $+0.29$) is an order of magnitude above the insertion-row seed stds ($0.03$--$0.04$), and the runner-up shares the operator, so the operator choice stands even if the two leading feasibility strategies were tied.
@@ -801,7 +947,7 @@ Figures~\ref{fig:v1heat}--\ref{fig:v1spread} give three complementary views of t
 \label{fig:v1spread}
 \end{figure}
 
-\appsection{Feature Ablation, Full Results}
+\section{Feature Ablation, Full Results}
 \label{app:v2}
 % ============================================================================
 
@@ -928,11 +1074,11 @@ On top of the retained set, the two second-stage conditioning signals (edge dist
 \label{fig:v2cond}
 \end{figure*}
 
-\appsection{Architecture Study, Full Results}
+\section{Architecture Study, Full Results}
 \label{app:v3}
 % ============================================================================
 
-This appendix collects the candidate definitions, complete grids, and per-seed diagnostics of the architecture study behind the ``Policy and learning'' paragraph of the main text, one paragraph per axis in the order they were swept (critic, capacity, global context, shared encoder, distribution shaping), each sweep inheriting the previous winner. In the plot labels, the internal names map to the paper terminology as \texttt{deepsets} = multi-statistic critic, \texttt{ff} = mean-pooled feed-forward critic, \texttt{seq} = the incumbent actor with independent per-stage scorers, \texttt{shared} = the shared-encoder variant, \texttt{gc} = pooled global context, \texttt{bil} = bilinear second-stage head ($0$ = concatenation), and networks are written width/depth, e.g.\ \texttt{64/2L}.
+This appendix collects the candidate definitions, complete grids, and per-seed diagnostics of the architecture study behind the ``Policy and learning'' paragraph of the main text, one paragraph per axis in the order they were swept (critic, capacity, global context, shared encoder, distribution shaping), each sweep inheriting the previous winner. In the plot labels, the internal names map to the paper terminology as \texttt{deepsets} = multi-statistic critic, \texttt{ff} = mean-pooled feed-forward critic, \texttt{seq} = the reference actor with independent per-stage scorers, \texttt{shared} = the shared-encoder variant, \texttt{gc} = pooled global context, \texttt{bil} = bilinear second-stage head ($0$ = concatenation), and networks are written width/depth, e.g.\ \texttt{64/2L}.
 
 \paragraph{Critic.}
 The baseline critic scores each node with a small MLP and averages the scalar outputs into the value estimate, which makes $V_\phi$ a linear functional of the mean node representation. The alternative is the multi-statistic variant of the training section: nodes are encoded into embeddings, pooled with mean, max, and standard deviation, and mapped to the value by a nonlinear head --- so dispersion information (clustered against scattered instances) survives the pooling. Table~\ref{tab:v3critic} compares the two. The critic only shapes the advantage estimates during training and is discarded afterwards, so the comparison is on solution quality alone.
@@ -948,12 +1094,12 @@ multi-statistic & $16.635 \pm 0.038$ \\
 feed-forward    & $16.693 \pm 0.006$ \\
 \bottomrule
 \end{tabular}
-\caption{Critic comparison ($3$ runs per arm; noise floor $\approx 0.027$). The multi-statistic critic improves the mean final cost by $0.058$, about twice the floor. The critic is used only during training, so deployment cost is unchanged.}
+\caption{Critic comparison ($3$ runs per arm; noise floor $\approx 0.027$). The multi-statistic critic improves the mean final cost by $0.058$, about twice the floor. The critic is used only during training, so inference cost is unchanged.}
 \label{tab:v3critic}
 \end{table}
 
 \paragraph{Actor capacity.}
-The embedding width and the number of hidden layers of the two scoring networks are swept jointly, trading representational capacity against per-step inference cost. Table~\ref{tab:v3arch} gives the full width $\times$ depth grid: the full spread from the smallest to the largest network is $0.079$, no cell clears the floor ($\approx 0.053$) against the $32 \times 1$ incumbent, and wall-clock rises by up to $38\%$; the faint monotone trend favors width over depth (main-effect spans $0.069$ against $0.019$). Figure~\ref{fig:v3archgrid} adds the seed-paired deltas against the noise band --- every cell falls inside it --- and Figure~\ref{fig:v3archpareto} shows the cost--compute view: quality improves only marginally along a steeply rising compute axis, the signature of a capacity plateau.
+The embedding width and the number of hidden layers of the two scoring networks are swept jointly, trading representational capacity against per-step inference cost. Table~\ref{tab:v3arch} gives the full width $\times$ depth grid: the full spread from the smallest to the largest network is $0.079$, no cell clears the floor ($\approx 0.053$) against the $32 \times 1$ reference, and wall-clock rises by up to $38\%$; the faint monotone trend favors width over depth (main-effect spans $0.069$ against $0.019$). Figure~\ref{fig:v3archgrid} adds the seed-paired deltas against the noise band --- every cell falls inside it --- and Figure~\ref{fig:v3archpareto} shows the cost--compute view: quality improves only marginally along a steeply rising compute axis, the signature of a capacity plateau.
 
 \begin{table}[t]
 \centering
@@ -970,14 +1116,14 @@ $16 \times 2$ & $16.649 \pm 0.083$ & 165 & $+0.011 \pm 0.093$ \\
 $16 \times 1$ & $16.668 \pm 0.042$ & 160 & $+0.031 \pm 0.063$ \\
 \bottomrule
 \end{tabular}
-\caption{Actor capacity grid (embedding width $\times$ hidden layers), sorted by mean cost; $\Delta$ is seed-paired against the $32 \times 1$ incumbent. No cell clears the noise floor ($\approx 0.053$); the width main effect spans $0.069$ against $0.019$ for depth.}
+\caption{Actor capacity grid (embedding width $\times$ hidden layers), sorted by mean cost; $\Delta$ is seed-paired against the $32 \times 1$ reference. No cell clears the noise floor ($\approx 0.053$); the width main effect spans $0.069$ against $0.019$ for depth.}
 \label{tab:v3arch}
 \end{table}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{v3_arch_grid.png}
-\caption{Actor capacity grid (Table~\ref{tab:v3arch}). Left: mean final cost and wall-clock per cell (green = better). Right: seed-paired $\Delta$ against the $32 \times 1$ incumbent --- every cell falls inside the shaded noise band, so no capacity change is a significant win.}
+\caption{Actor capacity grid (Table~\ref{tab:v3arch}). Left: mean final cost and wall-clock per cell (green = better). Right: seed-paired $\Delta$ against the $32 \times 1$ reference --- every cell falls inside the shaded noise band, so no capacity change is a significant win.}
 \label{fig:v3archgrid}
 \end{figure*}
 
@@ -999,7 +1145,7 @@ The \emph{global context} option pools the node representations into a summary $
 \end{figure*}
 
 \paragraph{Shared encoder.}
-Figure~\ref{fig:sharedactor} illustrates the variant: each node is encoded once into an embedding $\mathbf{h}_i$, and both selection stages are lightweight heads over the shared embeddings, the conditional score being computed either by a concatenation head over $[\mathbf{h}_j \,|\, \mathbf{h}_i]$ or as a bilinear compatibility $\mathbf{q}^\top \mathbf{k} / \sqrt{d}$ between a query built from the selected node and a key per candidate. Table~\ref{tab:v3shared} and Figure~\ref{fig:v3shared} report its $2 \times 2$ grid (head type $\times$ context) against the incumbent: every cell sits $+3.20$ to $+3.53$ above the reference --- a $19\%$ quality loss, more than $18\times$ that batch's noise floor --- so forcing both stages through one trunk destroys the pair-scoring ability at this problem size; the failure is structural rather than a bad corner of the grid.
+Figure~\ref{fig:sharedactor} illustrates the variant: each node is encoded once into an embedding $\mathbf{h}_i$, and both selection stages are lightweight heads over the shared embeddings, the conditional score being computed either by a concatenation head over $[\mathbf{h}_j \,|\, \mathbf{h}_i]$ or as a bilinear compatibility $\mathbf{q}^\top \mathbf{k} / \sqrt{d}$ between a query built from the selected node and a key per candidate. Table~\ref{tab:v3shared} and Figure~\ref{fig:v3shared} report its $2 \times 2$ grid (head type $\times$ context) against the reference actor: every cell sits $+3.20$ to $+3.53$ above it --- a $19\%$ quality loss, more than $18\times$ that batch's noise floor --- so forcing both stages through one trunk destroys the pair-scoring ability at this problem size; the failure is structural rather than a bad corner of the grid.
 
 \begin{figure}[t]
 \centering
@@ -1048,14 +1194,14 @@ concat   & off & 20.154 & 192 & $+3.520 \pm 0.251$ \\
 concat   & on  & 20.160 & 236 & $+3.526 \pm 0.099$ \\
 \bottomrule
 \end{tabular}
-\caption{Shared-encoder grid, sorted by mean cost; $\Delta$ is seed-paired against the incumbent actor re-run with context off ($16.633 \pm 0.036$, $180$\,s). Per-cell seed std between $0.06$ and $0.26$; noise floor $\approx 0.176$. Within the shared family the bilinear head beats concatenation (main effect $-0.31$) and the context toggle is neutral ($-0.01$), but every cell is $\approx 3$ units worse than the reference.}
+\caption{Shared-encoder grid, sorted by mean cost; $\Delta$ is seed-paired against the reference actor re-run with context off ($16.633 \pm 0.036$, $180$\,s). Per-cell seed std between $0.06$ and $0.26$; noise floor $\approx 0.176$. Within the shared family the bilinear head beats concatenation (main effect $-0.31$) and the context toggle is neutral ($-0.01$), but every cell is $\approx 3$ units worse than the reference.}
 \label{tab:v3shared}
 \end{table}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{v3_shared_compare.png}
-\caption{Shared encoder against independent scorers (Table~\ref{tab:v3shared}). Left: per-seed final cost, incumbent reference (green) against the four shared cells (red); the dashed line marks the reference mean, and every shared seed sits far above it. Right: the shared $2 \times 2$ grid --- the bilinear head beats concatenation and context is roughly neutral, but all four cells are $\approx 3$ units worse than the reference.}
+\caption{Shared encoder against independent scorers (Table~\ref{tab:v3shared}). Left: per-seed final cost, reference actor (green) against the four shared cells (red); the dashed line marks the reference mean, and every shared seed sits far above it. Right: the shared $2 \times 2$ grid --- the bilinear head beats concatenation and context is roughly neutral, but all four cells are $\approx 3$ units worse than the reference.}
 \label{fig:v3shared}
 \end{figure*}
 
@@ -1076,27 +1222,27 @@ off      & learned & 16.580 & 176 & $-0.050 \pm 0.069$ \\
 off      & fixed   & 16.630 & 175 & ref \\
 \bottomrule
 \end{tabular}
-\caption{Distribution-shaping grid, sorted by mean cost; $\Delta$ is seed-paired against the both-off incumbent. Per-cell seed std between $0.04$ and $0.11$; noise floor $\approx 0.072$. Only logit clipping clears the floor; the learnable temperature does not help it (clipping main effect $-0.136$, temperature $-0.014$).}
+\caption{Distribution-shaping grid, sorted by mean cost; $\Delta$ is seed-paired against the both-off reference. Per-cell seed std between $0.04$ and $0.11$; noise floor $\approx 0.072$. Only logit clipping clears the floor; the learnable temperature does not help it (clipping main effect $-0.136$, temperature $-0.014$).}
 \label{tab:v3stab}
 \end{table}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{v3_stab_compare.png}
-\caption{Distribution shaping (Table~\ref{tab:v3stab}). Left: $2 \times 2$ grid of mean final cost and time (green = better); the clipping-on, fixed-temperature cell is the best. Right: seed-paired $\Delta$ against the both-off incumbent --- only logit clipping escapes the noise band, and stacking the learnable temperature on top of it does not help.}
+\caption{Distribution shaping (Table~\ref{tab:v3stab}). Left: $2 \times 2$ grid of mean final cost and time (green = better); the clipping-on, fixed-temperature cell is the best. Right: seed-paired $\Delta$ against the both-off reference --- only logit clipping escapes the noise band, and stacking the learnable temperature on top of it does not help.}
 \label{fig:v3stab}
 \end{figure*}
 
-\appsection{Search-Loop Components, Full Results}
+\section{Search-Loop Components, Full Results}
 \label{app:v5678}
 % ============================================================================
 
-This appendix collects the full rankings and per-seed diagnostics behind the reward, annealing, acceptance, and initialization studies of the main text, one paragraph per axis. All four batches follow the standard protocol ($3$ seeds, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set); the incumbent configuration reproduces at $16.459$--$16.460$ across the four batches, matching the adopted cell of the architecture study (Table~\ref{tab:v3stab}).
+This appendix collects the full rankings and per-seed diagnostics behind the reward, annealing, acceptance, and initialization studies of the main text, one paragraph per axis. All four batches follow the standard protocol ($3$ seeds, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set); the reference configuration reproduces at $16.459$--$16.460$ across the four batches, matching the adopted cell of the architecture study (Table~\ref{tab:v3stab}).
 
 \paragraph{Reward.}
 The reward decides which behavior PPO reinforces: per-step improvement, new records, or only the final outcome. Because the SA loop already owns part of the exploration --- worsening moves are accepted by the Metropolis criterion, not chosen by the policy --- it is not obvious how much of the trajectory should be credited to the actor. Let $\Delta_t$ denote the cost improvement realized by the executed transition (zero when the move is rejected) and $B_t$ the best cost found so far. The compared variants are: \textit{immediate}, $r_t = \Delta_t$ with a fixed penalty for infeasible proposals; \textit{acceptance-aligned}, which rewards accepted improving moves by $\Delta_t$ but deliberately assigns zero to accepted worsening moves (exploration is SA's responsibility, not the policy's fault) and a small constant penalty to rejected proposals; \textit{best-so-far}, $r_t = \max(0, B_{t-1} - B_t)$, which only rewards new records; \textit{terminal}, a single end-of-episode reward equal to the relative improvement over the initial cost; \textit{mixtures}, either a fixed convex combination of the immediate and best-so-far signals or a scheduled interpolation that starts from the dense acceptance-aligned signal early in training and shifts toward the sparser best-so-far or terminal signals; and \textit{step-penalty}, a negative per-step reward proportional to the current best cost, pressuring fast descent. In the plot labels, the internal reward names map to this terminology as \texttt{immediate} = immediate, \texttt{sa\_aligned} = acceptance-aligned, \texttt{global\_best} = best-so-far, \texttt{hybrid} = the fixed mixture ($\alpha = 0.5$), \texttt{curriculum} and \texttt{curriculum\_terminal} = the scheduled interpolations toward best-so-far and terminal respectively, and \texttt{step\_penalty\_init} and \texttt{step\_penalty\_16} = the per-step penalty normalized by the initial cost and by a fixed constant close to the typical final cost.
 
-Table~\ref{tab:reward} splits the nine candidates into two regimes (noise floor $0.042$, the pooled seed std of the stable cluster). Every reward built on dense per-step improvement lands in a band only $0.07$ wide: the incumbent immediate reward is best at $16.459$, the fixed mixture is a statistical tie (seed-paired $+0.001 \pm 0.042$), and the acceptance-aligned, best-so-far, and scheduled variants trail by at most $0.07$ --- the actor is largely insensitive to the exact shaping as long as the signal is dense. Removing the per-step credit is catastrophic: the terminal reward loses $2.95$ routing units with seed swings of almost a full unit, and the step-penalty schemes lose $0.7$ to $1.1$ with similarly unstable training --- the penalty fights the improvement signal instead of complementing it. Figure~\ref{fig:v5cluster} zooms on the stable cluster and shows the seed-paired deltas against the noise band.
+Table~\ref{tab:reward} splits the nine candidates into two regimes (noise floor $0.042$, the pooled seed std of the stable cluster). Every reward built on dense per-step improvement lands in a band only $0.07$ wide: the reference immediate reward is best at $16.459$, the fixed mixture is a statistical tie (seed-paired $+0.001 \pm 0.042$), and the acceptance-aligned, best-so-far, and scheduled variants trail by at most $0.07$ --- the actor is largely insensitive to the exact shaping as long as the signal is dense. Removing the per-step credit is catastrophic: the terminal reward loses $2.95$ routing units with seed swings of almost a full unit, and the step-penalty schemes lose $0.7$ to $1.1$ with similarly unstable training --- the penalty fights the improvement signal instead of complementing it. Figure~\ref{fig:v5cluster} zooms on the stable cluster and shows the seed-paired deltas against the noise band.
 
 \begin{table}[t]
 \centering
@@ -1105,7 +1251,7 @@ Table~\ref{tab:reward} splits the nine candidates into two regimes (noise floor 
 \toprule
 \textbf{Reward} & \textbf{Cost} \\
 \midrule
-immediate (incumbent)     & $\mathbf{16.459}$ \\
+immediate (reference)     & $\mathbf{16.459}$ \\
 fixed mixture             & $16.460$ \\
 sched.\ $\to$ best-so-far & $16.503$ \\
 best-so-far               & $16.510$ \\
@@ -1124,12 +1270,12 @@ terminal                  & $19.411$ \\
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{v5_reward_cluster.png}
-\caption{Zoom on the stable reward cluster. Left: per-seed final cost (black bars = means); the arms overlap heavily. Right: seed-paired $\Delta$ against the incumbent immediate reward --- the fixed mixture sits inside the noise band (a tie), the remaining dense variants are marginally but consistently above zero.}
+\caption{Zoom on the stable reward cluster. Left: per-seed final cost (black bars = means); the arms overlap heavily. Right: seed-paired $\Delta$ against the reference immediate reward --- the fixed mixture sits inside the noise band (a tie), the remaining dense variants are marginally but consistently above zero.}
 \label{fig:v5cluster}
 \end{figure*}
 
 \paragraph{Cooling schedule.}
-The cooling schedule controls how quickly the acceptance criterion hardens from tolerant exploration to strict descent; a learned proposal could in principle prefer a different cooling profile than blind SA. The \emph{shape} comparison holds the temperature range $(T_0, T_{\mathrm{final}})$ fixed and opposes the \textit{geometric} decay $T_{k+1} = \alpha T_k$ to a piecewise-constant \textit{step} schedule that drops the temperature at one half, two thirds, and three quarters of the horizon. It is a statistical tie: $16.460$ against $16.473$, a seed-paired $-0.013 \pm 0.034$ against a noise floor of $0.044$, with the per-seed sign split and identical wall-clock (Figure~\ref{fig:v6sched}). The \emph{range}, by contrast, holds the largest single-knob improvement of the whole validation: a $3 \times 2$ grid retrains the policy over $T_0 \in \{0.5, 1, 2\}$ and $T_{\mathrm{final}} \in \{0.01, 0.1\}$ (Table~\ref{tab:temprange}) and splits cleanly by final temperature --- every $T_{\mathrm{final}} = 0.01$ cell beats every $T_{\mathrm{final}} = 0.1$ cell, and the incumbent $(1, 0.1)$ is in fact the worst cell of its own grid. Cooling deeper gains $-0.165 \pm 0.034$ at the incumbent $T_0$, four times the $0.041$ floor, with a unanimous sign at every starting temperature; the initial temperature is inert (at $T_{\mathrm{final}} = 0.01$ the three starting points are a three-way tie). Since $0.01$ is the boundary of the tested grid, an even lower floor cannot be ruled out.
+The cooling schedule controls how quickly the acceptance criterion hardens from tolerant exploration to strict descent; a learned proposal could in principle prefer a different cooling profile than blind SA. The \emph{shape} comparison holds the temperature range $(T_0, T_{\mathrm{final}})$ fixed and opposes the \textit{geometric} decay $T_{k+1} = \alpha T_k$ to a piecewise-constant \textit{step} schedule that drops the temperature at one half, two thirds, and three quarters of the horizon. It is a statistical tie: $16.460$ against $16.473$, a seed-paired $-0.013 \pm 0.034$ against a noise floor of $0.044$, with the per-seed sign split and identical wall-clock (Figure~\ref{fig:v6sched}). The \emph{range}, by contrast, holds the largest single-knob improvement of the whole validation: a $3 \times 2$ grid retrains the policy over $T_0 \in \{0.5, 1, 2\}$ and $T_{\mathrm{final}} \in \{0.01, 0.1\}$ (Table~\ref{tab:temprange}) and splits cleanly by final temperature --- every $T_{\mathrm{final}} = 0.01$ cell beats every $T_{\mathrm{final}} = 0.1$ cell, and the reference range $(1, 0.1)$ is in fact the worst cell of its own grid. Cooling deeper gains $-0.165 \pm 0.034$ at the reference $T_0$, four times the $0.041$ floor, with a unanimous sign at every starting temperature; the initial temperature is inert (at $T_{\mathrm{final}} = 0.01$ the three starting points are a three-way tie). Since $0.01$ is the boundary of the tested grid, an even lower floor cannot be ruled out.
 
 \begin{table}[t]
 \centering
@@ -1143,7 +1289,7 @@ $1$   & $16.343$ & $\mathbf{16.508}$ \\
 $2$   & $16.354$ & $16.486$ \\
 \bottomrule
 \end{tabular}
-\caption{Temperature-range grid: mean final cost over $3$ seeds; rows = initial temperature $T_0$, columns = final temperature $T_{\mathrm{final}}$ (incumbent in bold).}
+\caption{Temperature-range grid: mean final cost over $3$ seeds; rows = initial temperature $T_0$, columns = final temperature $T_{\mathrm{final}}$ (reference in bold).}
 \label{tab:temprange}
 \end{table}
 
@@ -1155,7 +1301,7 @@ $2$   & $16.354$ & $16.486$ \\
 \end{figure*}
 
 \paragraph{Metropolis acceptance.}
-Once the proposal is learned, does the stochastic acceptance still earn its keep --- and should the policy be trained with it in the loop? A $2 \times 2$ ablation enables or disables the Metropolis criterion independently at training and at test time (the ``off'' arm accepts every proposed move), quantifying whether the learned proposal replaces the stochastic acceptance or complements it. The cross (Table~\ref{tab:metro}) shows the criterion earns its keep at deployment, not at training: removing the acceptance at test time costs $+0.119 \pm 0.025$ over the incumbent-trained actor and $+0.094 \pm 0.009$ over the greedy-trained one --- several times the $0.034$ floor and unanimous across seeds --- whereas the training-time flag is within noise at the standard test-on deployment ($+0.027 \pm 0.045$, sign split). Only when deploying greedily does greedy training pay ($+0.052 \pm 0.050$), a mild train/test-consistency effect outside the regime we deploy in. Figure~\ref{fig:v7cross} decomposes the cross into its two effects; the greedy-trained arms also show markedly lower seed variance ($0.010$/$0.020$ against $0.040$/$0.050$).
+Once the proposal is learned, does the stochastic acceptance still earn its keep --- and should the policy be trained with it in the loop? A $2 \times 2$ ablation enables or disables the Metropolis criterion independently at training and at test time (the ``off'' arm accepts every proposed move), quantifying whether the learned proposal replaces the stochastic acceptance or complements it. The cross (Table~\ref{tab:metro}) shows the criterion earns its keep at inference, not at training: removing the acceptance at test time costs $+0.119 \pm 0.025$ over the Metropolis-trained actor and $+0.094 \pm 0.009$ over the greedy-trained one --- several times the $0.034$ floor and unanimous across seeds --- whereas the training-time flag is within noise at the standard test-on inference ($+0.027 \pm 0.045$, sign split). Only when deploying greedily does greedy training pay ($+0.052 \pm 0.050$), a mild train/test-consistency effect outside the regime we deploy in. Figure~\ref{fig:v7cross} decomposes the cross into its two effects; the greedy-trained arms also show markedly lower seed variance ($0.010$/$0.020$ against $0.040$/$0.050$).
 
 \begin{table}[t]
 \centering
@@ -1164,23 +1310,23 @@ Once the proposal is learned, does the stochastic acceptance still earn its keep
 \toprule
 \textbf{Train $\backslash$ Test} & \textbf{Metropolis} & \textbf{Accept-all} \\
 \midrule
-Metropolis (incumbent) & $\mathbf{16.459}$ & $16.578$ \\
+Metropolis (reference) & $\mathbf{16.459}$ & $16.578$ \\
 Accept-all             & $16.432$          & $16.526$ \\
 \bottomrule
 \end{tabular}
-\caption{Metropolis $2 \times 2$ cross: mean final cost over $3$ seeds; rows = training setting, columns = deployment setting. Per-seed effects in Figure~\ref{fig:v7cross}.}
+\caption{Metropolis $2 \times 2$ cross: mean final cost over $3$ seeds; rows = training setting, columns = inference setting. Per-seed effects in Figure~\ref{fig:v7cross}.}
 \label{tab:metro}
 \end{table}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.95\textwidth]{v7_metro_cross.png}
-\caption{Metropolis train $\times$ test cross (Table~\ref{tab:metro}). Left: $2 \times 2$ heatmap of mean final cost (greener = better). Center: cost of removing test-time Metropolis (off $-$ on) at each training setting --- both bars are well past the noise band, the dominant effect. Right: training-flag effect (on $-$ off) at each deployment --- the test-on bar sits inside the band (a tie), test-off just clears it.}
+\caption{Metropolis train $\times$ test cross (Table~\ref{tab:metro}). Left: $2 \times 2$ heatmap of mean final cost (greener = better). Center: cost of removing test-time Metropolis (off $-$ on) at each training setting --- both bars are well past the noise band, the dominant effect. Right: training-flag effect (on $-$ off) at each inference --- the test-on bar sits inside the band (a tie), test-off just clears it.}
 \label{fig:v7cross}
 \end{figure*}
 
 \paragraph{Initialization.}
-Every episode starts from a constructive solution, both during training and at deployment, and the two roles need not agree: at training time the construction fixes the state distribution the policy learns from, while at deployment it is a free knob of the solver. Training starts from a single constructive heuristic --- random assignment, nearest neighbor, sweep, or single-customer routes --- or from a progressively introduced mixture of all four; every trained policy is additionally cross-tested from all five test-time constructions (the four above plus Clarke--Wright savings). The heuristics appear under their code names \texttt{random} (random assignment), \texttt{sweep}, \texttt{nearest\_neighbor}, \texttt{Clark\_and\_Wright} (Clarke--Wright savings), and \texttt{isolate} (single-customer routes); their construction costs on the test set are $57.9$, $30.5$, $19.0$, $16.4$, and $104.0$ respectively. Table~\ref{tab:v8grid} gives the full train $\times$ test cross. At deployment the construction barely matters --- the random-trained actor lands in a band only $0.160$ wide, the one real edge being a Clarke--Wright start, which already sits at the fixed point of the search ($-0.153 \pm 0.021$ against the $0.063$ stable floor). At training time it is decisive: actors trained from the structured heuristics lose $1.1$ to $2.8$ routing units at the standard deployment, unanimously and far past even the global $0.395$ floor, and mixing all four constructions into training dilutes coverage, a small but unanimous regression ($+0.222 \pm 0.084$). Figure~\ref{fig:v8grid} shows the cross as a heatmap, and Figure~\ref{fig:v8slices} shows the two slices that support the main-text reading: training construction matters, deployment construction barely does, and the matched train/test diagonal --- worse than the random-trained actor everywhere --- rules out a mismatch explanation.
+Every episode starts from a constructive solution, both during training and at inference, and the two roles need not agree: at training time the construction fixes the state distribution the policy learns from, while at inference it is a free knob of the solver. Training starts from a single constructive heuristic --- random assignment, nearest neighbor, sweep, or single-customer routes --- or from a progressively introduced mixture of all four; every trained policy is additionally cross-tested from all five test-time constructions (the four above plus Clarke--Wright savings). The heuristics appear under their code names \texttt{random} (random assignment), \texttt{sweep}, \texttt{nearest\_neighbor}, \texttt{Clark\_and\_Wright} (Clarke--Wright savings), and \texttt{isolate} (single-customer routes); their construction costs on the test set are $57.9$, $30.5$, $19.0$, $16.4$, and $104.0$ respectively. Table~\ref{tab:v8grid} gives the full train $\times$ test cross. At inference the construction barely matters --- the random-trained actor lands in a band only $0.160$ wide, the one real edge being a Clarke--Wright start, which already sits at the fixed point of the search ($-0.153 \pm 0.021$ against the $0.063$ stable floor). At training time it is decisive: actors trained from the structured heuristics lose $1.1$ to $2.8$ routing units at the standard inference, unanimously and far past even the global $0.395$ floor, and mixing all four constructions into training dilutes coverage, a small but unanimous regression ($+0.222 \pm 0.084$). Figure~\ref{fig:v8grid} shows the cross as a heatmap, and Figure~\ref{fig:v8slices} shows the two slices that support the main-text reading: training construction matters, inference construction barely does, and the matched train/test diagonal --- worse than the random-trained actor everywhere --- rules out a mismatch explanation.
 
 \begin{table}[t]
 \centering
@@ -1190,14 +1336,14 @@ Every episode starts from a constructive solution, both during training and at d
 \toprule
 \textbf{Train $\backslash$ Test} & \textbf{Rand.} & \textbf{Sweep} & \textbf{NN} & \textbf{C--W} & \textbf{Isol.} \\
 \midrule
-random (incumbent) & $\mathbf{16.460}$ & $16.467$ & $16.467$ & $16.307$ & $16.444$ \\
+random (reference) & $\mathbf{16.460}$ & $16.467$ & $16.467$ & $16.307$ & $16.444$ \\
 sweep              & $17.548$ & $16.950$ & $16.854$ & $16.271$ & $17.148$ \\
 nearest neighbor   & $19.228$ & $17.729$ & $17.401$ & $16.381$ & $18.837$ \\
 single-customer    & $17.736$ & $17.725$ & $17.753$ & $16.442$ & $17.706$ \\
 mixed              & $16.682$ & $16.663$ & $16.700$ & $16.357$ & $16.673$ \\
 \bottomrule
 \end{tabular}
-\caption{Initialization cross: mean final cost over $3$ seeds, rows = training construction, columns = test-time construction (NN = nearest neighbor, C--W = Clarke--Wright savings, Isol.\ = single-customer routes). The random-trained row is uniformly the best, and its spread across test constructions is only $0.160$ although the construction costs span $16.4$ (C--W) to $104.0$ (single-customer). The structured-training rows recover only in the C--W column, where the construction itself already sits at the fixed point of the search --- that column measures the deployment, not the actor. Worst case over deployments: $16.467$ (random), $16.700$ (mixed), $17.5$--$19.2$ (structured).}
+\caption{Initialization cross: mean final cost over $3$ seeds, rows = training construction, columns = test-time construction (NN = nearest neighbor, C--W = Clarke--Wright savings, Isol.\ = single-customer routes). The random-trained row is uniformly the best, and its spread across test constructions is only $0.160$ although the construction costs span $16.4$ (C--W) to $104.0$ (single-customer). The structured-training rows recover only in the C--W column, where the construction itself already sits at the fixed point of the search --- that column measures the inference, not the actor. Worst case over inferences: $16.467$ (random), $16.700$ (mixed), $17.5$--$19.2$ (structured).}
 \label{tab:v8grid}
 \end{table}
 
@@ -1211,19 +1357,19 @@ mixed              & $16.682$ & $16.663$ & $16.700$ & $16.357$ & $16.673$ \\
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.95\textwidth]{v8_init_slices.png}
-\caption{Left: final cost by training construction at the standard random-start deployment --- random (gold) is far below the rest, with mixed (gray) a close second. Right: final cost of selected actors across the five test constructions: the random-trained actor (gold) is nearly flat and mostly inside the stable-floor band, the mixed actor (purple) sits uniformly a touch above it, and the matched train/test diagonal (green diamonds) climbs away --- ruling out a train/test-matching explanation for the training-construction effect.}
+\caption{Left: final cost by training construction at the standard random-start inference --- random (gold) is far below the rest, with mixed (gray) a close second. Right: final cost of selected actors across the five test constructions: the random-trained actor (gold) is nearly flat and mostly inside the stable-floor band, the mixed actor (purple) sits uniformly a touch above it, and the matched train/test diagonal (green diamonds) climbs away --- ruling out a train/test-matching explanation for the training-construction effect.}
 \label{fig:v8slices}
 \end{figure*}
 
 % ============================================================================
-\appsection{Optimization Hyperparameters, Full Results}
+\section{Optimization Hyperparameters, Full Results}
 \label{app:xknobs}
 % ============================================================================
 
-This appendix documents the optimization-hyperparameter sweeps and their combined-configuration validation, in particular the reproducible divergence that fixed the final critic learning rate. Every axis before this one compared design alternatives; the plain numerical knobs of the optimizer were inherited, not tuned. With the architecture and search loop frozen, the knobs are swept around the incumbent one axis at a time: the actor and critic learning rates (a $3 \times 3$ grid), the entropy coefficient, and the rollout length --- the number of SA steps collected per PPO update, which sets both the horizon over which advantages are estimated and how far into the cooling schedule the collected experience reaches. Every incumbent lies strictly inside its grid, so each sweep is a proper local search around the default. All batches follow the standard protocol ($3$ seeds per configuration, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set); the per-batch noise floors are $0.031$ (learning rates), $0.046$ (entropy), $0.041$ (rollout), and $0.041$ (temperature range), and the incumbent reproduces at $16.459$--$16.508$ across the four batches.
+This appendix documents the optimization-hyperparameter sweeps and their combined-configuration validation, in particular the reproducible divergence that fixed the final critic learning rate. Every axis before this one compared design alternatives; the plain numerical knobs of the optimizer were inherited, not tuned. With the architecture and search loop frozen, the knobs are swept around the reference configuration one axis at a time: the actor and critic learning rates (a $3 \times 3$ grid), the entropy coefficient, and the rollout length --- the number of SA steps collected per PPO update, which sets both the horizon over which advantages are estimated and how far into the cooling schedule the collected experience reaches. Every reference value lies strictly inside its grid, so each sweep is a proper local search around the default. All batches follow the standard protocol ($3$ seeds per configuration, $10{,}000$ SA steps at half precision on the Nazari $N = 100$ test set); the per-batch noise floors are $0.031$ (learning rates), $0.046$ (entropy), $0.041$ (rollout), and $0.041$ (temperature range), and the reference configuration reproduces at $16.459$--$16.508$ across the four batches.
 
 \paragraph{Learning rates.}
-The actor learning rate is the axis that matters, and its effect is monotone (Table~\ref{tab:xlr}): the three worst cells all share the highest actor rate, the three best all share the lowest, and each grid step upward costs roughly $0.05$ on average over the critic axis. The critic rate is a weaker, second-order knob. The best cell --- actor $3 \times 10^{-4}$, critic $3 \times 10^{-3}$ --- improves on the incumbent by $-0.064 \pm 0.051$, unanimous across seeds against the $0.031$ floor; the combined-configuration runs below explain why the adopted configuration nevertheless keeps the critic rate at $10^{-3}$.
+The actor learning rate is the axis that matters, and its effect is monotone (Table~\ref{tab:xlr}): the three worst cells all share the highest actor rate, the three best all share the lowest, and each grid step upward costs roughly $0.05$ on average over the critic axis. The critic rate is a weaker, second-order knob. The best cell --- actor $3 \times 10^{-4}$, critic $3 \times 10^{-3}$ --- improves on the reference by $-0.064 \pm 0.051$, unanimous across seeds against the $0.031$ floor; the combined-configuration runs below explain why the adopted configuration nevertheless keeps the critic rate at $10^{-3}$.
 
 \begin{table}[t]
 \centering
@@ -1237,7 +1383,7 @@ $10^{-3}$            & $16.509$ & $\mathbf{16.460}$ & $16.466$ \\
 $3\!\times\!10^{-3}$ & $16.509$ & $16.502$ & $16.510$ \\
 \bottomrule
 \end{tabular}
-\caption{Learning-rate grid: mean final cost over $3$ seeds; rows = actor rate, columns = critic rate (incumbent in bold).}
+\caption{Learning-rate grid: mean final cost over $3$ seeds; rows = actor rate, columns = critic rate (reference in bold).}
 \label{tab:xlr}
 \end{table}
 
@@ -1252,12 +1398,12 @@ The entropy coefficient is a clean confirmation of the default (Table~\ref{tab:x
 \textbf{Entropy coefficient} & \textbf{Cost} \\
 \midrule
 $0$    & $16.587$ \\
-$0.01$ (incumbent) & $\mathbf{16.459}$ \\
+$0.01$ (reference) & $\mathbf{16.459}$ \\
 $0.05$ & $17.242$ \\
 \midrule
 \textbf{Rollout length} & \\
 $50$  & $16.904$ \\
-$100$ (incumbent) & $\mathbf{16.460}$ \\
+$100$ (reference) & $\mathbf{16.460}$ \\
 $200$ & $16.404$ \\
 \bottomrule
 \end{tabular}
@@ -1287,9 +1433,9 @@ mean (converged) & $16.216 \pm 0.048$ & $16.230 \pm 0.039$ \\
 \end{table}
 
 \paragraph{Combined-configuration runs.}
-The three wins --- the lower actor rate, the longer rollout, and the deeper cooling floor of the annealing study --- were each measured in isolation, so the joint configuration is retrained from scratch to test additivity. With the best-cell critic rate of $3 \times 10^{-3}$, five of six seeds land at $16.216 \pm 0.048$, matching the sum of the individual effects; reducing the critic rate to the incumbent $10^{-3}$ converges on every seed at $16.230 \pm 0.039$, a seed-paired $-0.223 \pm 0.016$ against the incumbent, unanimous --- the adopted configuration. Two caveats carry over to the main text: the two winning values (actor rate and cooling floor) both sit on the boundary of their grids, and the divergence below shows that stacking individually-validated winners can create interactions none of them exhibits alone. Table~\ref{tab:xcombined} lists every training run of the two combined configurations. The aggressive variant (critic rate $3 \times 10^{-3}$, the best single cell of the learning-rate grid) was extended from $3$ to $6$ seeds after the first divergence, and the failing seed was retrained a second time from scratch: both runs land at $19.86$--$19.87$, so the failure is deterministic given the seed, not a flaky run. The same seed trains without incident under the incumbent configuration ($16.473$) and under the final configuration ($16.268$), so the seed itself is not pathological --- the divergence is created only by the combination of knobs, each of which was stable across all its seeds in isolation.
+The three wins --- the lower actor rate, the longer rollout, and the deeper cooling floor of the annealing study --- were each measured in isolation, so the joint configuration is retrained from scratch to test additivity. With the best-cell critic rate of $3 \times 10^{-3}$, five of six seeds land at $16.216 \pm 0.048$, matching the sum of the individual effects; reducing the critic rate to the reference $10^{-3}$ converges on every seed at $16.230 \pm 0.039$, a seed-paired $-0.223 \pm 0.016$ against the reference configuration, unanimous --- the adopted configuration. Two caveats carry over to the main text: the two winning values (actor rate and cooling floor) both sit on the boundary of their grids, and the divergence below shows that stacking individually-validated winners can create interactions none of them exhibits alone. Table~\ref{tab:xcombined} lists every training run of the two combined configurations. The aggressive variant (critic rate $3 \times 10^{-3}$, the best single cell of the learning-rate grid) was extended from $3$ to $6$ seeds after the first divergence, and the failing seed was retrained a second time from scratch: both runs land at $19.86$--$19.87$, so the failure is deterministic given the seed, not a flaky run. The same seed trains without incident under the reference configuration ($16.473$) and under the final configuration ($16.268$), so the seed itself is not pathological --- the divergence is created only by the combination of knobs, each of which was stable across all its seeds in isolation.
 
 \paragraph{Failure mechanism.}
-The quantity that overflows is not the learning rate itself but the product of learning rate and advantage, and it is the fast critic that manufactures the oversized advantages. With a $200$-step rollout cooling to $T_{\mathrm{final}} = 0.01$, the long low-temperature tail of every collected episode is a regime where the Metropolis rule rejects nearly every non-improving move; a rejected move leaves the state unchanged and its immediate reward is exactly zero, so early in training --- when the near-random policy finds few improving moves --- the return signal is mostly zeros punctuated by rare spikes. A critic stepping $10\times$ faster than the policy it evaluates overshoots when fitting that target, and an occasional badly mis-scaled value estimate produces one outsized advantage, hence one outsized policy step; the updated policy then jumps far enough from the collection policy that the exponentiated log-ratio overflows in the backward pass and the run never recovers. The seed dependence is a race: a seed that lingers longer in the flat zero-reward regime gives the fast critic more opportunities to overshoot before the policy finds signal --- the failing seed spent roughly $50$ epochs there where a converging seed escaped in about $5$. Matching the critic rate to the incumbent $10^{-3}$ keeps the advantages bounded and closes the race at no measurable cost: the two variants are statistically indistinguishable on their common converged seeds (Table~\ref{tab:xcombined}).
+The quantity that overflows is not the learning rate itself but the product of learning rate and advantage, and it is the fast critic that manufactures the oversized advantages. With a $200$-step rollout cooling to $T_{\mathrm{final}} = 0.01$, the long low-temperature tail of every collected episode is a regime where the Metropolis rule rejects nearly every non-improving move; a rejected move leaves the state unchanged and its immediate reward is exactly zero, so early in training --- when the near-random policy finds few improving moves --- the return signal is mostly zeros punctuated by rare spikes. A critic stepping $10\times$ faster than the policy it evaluates overshoots when fitting that target, and an occasional badly mis-scaled value estimate produces one outsized advantage, hence one outsized policy step; the updated policy then jumps far enough from the collection policy that the exponentiated log-ratio overflows in the backward pass and the run never recovers. The seed dependence is a race: a seed that lingers longer in the flat zero-reward regime gives the fast critic more opportunities to overshoot before the policy finds signal --- the failing seed spent roughly $50$ epochs there where a converging seed escaped in about $5$. Matching the critic rate to the reference $10^{-3}$ keeps the advantages bounded and closes the race at no measurable cost: the two variants are statistically indistinguishable on their common converged seeds (Table~\ref{tab:xcombined}).
 
 \end{document}
