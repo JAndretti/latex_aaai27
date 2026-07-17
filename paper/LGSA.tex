@@ -77,6 +77,13 @@
 \affiliations{
 }
 
+% ── AAAI-27 submission keywords ──────────────────────────────────────────────
+% Keywords are selected on the submission form, not printed in the PDF (the
+% aaai2027 style has no keywords field). Applicable entries:
+%   Primary area: Planning, Routing, and Scheduling (PRS)
+%   PRS: Scheduling & Routing
+%   PRS: Learning for Planning & Scheduling
+
 
 
 
@@ -101,8 +108,14 @@
 \maketitle
 
 \begin{abstract}
-% TODO: replace the bracketed [XX] placeholders once the final-model results
-The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem of broad practical relevance. Neural improvement methods reach strong solution quality but typically rely on heavyweight architectures whose inference cost limits large-scale deployment. We take the opposite route: within Learning-Guided Simulated Annealing (LG-SA), a hybrid framework that retains the classical SA skeleton and learns only the move-proposal distribution, we show that a tiny policy suffices. A two-stage MLP with a single hidden layer of $32$ neurons scores node pairs in $\mathcal{O}(N)$ over a node-centric state representation whose dimensionality is independent of the instance size, so proposals are computed simultaneously for all nodes of thousands of instances on a single GPU. Training combines a stabilized PPO with a curriculum that progressively improves the initial solutions, closing the gap between short training rollouts and the long annealing horizons deployed at inference. Every design decision --- features, architecture, reward, annealing parameters, initialization, curriculum --- is validated by a seed-paired sequential protocol covering $15$ design axes and $78$ candidate settings. On the uniform $N{=}100$ benchmark, the final model reaches a routing cost of $[XX]$ at $10^4$ SA steps and $[XX]$ at $10^6$ steps, setting a new state of the art among learning-based improvement methods when solution cost and computation time are considered jointly: it matches the best reported solution quality while processing $[XX]$ instances in $[XX]$ minutes on a single GPU, orders of magnitude faster than heavyweight neural alternatives. The same checkpoint transfers across instance sizes up to $N{=}[XX]$ with near-linear runtime scaling.
+% TODO: the abstract is deliberately number-free (final-model results
+% pending). If the numbers land before the deadline, consider reinstating:
+% cost at 10^4 / 10^6 steps, batch throughput (instances / minutes), and the
+% largest evaluated size. The state-of-the-art claim is phrased on the
+% cost--compute trade-off; it must be backed by the headline table with
+% literature rows (DACT, NLNS, LIH, CDCP) and wall-clock columns before the
+% full-paper deadline.
+The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem of broad practical relevance. Neural improvement methods reach strong solution quality but typically rely on heavyweight architectures whose inference cost limits large-scale deployment. We take the opposite route: within Learning-Guided Simulated Annealing (LG-SA), a hybrid framework that retains the classical SA skeleton and learns only the move-proposal distribution, we show that a tiny policy suffices. A two-stage MLP with a single hidden layer of $32$ neurons scores node pairs in $\mathcal{O}(N)$ over a node-centric state representation whose dimensionality is independent of the instance size, so proposals are computed simultaneously for all nodes of thousands of instances on a single GPU. Training combines a stabilized PPO with a curriculum that progressively improves the initial solutions, closing the gap between short training rollouts and the long annealing horizons deployed at inference. Every design decision --- features, architecture, reward, annealing parameters, initialization, curriculum --- is validated by a seed-paired sequential protocol covering $15$ design axes and $78$ candidate settings. On uniform CVRP benchmarks, the resulting solver sets a new state of the art among learning-based improvement methods when solution cost and computation time are considered jointly: it matches the best reported solution quality while solving thousands of instances in parallel on a single GPU, orders of magnitude faster than heavyweight neural alternatives. The same checkpoint transfers to instances far beyond its training size with near-linear runtime scaling.
 \end{abstract}
 
 % ============================================================================
