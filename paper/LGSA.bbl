@@ -1,10 +1,18 @@
-\begin{thebibliography}{6}
+\begin{thebibliography}{8}
 \providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Andretti, Cabessa, and Strozecki(2026)}]{AndrettiEtAl26}
+Andretti, J.; Cabessa, J.; and Strozecki, Y. 2026.
+\newblock Learning-{Guided} {Simulated} {Annealing} for the {Capacitated}
+  {Vehicle} {Routing} {Problem}.
+\newblock In \emph{Proceedings of the {International} {Conference} on
+  {Automated} {Planning} and {Scheduling}}, volume~36. AAAI Press.
 
 \bibitem[{Correia, Worrall, and Bondesan(2023)}]{correia_neural_2023}
 Correia, A. H.~C.; Worrall, D.~E.; and Bondesan, R. 2023.
 \newblock Neural {Simulated} {Annealing}.
-\newblock In \emph{Proceedings of {The} 26th {International} {Conference} on {Artificial} {Intelligence} and {Statistics}}, 4946--4962. PMLR.
+\newblock In \emph{Proceedings of {The} 26th {International} {Conference} on
+  {Artificial} {Intelligence} and {Statistics}}, 4946--4962. PMLR.
 \newblock ISSN: 2640-3498.
 
 \bibitem[{Furnon and Perron(2024)}]{ortools_routing}
@@ -16,19 +24,32 @@ Kool, W.; van Hoof, H.; and Welling, M. 2019.
 \newblock Attention, Learn to Solve Routing Problems!
 \newblock In \emph{International Conference on Learning Representations}.
 
-\bibitem[{Nazari et~al.(2018)Nazari, Oroojlooy, Snyder, and Takac}]{nazari_reinforcement_2018}
-Nazari, M.; Oroojlooy, A.; Snyder, L.; and Takac, M. 2018.
-\newblock Reinforcement {Learning} for {Solving} the {Vehicle} {Routing} {Problem}.
-\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}}, volume~31. Curran Associates, Inc.
+\bibitem[{Ma et~al.(2021)Ma, Li, Cao, Song, Zhang, Chen, and
+  Tang}]{ma_learning_2021}
+Ma, Y.; Li, J.; Cao, Z.; Song, W.; Zhang, L.; Chen, Z.; and Tang, J. 2021.
+\newblock Learning to {Iteratively} {Solve} {Routing} {Problems} with
+  {Dual}-{Aspect} {Collaborative} {Transformer}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~34, 11096--11107. Curran Associates, Inc.
 
-\bibitem[{Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and Klimov}]{schulman_proximal_2017}
+\bibitem[{Nazari et~al.(2018)Nazari, Oroojlooy, Snyder, and
+  Takac}]{nazari_reinforcement_2018}
+Nazari, M.; Oroojlooy, A.; Snyder, L.; and Takac, M. 2018.
+\newblock Reinforcement {Learning} for {Solving} the {Vehicle} {Routing}
+  {Problem}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~31. Curran Associates, Inc.
+
+\bibitem[{Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and
+  Klimov}]{schulman_proximal_2017}
 Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and Klimov, O. 2017.
 \newblock Proximal {Policy} {Optimization} {Algorithms}.
 \newblock ArXiv:1707.06347 [cs].
 
 \bibitem[{Vidal(2016)}]{vidal_technical_2016}
 Vidal, T. 2016.
-\newblock Technical note: {Split} algorithm in {O}(n) for the capacitated vehicle routing problem.
+\newblock Technical note: {Split} algorithm in {O}(n) for the capacitated
+  vehicle routing problem.
 \newblock \emph{Computers \& Operations Research}, 69: 40--47.
 
 \end{thebibliography}

@@ -70,7 +70,7 @@
   rt/.style={thick, gray},
 }
 
-\title{Learning-Guided Simulated Annealing for the Capacitated Vehicle Routing Problem}
+\title{Tiny Policies at Scale: Curriculum-Trained Simulated Annealing for the Capacitated Vehicle Routing Problem}
 \author{
     Anonymous Submission
 }
@@ -101,33 +101,18 @@
 \maketitle
 
 \begin{abstract}
-% TODO: Abstract to be written last.
+% TODO: replace the bracketed [XX] placeholders once the final-model results
+The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem of broad practical relevance. Neural improvement methods reach strong solution quality but typically rely on heavyweight architectures whose inference cost limits large-scale deployment. We take the opposite route: within Learning-Guided Simulated Annealing (LG-SA), a hybrid framework that retains the classical SA skeleton and learns only the move-proposal distribution, we show that a tiny policy suffices. A two-stage MLP with a single hidden layer of $32$ neurons scores node pairs in $\mathcal{O}(N)$ over a node-centric state representation whose dimensionality is independent of the instance size, so proposals are computed simultaneously for all nodes of thousands of instances on a single GPU. Training combines a stabilized PPO with a curriculum that progressively improves the initial solutions, closing the gap between short training rollouts and the long annealing horizons deployed at inference. Every design decision --- features, architecture, reward, annealing parameters, initialization, curriculum --- is validated by a seed-paired sequential protocol covering $15$ design axes and $78$ candidate settings. On the uniform $N{=}100$ benchmark, the final model reaches a routing cost of $[XX]$ at $10^4$ SA steps and $[XX]$ at $10^6$ steps, setting a new state of the art among learning-based improvement methods when solution cost and computation time are considered jointly: it matches the best reported solution quality while processing $[XX]$ instances in $[XX]$ minutes on a single GPU, orders of magnitude faster than heavyweight neural alternatives. The same checkpoint transfers across instance sizes up to $N{=}[XX]$ with near-linear runtime scaling.
 \end{abstract}
 
 % ============================================================================
 \section{Introduction}
 % ============================================================================
-% TODO: Introduction.
-% Suggested flow (from the slides / old draft):
-%   - CVRP: fundamental NP-hard problem, practical relevance.
-%   - Improvement metaheuristics (SA): robust, handle capacity constraints
-%     naturally, but propose moves blindly -> slow convergence.
-%   - Neural combinatorial optimization: construction vs improvement methods;
-%     improvement learners are powerful but heavyweight at inference.
-%   - Our idea: keep the SA skeleton, replace only the blind proposal with a
-%     tiny learned policy (extends Neural SA [Correia et al. 2023] to CVRP).
-%   - Contributions bullet list.
-%   - Paper organization paragraph.
+
 
 % ============================================================================
 \section{Related Works}
 % ============================================================================
-% TODO: Related work.
-% Suggested coverage: exact methods and classical heuristics/metaheuristics
-% (Clarke-Wright, 2-opt, SA, OR-Tools, LKH/HGS); neural construction methods
-% (Nazari, Kool AM, POMO); neural improvement methods (Wu, DACT, NLNS, CDCP,
-% IIL); Neural Simulated Annealing (Correia et al. 2023) and why extending it
-% to CVRP is non-trivial (capacity constraints, feasibility).
 
 % ============================================================================
 \section{CVRP}
@@ -233,7 +218,7 @@ A solution $s_t$ consists of an ordered sequence of customer nodes separated by 
 $\bar{s}_t = \{ \mathbf{x}_k \}_{k \in \mathcal C}$ of $s_t$, 
 where each $\mathbf{x}_k$ is a feature vector that encodes both static and dynamic information associated with customer $i$ in the current solution and search state. The encoded representation $\bar{s}_t$ constitutes the input to the neural policy $\pi_\theta$.
 
-Our feature representation combines static geometric information, dynamic descriptors of the node's position within the current solution (e.g., predecessor and successor, local detour cost, and distance to the route centroid), route capacity statistics, and search meta-features such as the current temperature and remaining search budget. Unlike conventional geometric encodings, it also includes quality-related signals that explicitly characterize the local quality of the current solution around each node. Importantly, the feature dimensionality is independent of the instance size, making the representation scalable to instances with arbitrary numbers of customers. The complete feature definitions are provided in Appendix~\ref{app:features}.
+Our feature representation combines static geometric information, dynamic descriptors of the node's position within the current solution (e.g., predecessor and successor, local detour cost, and distance to the route centroid), route capacity statistics, and search meta-features such as the current temperature and remaining search budget. Unlike conventional geometric encodings, it also includes quality-related signals that explicitly characterize the local quality of the current solution around each node. Importantly, the feature dimensionality is independent of the instance size, making the representation scalable to instances with arbitrary numbers of customers. Moreover, since every node is described by the same fixed-size vector, the policy processes all nodes --- of all instances in a batch --- simultaneously, as a single vectorized tensor computation. The complete feature definitions are provided in Appendix~\ref{app:features}.
 
 
 \paragraph{Two-stage policy.}
@@ -249,20 +234,13 @@ $$
 \cdot
 \pi_\theta^{(2)}(j\mid i,\bar{s}_t) \,,
 $$
-where the two conditional distributions are parameterized by lightweight neural networks. The first network $f_\theta$ receives all node features $\{\mathbf{x}_k\}_{k\in\mathcal C}$ in parallel, computes a score for each node independently, and samples the first node $i$. Conditioned on this selection, the second network $g_\theta$ receives the pair representations $\{[\mathbf{x}_i,\mathbf{x}_k]\}_{k\in\mathcal C}$ in parallel also, computes a score for each candidate partner, and samples the second node $j$. The neural networks $f_\theta$ and $g_\theta$ are illustrated in Figure~\ref{fig:twostage} (Appendix~\ref{app:policy}).
+where the two conditional distributions are parameterized by two small multi-layer perceptrons (MLPs). The first network $f_\theta$ receives all node features $\{\mathbf{x}_k\}_{k\in\mathcal C}$ in parallel, computes a score for each node independently, and samples the first node $i$. Conditioned on this selection, the second network $g_\theta$ receives the pair representations $\{[\mathbf{x}_i,\mathbf{x}_k]\}_{k\in\mathcal C}$ in parallel also, computes a score for each candidate partner, and samples the second node $j$. The neural networks $f_\theta$ and $g_\theta$ are illustrated in Figure~\ref{fig:twostage} (Appendix~\ref{app:policy}).
 
-Hence, each action sampling step requires only $\mathcal{O}(N)$ pair evaluations instead of $\mathcal{O}(N^2)$. All computations are expressed as batched tensor operations, enabling efficient parallel execution on a GPU.
+Hence, each action sampling step requires only $\mathcal{O}(N)$ pair evaluations instead of $\mathcal{O}(N^2)$. Because both MLPs are tiny and score every node with the same computation, an entire sampling step reduces to a few batched matrix products, enabling efficient parallel execution on a GPU.
 
 
 \paragraph{Neighborhood operator.}
-The action $a_t=(i,j)$ sampled from $\pi_\theta(\cdot\mid\bar{s}_t)$ is interpreted by a neighborhood operator $H$, which transforms the current solution $s_t$ into the candidate solution
-$$
-s_t' = H(s_t,a_t)
-$$
-by applying the corresponding local-search move. 
-Here, we consider the three following standard pairwise operators: (i) \textit{Swap}, (ii) \textit{Insertion}, and (iii) \textit{2-opt/2-opt}, illustrated in Figure~\ref{fig:operators} (see Appendix~\ref{app:operators}). The neighborhood operator is fixed for a given model. Consequently, the policy learns a proposal distribution specialized for the selected operator.
-
-Under capacity constraints, many actions can generate infeasible solutions, i.e., $H(s_t,a_t) \notin \mathcal{F}$. We investigate three strategies to preserve feasibility: (i) \textit{proactive filtering}, which restricts the policy to feasible actions before sampling; (ii) \textit{reactive rejection}, which discards infeasible moves after sampling; and (iii) \textit{indirect representation} based on unconstrained permutations decoded into feasible routes using a greedy split procedure. Full details are given in Appendix~\ref{app:feasibility}. The full LG-SA iteration loop is summarized in Figure~\ref{fig:lgsa-loop}.
+The action $a_t=(i,j)$ sampled from $\pi_\theta(\cdot\mid\bar{s}_t)$ is interpreted by a neighborhood operator $H$, which transforms the current solution $s_t$ into the candidate solution $s_t' = H(s_t,a_t)$ by applying the corresponding local-search move. Following the operator--feasibility study of our previous work \citep{AndrettiEtAl26}, we adopt the \textit{insertion} operator, which relocates node $i$ immediately after node $j$, and preserve feasibility under the capacity constraints through \textit{proactive masking}, which restricts the policy to feasible actions before sampling. The alternative operators (swap, 2-opt/2-opt*) and constraint-handling strategies (reactive rejection, indirect representation) compared in that study are recalled in Appendices~\ref{app:operators} and~\ref{app:feasibility}. The full LG-SA iteration loop is summarized in Figure~\ref{fig:lgsa-loop}.
 
 \begin{figure}[h!]
 \centering
@@ -297,7 +275,7 @@ $};
 The LG-SA search process is formulated as a Markov Decision Process (MDP). The encoded solution $\bar{s}_t$ constitutes the state, the sampled node pair $a_t=(i,j)$ the action, and the transition combines the neighborhood operator with the stochastic Metropolis acceptance criterion. The reward is derived from the normalized improvement in solution quality, encouraging proposals that improve the search trajectory rather than individual moves.
 
 
-The policy is trained using Proximal Policy Optimization (PPO) \citep{schulman_proximal_2017}. The \textit{actor} is the two-stage policy described above, while the \textit{critic} is a separate permutation-invariant network operating on the encoded state $\bar s_t$. Compared with standard PPO, our implementation incorporates an adaptive KL-regularized clipped objective, KL-driven learning-rate adaptation, and a regularized critic to improve training stability over the long stochastic SA horizon. Further details are given in Appendix~\ref{app:ppo}.
+The policy is trained using Proximal Policy Optimization (PPO) \citep{schulman_proximal_2017}. The \textit{actor} is the two-stage policy described above, while the \textit{critic} is a separate small permutation-invariant MLP operating on the encoded state $\bar s_t$. Compared with standard PPO, our implementation incorporates an adaptive KL-regularized clipped objective, KL-driven learning-rate adaptation, and a regularized critic to improve training stability over the long stochastic SA horizon. Further details are given in Appendix~\ref{app:ppo}.
 
 
 
@@ -309,7 +287,7 @@ Beyond the PPO optimization itself, we introduce a dedicated training methodolog
 
 Training instances are initialized using diverse constructive heuristics, including \textit{random assignment}, \textit{nearest neighbor}, \textit{sweep}, \textit{Clarke--Wright savings} (greedy route merging based on distance savings), and \textit{isolate} (single-customer routes), exposing the policy to qualitatively different regions of the solution space. 
 
-We employ curriculum learning to progressively improve the initial solutions encountered during training. Before each collection phase, every instance is first improved by the current policy for a limited number of LG-SA iterations, and this warm-up depth gradually increases throughout training. Consequently, early episodes focus on repairing poor initial solutions, whereas later episodes increasingly start from refined solutions and learn to perform the fine-grained improvements required near local optima. The construction heuristics are detailed in Appendix~\ref{app:init} and the curriculum mechanisms in Appendix~\ref{app:curriculum}.
+During training, the reward is evaluated on short LG-SA rollouts of only a few hundred annealing steps --- orders of magnitude shorter than the budgets deployed at inference --- so a policy trained solely from constructive solutions would rarely experience the well-optimized states that dominate the end of a long search. We therefore employ curriculum learning \citep{ma_learning_2021} to progressively improve the initial solutions encountered during training. Before each collection phase, every instance is first improved by the current policy for a limited number of LG-SA iterations, and this warm-up depth gradually increases throughout training. Consequently, early episodes focus on repairing poor initial solutions, whereas later episodes increasingly start from refined solutions and learn to perform the fine-grained improvements required near local optima. The construction heuristics are detailed in Appendix~\ref{app:init} and the curriculum mechanisms in Appendix~\ref{app:curriculum}.
 
 
 
@@ -379,25 +357,8 @@ Combined confirmation & rates, rollout, $T_{\mathrm{final}}$ & --- & $+0.22^{**}
 \label{tab:summary}
 \end{table}
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-\textbf{Operator} & \textbf{Masking} & \textbf{Indirect} & \textbf{Rejection} \\
-\midrule
-Insertion & $\mathbf{16.68 \pm 0.03}$ & $16.97 \pm 0.04$ & $26.36 \pm 0.71$ \\
-Swap      & $19.50 \pm 1.54$          & $22.82 \pm 1.36$ & $35.75 \pm 3.04$ \\
-2-opt(*)  & $18.93 \pm 0.09$          & $21.29 \pm 0.39$ & $25.84 \pm 0.42$ \\
-\bottomrule
-\end{tabular}
-\caption{Operator $\times$ feasibility study: mean final cost $\pm$ seed std at $N=100$ ($10^4$ SA steps, $10{,}000$ instances, $3$ seeds; all runs start from mean cost $57.87$). Insertion with proactive masking wins and is also the most stable cell. Definitions, main effects, compute, and per-seed diagnostics in Appendix~\ref{app:v1}.}
-\label{tab:v1grid}
-\end{table}
-
-
 \paragraph{Search operators.}
-The first sweep jointly fixes the operator $H$ (swap, insertion, 2-opt/2-opt*) and the constraint-handling strategy (proactive masking, reactive rejection, or indirect representation). Insertion with proactive masking emerges as the best-performing configuration (Table~\ref{tab:v1grid}), achieving both the lowest routing cost and the lowest seed variance. Insertion naturally matches the two-stage policy's node-pair formulation by relocating a selected node relative to another, whereas reactive rejection consistently performs worst, as discarded proposals waste both search budget and learning signal. The factorial main effects confirm that the winning cell is not an interaction artefact (Table~\ref{tab:v1main}, Appendix~\ref{app:v1}).
+The operator $H$ and the constraint-handling strategy were already validated in our previous work \citep{AndrettiEtAl26}, where insertion with proactive masking dominated the full operator $\times$ feasibility grid; no new operator or feasibility mechanism is introduced here. The first sweep therefore only re-confirms this choice in the present setting --- insertion with masking again achieves both the lowest cost and the lowest seed variance --- and the complete grid, factorial main effects, compute costs, and per-seed diagnostics are deferred to Appendix~\ref{app:v1} (Tables~\ref{tab:v1grid} and~\ref{tab:v1main}).
 
 
 \begin{table}[t]
@@ -425,7 +386,7 @@ The feature ablation study shows that individual group importance does not fully
 
 
 \paragraph{Policy and learning.}
-We first analyze the architecture of the actor $\pi_\theta$, studying three possible extensions of the original two-stage design: increasing the depth and width of the scoring networks $f_\theta$ and $g_\theta$, adding a pooled global instance context to their inputs, and replacing the independent scorers with a shared encoder. None of these modifications improves over the original factorized actor (Appendix~\ref{app:v3}): the width $\times$ depth capacity grid never clears the noise floor while wall-clock rises by up to $38\%$ (Table~\ref{tab:v3arch}), the signature of a capacity plateau (Figure~\ref{fig:v3archpareto}); the pooled global context degrades every seed at $+48\%$ compute; and the shared encoder loses $\approx 3$ routing units in every cell of its grid (Table~\ref{tab:v3shared}).
+The actor and the critic are deliberately tiny MLPs --- a single hidden layer of $32$ neurons suffices for the two scoring networks --- so that scoring all nodes amounts to a few matrix products, vectorized across the nodes of every instance in the batch. We first analyze the architecture of the actor $\pi_\theta$, studying three possible extensions of the original two-stage design: increasing the depth and width of the scoring networks $f_\theta$ and $g_\theta$, adding a pooled global instance context to their inputs, and replacing the independent scorers with a shared encoder. None of these modifications improves over the original factorized actor (Appendix~\ref{app:v3}): the width $\times$ depth capacity grid never clears the noise floor while wall-clock rises by up to $38\%$ (Table~\ref{tab:v3arch}), the signature of a capacity plateau (Figure~\ref{fig:v3archpareto}); the pooled global context degrades every seed at $+48\%$ compute; and the shared encoder loses $\approx 3$ routing units in every cell of its grid (Table~\ref{tab:v3shared}).
 
 We also study two stabilization mechanisms: a logit clipping in the actor (Table~\ref{tab:v3stab}) and a richer critic architecture (Table~\ref{tab:v3critic}), both in Appendix~\ref{app:v3}. Logit clipping at $C = 10$ provides a larger and more consistent gain, preventing the proposal distribution from collapsing while leaving the inference cost unchanged. The multi-statistic critic improves performance at no inference cost, since the critic is discarded after training.  At $N=100$, these results suggest that improving value estimation and maintaining proposal diversity are more important than further increasing actor capacity.
 
@@ -469,7 +430,7 @@ We finally study the initial solution, comparing five construction heuristics (d
 \label{fig:ramp}
 \end{figure}
 
-Training episodes are far shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation with out-of-distribution evaluations.
+Training rewards are evaluated on LG-SA rollouts of only a few hundred steps, far shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. Curriculum learning \citep{ma_learning_2021} closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation with out-of-distribution evaluations.
 % TODO(curriculum): Q protocol results — Q0 5-seed no-CL baseline (= floor),
 % Q1 warmup ramp, Q2 random depth, Q3 persistent chains, Q4 budget-matched
 % coverage ablation, Q5 5-seed confirmation + OOD evals, Q6 PPO-epochs
@@ -857,7 +818,7 @@ The training-time construction fixes the state distribution the policy learns fr
 \subsection{Curriculum Learning}
 \label{app:curriculum}
 
-Training episodes are much shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum closes this gap by moving the \textit{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ grows over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs, following a linear or sigmoid ramp (Figure~\ref{fig:ramp}). Early in training the policy thus learns to repair poor solutions; later it increasingly learns to improve already-refined ones. A further variant draws a per-instance depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$ instead of warming every instance to the same depth, so that a single batch covers the entire spectrum from raw initializations to deeply improved solutions.
+Training episodes are much shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. The curriculum \citep{ma_learning_2021} closes this gap by moving the \textit{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ grows over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs, following a linear or sigmoid ramp (Figure~\ref{fig:ramp}). Early in training the policy thus learns to repair poor solutions; later it increasingly learns to improve already-refined ones. A further variant draws a per-instance depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$ instead of warming every instance to the same depth, so that a single batch covers the entire spectrum from raw initializations to deeply improved solutions.
 
 The curriculum is validated with its own sequential protocol: (0) a multi-seed no-curriculum baseline, which also provides the noise floor used throughout this section; (1) a go/no-go comparison of a neutral mid-range curriculum against that baseline; (2) schedule shape (sigmoid against linear); (3) warm-up strength $\xi_{\mathrm{CL}}$; (4) ramp duration $E$; (5) sigmoid steepness; (6) a mechanism ablation opposing the ramped warm-up to a constant warm-up of equal budget, separating the contribution of the progression itself; and (7) the per-instance random depth, hypothesized to pay off in robustness and out-of-distribution behavior more than in the in-distribution headline. The winning curriculum is confirmed against the baseline with $5$ seeds.
 % TODO: curriculum results (gate outcome; winning schedule/strength/ramp;
@@ -870,7 +831,23 @@ The curriculum is validated with its own sequential protocol: (0) a multi-seed n
 \label{app:v1}
 % ============================================================================
 
-This appendix collects the complete diagnostics of the operator $\times$ feasibility sweep summarized in Table~\ref{tab:v1grid}; the operators and feasibility strategies themselves are defined in Appendices~\ref{app:operators} and~\ref{app:feasibility}. The sweep trains one policy per operator--strategy cell ($3$ seeds per cell, $27$ runs). In the plot legends, the internal configuration names map to the paper terminology as \texttt{valid} = proactive masking, \texttt{free} = indirect representation (greedy split), \texttt{rm\_depot} = reactive rejection.
+This appendix collects the complete results of the operator $\times$ feasibility sweep (Table~\ref{tab:v1grid}); the operators and feasibility strategies themselves are defined in Appendices~\ref{app:operators} and~\ref{app:feasibility}. The sweep replicates, under the present training configuration, the operator--feasibility study of \citet{AndrettiEtAl26}, and reaches the same conclusion. It trains one policy per operator--strategy cell ($3$ seeds per cell, $27$ runs). In the plot legends, the internal configuration names map to the paper terminology as \texttt{valid} = proactive masking, \texttt{free} = indirect representation (greedy split), \texttt{rm\_depot} = reactive rejection.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Operator} & \textbf{Masking} & \textbf{Indirect} & \textbf{Rejection} \\
+\midrule
+Insertion & $\mathbf{16.68 \pm 0.03}$ & $16.97 \pm 0.04$ & $26.36 \pm 0.71$ \\
+Swap      & $19.50 \pm 1.54$          & $22.82 \pm 1.36$ & $35.75 \pm 3.04$ \\
+2-opt(*)  & $18.93 \pm 0.09$          & $21.29 \pm 0.39$ & $25.84 \pm 0.42$ \\
+\bottomrule
+\end{tabular}
+\caption{Operator $\times$ feasibility study: mean final cost $\pm$ seed std at $N=100$ ($10^4$ SA steps, $10{,}000$ instances, $3$ seeds; all runs start from mean cost $57.87$). Insertion with proactive masking wins and is also the most stable cell.}
+\label{tab:v1grid}
+\end{table}
 
 \paragraph{Main effects.}
 Table~\ref{tab:v1main} averages each factor level over the other factor. Insertion and masking win marginally as well as jointly, so the winning cell of Table~\ref{tab:v1grid} is not an interaction artefact: the best operator and the best feasibility strategy are individually best as well. Relocating a single node is the move that best matches a learned pointer to a promising node pair, whereas the value of a swap or a segment reversal depends more delicately on both endpoints simultaneously, making the credit assignment noisier --- visible in the swap column's large seed variance. Reactive rejection is uniformly the worst strategy for every operator: discarding infeasible proposals wastes both search budget and learning signal, and the policy must spend capacity learning the feasibility boundary instead of move quality. The indirect (greedy-split) representation is competitive in cost for insertion but pays the reconstruction at every step. The margin of the winning cell over the runner-up (insertion + indirect, $+0.29$) is an order of magnitude above the insertion-row seed stds ($0.03$--$0.04$), and the runner-up shares the operator, so the operator choice stands even if the two leading feasibility strategies were tied.

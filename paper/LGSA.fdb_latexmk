@@ -1,15 +1,15 @@
 # Fdb version 4
-["bibtex LGSA"] 1784214528.13595 "LGSA.aux" "LGSA.bbl" "LGSA" 1784214788.01132 0
+["bibtex LGSA"] 1784293812.6871 "LGSA.aux" "LGSA.bbl" "LGSA" 1784294098.38092 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
-  "./bib.bib" 1783608818.74741 54241 0b753106345064f8854303580622e8ba ""
-  "LGSA.aux" 1784214787.88138 3345 050c5aba57b644e7194de08b7cfebeac "pdflatex"
+  "./bib.bib" 1784292804.72975 54709 0f5cc5d46c35a9e99f15986e31715cf5 ""
+  "LGSA.aux" 1784294098.24309 3680 3f60a7ee6ed6dee0858aad0bd6985378 "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1784214786.45457 "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" "LGSA.pdf" "LGSA" 1784214788.01143 0
+["pdflatex"] 1784294096.84618 "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" "LGSA.pdf" "LGSA" 1784294098.38102 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" 1784214786.31308 117172 05eca73a15c8a2efd2d32393a10faa1d ""
+  "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" 1784294096.70743 118556 6fad6ee178d97a66b7413554637f50fa ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -220,9 +220,9 @@
   "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
   "Figures/v8_init_grid.png" 1783875258.91561 80223 73310ba0535fcdb05175cb5bf155760e ""
   "Figures/v8_init_slices.png" 1783875258.91609 74565 47b3ab874d3c8ba7a608e80e58ecf862 ""
-  "LGSA.aux" 1784214787.88138 3345 050c5aba57b644e7194de08b7cfebeac "pdflatex"
-  "LGSA.bbl" 1784214528.1828 1637 24faa60d909fcafd675302b1da0aac41 "bibtex LGSA"
-  "LGSA.tex" 1784214786.31308 117172 05eca73a15c8a2efd2d32393a10faa1d ""
+  "LGSA.aux" 1784294098.24309 3680 3f60a7ee6ed6dee0858aad0bd6985378 "pdflatex"
+  "LGSA.bbl" 1784293812.72753 2425 424e8ac882ace69a3d6d648b0d4da4b0 "bibtex LGSA"
+  "LGSA.tex" 1784294096.70743 118556 6fad6ee178d97a66b7413554637f50fa ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"

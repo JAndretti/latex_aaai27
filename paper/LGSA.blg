@@ -4,47 +4,46 @@ The top-level auxiliary file: LGSA.aux
 The style file: aaai2027.bst
 Database file #1: bib.bib
 Warning--entry type for "ortools_routing" isn't style-file defined
---line 44 of file bib.bib
-Warning--I didn't find a database entry for "AndrettiEtAl26"
-You've used 6 entries,
+--line 54 of file bib.bib
+You've used 8 entries,
             2840 wiz_defined-function locations,
-            623 strings with 5632 characters,
-and the built_in function-call counts, 3832 in all, are:
-= -- 309
-> -- 204
-< -- 1
-+ -- 73
-- -- 68
-* -- 263
-:= -- 634
-add.period$ -- 26
-call.type$ -- 6
-change.case$ -- 50
-chr.to.int$ -- 7
-cite$ -- 6
-duplicate$ -- 264
-empty$ -- 251
-format.name$ -- 82
-if$ -- 741
+            635 strings with 6140 characters,
+and the built_in function-call counts, 5649 in all, are:
+= -- 450
+> -- 307
+< -- 3
++ -- 110
+- -- 103
+* -- 396
+:= -- 903
+add.period$ -- 36
+call.type$ -- 8
+change.case$ -- 72
+chr.to.int$ -- 9
+cite$ -- 8
+duplicate$ -- 391
+empty$ -- 371
+format.name$ -- 123
+if$ -- 1108
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 58
-newline$ -- 34
-num.names$ -- 24
-pop$ -- 144
+missing$ -- 89
+newline$ -- 44
+num.names$ -- 32
+pop$ -- 219
 preamble$ -- 1
-purify$ -- 42
+purify$ -- 60
 quote$ -- 0
-skip$ -- 120
+skip$ -- 179
 stack$ -- 0
-substring$ -- 129
-swap$ -- 129
-text.length$ -- 1
+substring$ -- 199
+swap$ -- 202
+text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 54
+type$ -- 72
 warning$ -- 0
-while$ -- 29
+while$ -- 40
 width$ -- 0
-write$ -- 80
-(There were 2 warnings)
+write$ -- 109
+(There was 1 warning)
