@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper_summaries.aux
+The style file: plainnat.bst
+Database file #1: ref.bib
+Warning--empty journal in helsgaun_extension_2017
+Warning--empty journal in pirnay_self-improvement_2024
+Warning--empty journal in queiroga_10000_nodate
+You've used 29 entries,
+            2773 wiz_defined-function locations,
+            787 strings with 13091 characters,
+and the built_in function-call counts, 16345 in all, are:
+= -- 1408
+> -- 1235
+< -- 18
++ -- 409
+- -- 380
+* -- 1424
+:= -- 2550
+add.period$ -- 133
+call.type$ -- 29
+change.case$ -- 202
+chr.to.int$ -- 29
+cite$ -- 61
+duplicate$ -- 630
+empty$ -- 1147
+format.name$ -- 415
+if$ -- 3417
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 17
+newline$ -- 191
+num.names$ -- 128
+pop$ -- 434
+preamble$ -- 1
+purify$ -- 173
+quote$ -- 0
+skip$ -- 545
+stack$ -- 0
+substring$ -- 358
+swap$ -- 107
+text.length$ -- 13
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 319
+warning$ -- 3
+while$ -- 114
+width$ -- 0
+write$ -- 453
+(There were 3 warnings)

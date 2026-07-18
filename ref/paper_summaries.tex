@@ -1,0 +1,423 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[numbers]{natbib}
+\usepackage[hidelinks]{hyperref}
+\emergencystretch=1.5em
+
+\newcommand{\benchline}[1]{\par\smallskip\noindent\textbf{Benchmarks:} #1}
+\newcommand{\baseline}[1]{\par\noindent\textbf{Compared against:} #1}
+
+\title{Annotated Summary of the Reference Papers\\
+\large Datasets, baselines, and results on the Nazari benchmark}
+\author{}
+\date{Compiled July 2026}
+
+\begin{document}
+\maketitle
+
+\noindent This document summarises every paper in \texttt{ref/}. For each paper it states
+(i) what the paper does, (ii) on which datasets it was evaluated (Nazari-style uniform
+instances, Uchoa Set~X / CVRPLIB, Queiroga XML100, Queiroga Set~XL, TSPLIB, \dots), and
+(iii) which other solvers it benchmarked. Section~\ref{sec:overview} gives a one-glance
+overview table, and Section~\ref{sec:nazari-table} collects the published results on the
+Nazari benchmark for $n=50$ and $n=100$ customers.
+
+\section{The four benchmark families}
+\label{sec:benchmarks}
+
+\paragraph{Nazari benchmark (uniform random instances).}
+Introduced by \citet{nazari_reinforcement_2018} and adopted by essentially all neural CVRP
+papers. Customer and depot coordinates are drawn uniformly from the unit square, demands
+uniformly from $\{1,\dots,9\}$, and the vehicle capacity is $30$, $40$ and $50$ for $n=20$,
+$50$ and $100$ customers respectively. \citet{kool_attention_2018} fixed the now-standard
+test protocol of $10{,}000$ held-out instances per size and reported average tour length,
+which makes numbers across papers directly comparable (Table~\ref{tab:nazari}).
+
+\paragraph{Uchoa Set X (and derivatives XE, CVRPLIB).}
+\citet{uchoa_new_2017} proposed 100 instances with 100--1{,}000 customers covering a wide
+range of depot positions, customer layouts (random / clustered / mixed), demand
+distributions and route lengths; it is the standard OR benchmark, hosted on CVRPLIB
+together with the older classical sets (A, B, E, F, M, P, Golden, \dots). The paper
+evaluates the state-of-the-art heuristics ILS-SP (Subramanian et al.) and UHGS (Vidal et
+al.) plus a Branch-Cut-and-Price exact code on the new set.
+\citet{hottung_andre_neural_2020} later derived the \emph{XE} groups (17 groups of 20
+instances, 100--297 customers) by re-sampling instances with Set-X characteristics so that
+learning methods can be trained per distribution.
+
+\paragraph{Queiroga XML100 (``10{,}000 optimal solutions'').}
+\citet{queiroga_10000_nodate} (note: \emph{Queiroga}, often misspelled Quiroga) generated
+10{,}000 heterogeneous 100-customer instances with the Set-X generator and solved almost
+all of them to \emph{proven optimality} with a Branch-Cut-and-Price solver. The package
+includes the instance generator (for producing unlimited training data) and is explicitly
+aimed at machine-learning-based heuristics, enabling absolute optimality-gap evaluation.
+
+\paragraph{Queiroga Set XL.}
+\citet{queiroga_xl_2026} extend the X methodology to 100 large-scale instances with
+1{,}000--10{,}000 customers. To provide initial best-known solutions they ran eight
+solvers: AILS-II, FILO, FILO2, KGLS-XXL, \textbf{HGS-CVRP}, SISRs, LKH-3 and OR-Tools.
+AILS-II produced 93 of the 100 initial BKS; HGS-CVRP remains the best method on XML100 and
+on the smaller half of Set X, while AILS-II and SISRs scale better to the XL regime. A
+community BKS challenge is hosted on CVRPLIB.
+
+\section{Classical solvers and benchmark papers}
+
+\paragraph{LKH-3 \citep{helsgaun_extension_2017}.}
+Extension of the Lin--Kernighan--Helsgaun TSP solver to constrained routing problems by
+transforming them into standard TSPs and penalising constraint violations. Tested on
+roughly 10{,}000 benchmark instances from the literature covering $\sim$30 problem
+classes; for the CVRP alone, 509 CVRPLIB instances (LKH-3 matched the BKS on 327 of them).
+It is the most common ``strong classical baseline'' in the neural-CVRP literature.
+\benchline{CVRPLIB and many other VRP-variant libraries (no Nazari-style instances in the
+report itself).}
+\baseline{best-known solutions from the literature.}
+
+\paragraph{HGS-CVRP \citep{vidal_hybrid_2022}.}
+Open-source specialisation of the Hybrid Genetic Search to the CVRP, adding the SWAP*
+neighborhood. On Set X it dominates all competitors (average gap $\approx 0.1\%$),
+followed by SISR ($0.19\%$), FILO, HILS, KGLS, LKH-3 ($1.00\%$) and OR-Tools ($4.01\%$).
+Currently the reference heuristic for the CVRP; several neural papers use it as the
+optimality proxy.
+\benchline{Uchoa Set X (100--1{,}000 customers).}
+\baseline{OR-Tools, LKH-3, HILS, KGLS, SISR, FILO, HGS-2012.}
+
+\paragraph{Set X paper \citep{uchoa_new_2017}, XML100 \citep{queiroga_10000_nodate},
+Set XL \citep{queiroga_xl_2026}.} See Section~\ref{sec:benchmarks}.
+
+\section{Learning to construct solutions}
+
+\paragraph{Pointer Networks \citep{vinyals_pointer_2015}.}
+Sequence-to-sequence model with an attention-based ``pointer'' over input positions,
+trained by supervised learning. Solves convex hull, Delaunay triangulation and planar TSP
+with 5--50 cities. No CVRP; historical starting point of the field.
+\benchline{Self-generated uniform TSP instances.}
+\baseline{exact/approximate TSP algorithms (A1--A3 heuristics).}
+
+\paragraph{Neural Combinatorial Optimization with RL \citep{bello_neural_2016}.}
+Trains a pointer network with actor-critic REINFORCE instead of supervision; introduces
+\emph{active search} (instance-wise fine-tuning at test time). Near-optimal on uniform
+TSP20--100 and 0--1 Knapsack. No CVRP.
+\benchline{Uniform random TSP20/50/100, Knapsack.}
+\baseline{Christofides, OR-Tools local search, supervised pointer network.}
+
+\paragraph{Nazari et al. \citep{nazari_reinforcement_2018}.}
+First deep-RL model for the CVRP: replaces the RNN encoder of the pointer network with
+permutation-invariant element-wise embeddings so that the dynamic state (remaining
+demands) can be re-embedded after each decoding step; trained with policy gradient, greedy
+or beam-search decoding. Defines the Nazari benchmark (VRP10/20/50/100, see
+Section~\ref{sec:benchmarks}). Results on VRP50/100 are reported as win rates rather than
+tour lengths; the lengths usually attributed to this method (11.15 / 16.96 for RL-BS(10))
+were tabulated by \citet{kool_attention_2018}.
+\benchline{Nazari uniform instances (VRP10--VRP100), 1{,}000 test instances.}
+\baseline{Clarke--Wright savings, Sweep heuristic, OR-Tools, exact MIP (small sizes).}
+
+\paragraph{Attention Model (AM) \citep{kool_attention_2018}.}
+Transformer encoder + attention decoder trained with REINFORCE and a greedy-rollout
+baseline; one architecture for TSP, CVRP, SDVRP, OP and PCTSP. Established the
+10k-instance evaluation protocol. CVRP: 10.98/16.80 (greedy) and 10.62/16.23 (1280
+samples) for $n{=}50/100$.
+\benchline{Nazari uniform instances (TSP/CVRP/SDVRP/OP/PCTSP, $n\le100$).}
+\baseline{Gurobi, Concorde, LKH-3, OR-Tools, Clarke--Wright, Sweep, Nazari et al.,
+NeuRewriter-era baselines.}
+
+\paragraph{POMO \citep{kwon_pomo_2020}.}
+Exploits solution symmetries: REINFORCE with a shared baseline over $N$ rollouts starting
+from every possible first node, plus $\times 8$ instance augmentation at inference.
+CVRP100 in 0.32\% of LKH-3 within minutes (10.42 / 15.73 for $n{=}50/100$).
+\benchline{Nazari uniform instances (TSP, CVRP, Knapsack).}
+\baseline{LKH-3, OR-Tools, AM, NeuRewriter, NLNS, L2I.}
+
+\paragraph{Learning Collaborative Policies (LCP) \citep{kim_learning_2021}.}
+Two-policy scheme: a ``seeder'' generates diverse candidate solutions (entropy-regularised
+AM) and a ``reviser'' repairs partial segments; applicable on top of AM. AM+LCP reaches
+10.52 / 15.98 on CVRP50/100.
+\benchline{Nazari uniform instances (TSP, PCTSP, CVRP; TSP up to $n{=}500$).}
+\baseline{LKH-3, OR-Tools, AM (sampling), NLNS, Nazari RL.}
+
+\paragraph{Efficient Active Search (EAS) \citep{hottung_efficient_2021}.}
+Revives Bello et al.'s active search but updates only a small subset of parameters per
+instance (added embeddings, an extra layer, or a policy lookup table) on top of a trained
+POMO model. Surpasses LKH-3 on uniform CVRP100 (15.63 vs.\ 15.65) and generalises to
+$n=125/150/200$; also evaluated on the XE groups derived from Set X, where EAS beats NLNS
+and LKH-3 on 8 of 9 sets.
+\benchline{Nazari/Kool uniform instances (TSP/CVRP $n{=}100$--$200$); XE instance groups
+based on Set X \citep{hottung_andre_neural_2020}.}
+\baseline{LKH-3, UHGS (on XE), Concorde, POMO (greedy/sampling), original active search,
+DPDP, NLNS, DACT, GNN-guided methods.}
+
+\paragraph{Simulation-Guided Beam Search (SGBS) \citep{choo_simulation-guided_2022}.}
+Inference method: beam search whose expansions are scored by greedy POMO rollouts
+(simulations), optionally interleaved with EAS updates (SGBS+EAS). CVRP100: 15.659 (SGBS)
+and 15.594/15.580 (SGBS+EAS short/long); roughly halves the previous neural gap to HGS.
+\benchline{Uniform instances: TSP100/150/200, CVRP100/150/200, FFSP20/50/100.}
+\baseline{Concorde, LKH-3, HGS, DACT, NLNS, DPDP, POMO, EAS, MatNet (FFSP).}
+
+\paragraph{BQ-NCO \citep{drakulic_bq-nco_2023}.}
+Reformulates constructive NCO as a bisimulation-quotiented MDP so that the policy
+conditions only on the \emph{remaining} sub-problem; trained by imitation of near-optimal
+solutions (LKH for CVRP). Strong out-of-distribution generalisation: trained on $n=100$,
+tested up to $n=1{,}000$ (CVRP gaps vs.\ LKH-3: 0.61\% at $n{=}100$ with beam 16) and on
+all Euclidean CVRPLIB instances up to 4{,}461 nodes.
+\benchline{Uniform instances $n\in\{100,200,500,1000\}$ (TSP, CVRP, OP, KP); TSPLIB;
+CVRPLIB (incl.\ Set X).}
+\baseline{LKH-3, HGS, Concorde, OR-Tools, AM, MDAM, POMO, SGBS, EAS, LEHD.}
+
+\paragraph{LEHD \citep{luo_neural_2023}.}
+Light-encoder/heavy-decoder architecture trained by supervised learning on HGS solutions
+of uniform CVRP100; the heavy decoder re-attends to all remaining nodes at each step,
+which transfers well to larger sizes. With Random Re-Construct (RRC) iterations it
+outperforms LKH-3 on uniform CVRP200--500 (gaps are reported relative to LKH-3, e.g.\
+$-0.24\%$ at $n{=}200$ with RRC~500). Also tested on TSPLIB and CVRPLIB sets A, B, E, F,
+M, P and X.
+\benchline{Uniform instances $n\in\{100,200,500,1000\}$; TSPLIB; CVRPLIB sets A, B, E,
+F, M, P, X.}
+\baseline{LKH-3, HGS, Concorde, OR-Tools, MDAM, POMO, SGBS, EAS, BQ-NCO,
+Att-GCN+MCTS.}
+
+\paragraph{Self-Improvement / Gumbeldore \citep{pirnay_self-improvement_2024}.}
+Replaces both expert data and policy gradients: in each epoch the model samples solutions
+without replacement (round-wise stochastic beam search with an advantage-based policy
+update), then imitates its own best solutions. Built on the BQ architecture; matches
+supervised BQ on TSP/CVRP (CVRP100 gap to HGS: 1.72\% with beam 16 vs.\ 1.22\% for
+supervised BQ) and sets state of the art on JSSP.
+\benchline{Uniform instances $n\in\{100,200,500,1000\}$ (same test sets as
+LEHD/BQ-NCO); JSSP benchmarks.}
+\baseline{OR-Tools, AM, MDAM, POMO, SGBS, BQ (supervised), LEHD.}
+
+\section{Learning to improve / learning-guided search}
+
+\paragraph{NeuRewriter \citep{chen_learning_2019}.}
+Learns a region-picking and a rule-picking policy that iteratively rewrite a feasible
+solution; trained with actor-critic on the improvement per rewriting step. Applications:
+expression simplification, online job scheduling, CVRP (6.16 / 10.51 / 16.10 on
+CVRP20/50/100).
+\benchline{Nazari uniform instances (CVRP20/50/100).}
+\baseline{OR-Tools, Clarke--Wright, Sweep, Nazari RL, AM.}
+
+\paragraph{L2I -- Learn to Improve \citep{Lu2020A}.}
+Iterative framework alternating learned improvement operators (RL-selected intra/inter-route
+moves) with rule-based perturbation operators; an ensemble of six policies with different
+history horizons. First learned method to beat LKH-3 on the Nazari benchmark: 6.12 /
+10.35 / 15.57 on CVRP20/50/100 (but with hours-long search budgets).
+\benchline{Nazari uniform instances (CVRP20/50/100).}
+\baseline{LKH-3, OR-Tools, Nazari RL, AM, NeuRewriter.}
+
+\paragraph{Learning Improvement Heuristics \citep{wu_learning_2022}.}
+Self-attention policy that selects the node pair for a pairwise local-search operator
+(2-opt, swap, reinsertion) inside a fixed-step improvement loop; RL with a
+best-so-far-based reward. TSP and CVRP: 10.45 / 16.03 on CVRP50/100 with $T{=}5{,}000$
+steps; also generalises to TSPLIB and CVRPLIB instances.
+\benchline{Nazari uniform instances (TSP/CVRP 20/50/100); TSPLIB; CVRPLIB.}
+\baseline{LKH-3, OR-Tools, AM (sampling), NeuRewriter.}
+
+\paragraph{Learning 2-opt Heuristics \citep{dacosta_learning_2020}.}
+Policy-gradient method (with GAE) that learns to pick 2-opt moves for the TSP using a
+pointing-attention mechanism; improves even from random initial tours. TSP only
+(TSP20/50/100 uniform); relevant here as the TSP analogue of learned local search.
+\benchline{Uniform TSP20/50/100.}
+\baseline{Concorde/exact, AM, Wu et al., classical 2-opt.}
+
+\paragraph{NLNS -- Neural Large Neighborhood Search \citep{hottung_andre_neural_2020}.}
+LNS in which the \emph{repair} operator is a learned attention model (destroy operators
+are handcrafted); batch search for many instances in parallel, single-instance search with
+simulated-annealing acceptance. Batch search: 10.54 / 15.99 on the Nazari sets. Single
+instance search on the 17 XE groups (Set-X characteristics, 100--297 customers) reaches
+parity with LKH-3, behind UHGS.
+\benchline{Nazari uniform instances (CVRP/SDVRP 20/50/100); XE groups derived from Set X.}
+\baseline{AM (sampling), Nazari RL-BS, UHGS, LKH-3, handcrafted-repair LNS.}
+
+\paragraph{DACT -- Dual-Aspect Collaborative Transformer \citep{ma_learning_2022}.}
+Improvement model encoding node features and positional (sequence) features in two
+separate embedding streams with cyclic positional encoding; PPO with curriculum learning
+selects 2-opt-style moves. CVRP: 10.39 / 15.71 with $\times 6$ augmentation; generalises
+to TSPLIB/CVRPLIB ($\le 200$ customers) better than POMO.
+\benchline{Nazari uniform instances (TSP/CVRP 20/50/100); TSPLIB and CVRPLIB
+($\le 200$).}
+\baseline{LKH-3, OR-Tools, AM, MDAM, POMO ($\times 8$), Wu et al., NeuRewriter, NLNS,
+DPDP, CVAE-Opt.}
+
+\paragraph{NeuOpt \citep{ma_learning_2023}.}
+Learning-to-search solver performing flexible $k$-opt via a recurrent dual-stream decoder;
+the GIRE scheme drops feasibility masking and lets the policy explore infeasible regions
+with reward shaping (capacity constraint of CVRP), plus dynamic data augmentation (D2A).
+First learned local-search method to surpass LKH-3 on the Nazari CVRP sets: 10.367 /
+15.579 at the largest budget, essentially matching HGS (10.366 / 15.563).
+\benchline{Nazari uniform instances (TSP/CVRP 20/50/100); TSPLIB; CVRPLIB Set X
+($\le 200$ customers).}
+\baseline{HGS, LKH-3, Concorde, POMO, POMO+EAS(+SGBS), AM+LCP, Sym-NCO, DACT, Wu et
+al., NLNS, NCE, DPDP, CVAE-Opt.}
+
+\paragraph{Neural Simulated Annealing \citep{correia_neural_2022}.}
+Frames the SA proposal distribution as an RL policy (small equivariant networks) trained
+with PPO or evolutionary strategies; the Metropolis criterion and temperature schedule
+stay classical. Evaluated on Rosenbrock, Knapsack, Bin Packing and TSP (up to
+$n\approx200$ with strong size generalisation). No CVRP -- conceptually the closest
+relative of LG-SA.
+\benchline{Rosenbrock's function, Knapsack, Bin Packing, uniform TSP.}
+\baseline{vanilla SA, greedy/random baselines, learned TSP solvers.}
+
+\paragraph{GNN-Guided Local Search \citep{hudson_graph_2021}.}
+GNN predicts the ``regret'' of each edge; guided local search penalises high-regret edges.
+TSP only: reduces the TSP100 gap of learned methods from 1.5\% to 0.7\%.
+\benchline{Uniform TSP20--100 (Kool test sets), TSPLIB.}
+\baseline{Concorde, LKH, AM, GCN-based predictors, 2-opt/GLS variants.}
+
+\paragraph{RHGA -- Reinforced Hybrid Genetic Algorithm \citep{zheng_reinforced_2023}.}
+Combines the EAX genetic algorithm with LKH local search for the \emph{TSP}; a Q-learning
+mechanism (from their earlier VSR-LKH work) adapts the candidate-edge selection. Evaluated
+on 138 TSPLIB/national instances with 1{,}000--85{,}900 cities.
+\benchline{TSPLIB and large TSP benchmarks.}
+\baseline{EAX-GA, LKH, VSR-LKH.}
+
+\paragraph{RFTHGS -- RL-finetuned LLM for HGS \citep{zhu_refining_2025}.}
+Fine-tunes a small code LLM with a curriculum-based RL reward to generate \emph{crossover
+operators} for HGS-CVRP that outperform the expert-designed OX crossover. Evaluated on
+CVRPLIB Set X instances from small to 1{,}000 nodes.
+\benchline{CVRPLIB Set X (up to 1{,}000 customers).}
+\baseline{HGS with expert operators, POMO, MTPOMO, RF-POMO and other neural solvers,
+prompt-based LLM heuristic design (EoH etc.), GPT-4o / GPT-4o-mini.}
+
+\section{Surveys}
+
+\paragraph{ML for Combinatorial Optimization \citep{bengio_machine_2018}.}
+Methodological tour d'horizon: taxonomy of learning alongside/instead of OR algorithms
+(learning to configure, learning in branching, end-to-end heuristics), generalisation and
+evaluation methodology. No experiments.
+
+\paragraph{NCO for VRPs: Comprehensive Survey \citep{wu_neural_survey_2024}.}
+Taxonomy of neural VRP solvers into Learning-to-Construct, Learning-to-Improve,
+Learning-to-Predict-Once and Learning-to-Predict-Multiplicity; discusses generalisation,
+scale, variants and OR-vs-ML comparability, and compares representative solvers across
+scales on uniform instances and TSPLIB/CVRPLIB; maintains a live repository.
+
+\section{Overview: who tests on what}
+\label{sec:overview}
+
+{\small
+\begin{longtable}{@{}p{3.6cm}p{5.2cm}p{6.2cm}@{}}
+\toprule
+Paper & Test datasets & Solvers benchmarked \\
+\midrule
+\endhead
+Nazari et al.~\citeyearpar{nazari_reinforcement_2018} & Nazari uniform VRP10--100 & CW savings, Sweep, OR-Tools, MIP \\
+AM~\citeyearpar{kool_attention_2018} & Nazari uniform ($n\le100$) & Gurobi, Concorde, LKH-3, OR-Tools, Nazari RL \\
+NeuRewriter~\citeyearpar{chen_learning_2019} & Nazari uniform & OR-Tools, Nazari RL, AM \\
+L2I~\citeyearpar{Lu2020A} & Nazari uniform & LKH-3, OR-Tools, Nazari RL, AM, NeuRewriter \\
+Wu et al.~\citeyearpar{wu_learning_2022} & Nazari uniform; TSPLIB; CVRPLIB & LKH-3, OR-Tools, AM, NeuRewriter \\
+NLNS~\citeyearpar{hottung_andre_neural_2020} & Nazari uniform; XE (Set-X style) & AM, Nazari RL, UHGS, LKH-3 \\
+POMO~\citeyearpar{kwon_pomo_2020} & Nazari uniform & LKH-3, OR-Tools, AM, NeuRewriter, NLNS, L2I \\
+LCP~\citeyearpar{kim_learning_2021} & Nazari uniform & LKH-3, OR-Tools, AM, NLNS \\
+DACT~\citeyearpar{ma_learning_2022} & Nazari uniform; TSPLIB/CVRPLIB $\le200$ & LKH-3, OR-Tools, AM, MDAM, POMO, Wu et al., NLNS, DPDP \\
+EAS~\citeyearpar{hottung_efficient_2021} & Kool uniform $n{=}100$--$200$; XE & LKH-3, UHGS, POMO, DPDP, NLNS, DACT, active search \\
+SGBS~\citeyearpar{choo_simulation-guided_2022} & Uniform CVRP100--200, TSP, FFSP & LKH-3, HGS, POMO, EAS, DACT, NLNS, DPDP \\
+NeuOpt~\citeyearpar{ma_learning_2023} & Nazari uniform; TSPLIB; Set X $\le200$ & HGS, LKH-3, POMO(+EAS,+SGBS), DACT, NLNS, \dots \\
+BQ-NCO~\citeyearpar{drakulic_bq-nco_2023} & Uniform $n{=}100$--$1000$; TSPLIB; CVRPLIB & LKH-3, HGS, OR-Tools, POMO, SGBS, EAS, LEHD \\
+LEHD~\citeyearpar{luo_neural_2023} & Uniform $n{=}100$--$1000$; TSPLIB; CVRPLIB A/B/E/F/M/P/X & LKH-3, HGS, OR-Tools, POMO, SGBS, EAS, BQ \\
+Self-Improvement~\citeyearpar{pirnay_self-improvement_2024} & Uniform $n{=}100$--$1000$; JSSP & OR-Tools, AM, MDAM, POMO, SGBS, BQ, LEHD \\
+RFTHGS~\citeyearpar{zhu_refining_2025} & CVRPLIB Set X ($\le1000$) & HGS, POMO variants, LLM-designed heuristics, GPT-4o \\
+Neural SA~\citeyearpar{correia_neural_2022} & Rosenbrock, KP, BPP, TSP & vanilla SA, off-the-shelf solvers \\
+Set X~\citeyearpar{uchoa_new_2017} & Set X (introduced) & ILS-SP, UHGS, Branch-Cut-and-Price \\
+XML100~\citeyearpar{queiroga_10000_nodate} & XML100 (introduced) & Branch-Cut-and-Price (optimal solutions) \\
+Set XL~\citeyearpar{queiroga_xl_2026} & Set XL (introduced); X; XML100 & AILS-II, FILO(2), KGLS-XXL, HGS-CVRP, SISRs, LKH-3, OR-Tools \\
+HGS-CVRP~\citeyearpar{vidal_hybrid_2022} & Set X & OR-Tools, LKH-3, HILS, KGLS, SISR, FILO, HGS-2012 \\
+LKH-3~\citeyearpar{helsgaun_extension_2017} & CVRPLIB + $\sim$30 VRP-variant libraries & best-known solutions \\
+\bottomrule
+\end{longtable}
+}
+
+\noindent TSP-only or non-CVRP papers (Pointer Networks, Bello et al., da Costa et al.,
+GNN-GLS, RHGA, Neural SA) and the two surveys are omitted from the CVRP tables.
+
+\section{Results on the Nazari benchmark ($n=50$ and $n=100$)}
+\label{sec:nazari-table}
+
+Table~\ref{tab:nazari} collects the average tour lengths on the Nazari-distribution test
+sets (uniform coordinates, demands $\in\{1,\dots,9\}$, capacity 40/50). Most values are on
+Kool's 10{,}000-instance test sets. For each size we report two times: ``10k'' is the
+\emph{total wall-clock time to solve the full 10{,}000-instance test set} as reported in
+the source of the corresponding row, and ``/inst.''\ is the amortized time per instance
+(total divided by the number of instances). Beware that neural methods solve the test set
+in large GPU batches, so the amortized per-instance time can be much lower than the
+latency of solving one instance alone; and since hardware, batching and implementation
+language differ across papers, times are indicative only: they rank search-budget regimes
+(milliseconds vs.\ minutes per instance), not implementations.
+
+\begin{table}[ht]
+\centering
+\caption{Average tour length and solving time on Nazari-distribution instances, CVRP50
+and CVRP100. ``10k'' = total time for the 10{,}000-instance test set; ``/inst.''\ =
+amortized time per instance.}
+\label{tab:nazari}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllllllr@{}}
+\toprule
+& \multicolumn{3}{c}{CVRP50} & \multicolumn{3}{c}{CVRP100} & \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & Obj. & 10k & /inst. & Obj. & 10k & /inst. & Source \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Classical solvers}}\\
+HGS-CVRP & 10.366 & 1.2d & 10s & 15.563 & 2.5d & 22s & \citep{ma_learning_2023} \\
+LKH-3 & 10.38 & 7h & 2.5s & 15.65 & 13h & 4.7s & \citep{kool_attention_2018} \\
+OR-Tools & 11.22 & 12m & 0.07s & 17.14 & 1h & 0.36s & \citep{kwon_pomo_2020} \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Learning to construct}}\\
+Nazari RL, BS(10) & 11.15 & n/r & n/r & 16.96 & n/r & n/r & \citep{kool_attention_2018} \\
+AM, greedy & 10.98 & 3s & 0.3ms & 16.80 & 8s & 0.8ms & \citep{kool_attention_2018} \\
+AM, 1280 samples & 10.62 & 28m & 0.17s & 16.23 & 2h & 0.72s & \citep{kool_attention_2018} \\
+POMO, $\times8$ augm. & 10.42 & 26s & 2.6ms & 15.73 & 2m & 12ms & \citep{kwon_pomo_2020} \\
+AM + LCP $\{2560,1\}$ & 10.52 & 52m & 0.31s & 16.00 & 2.1h & 0.76s & \citep{ma_learning_2023} \\
+POMO + EAS-Emb & 10.379 & 3.1h & 1.1s & 15.610 & 16h & 5.8s & \citep{ma_learning_2023} \\
+POMO + EAS + SGBS (long) & --- & & & 15.580 & 30h & 11s & \citep{choo_simulation-guided_2022} \\
+DPDP (heatmap + DP) & --- & & & 15.63 & 23h & 8.3s & \citep{hottung_efficient_2021} \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Learning to improve / search}}\\
+NeuRewriter & 10.51 & $\approx$55m$^\ddagger$ & 0.33s & 16.10 & $\approx$85m$^\ddagger$ & 0.51s & \citep{chen_learning_2019} \\
+L2I & 10.35$^\dagger$ & $\approx$118d$^\S$ & $\approx$17m & 15.57$^\dagger$ & $\approx$167d$^\S$ & $\approx$24m & \citep{Lu2020A} \\
+Wu et al., $T{=}5$k & 10.45 & 4h & 1.4s & 16.03 & 5h & 1.8s & \citep{wu_learning_2022} \\
+NLNS, batch search & 10.54 & 24m & 0.15s & 15.99 & 62m & 0.37s & \citep{hottung_andre_neural_2020} \\
+DACT, $\times6$ augm. & 10.39 & 1.5h & 0.54s & 15.71 & 4.5h & 1.6s & \citep{ma_learning_2022} \\
+NeuOpt-GIRE (D2A=5, $T{=}40$k) & 10.367 & 1.6d & 14s & 15.579 & 3.8d & 33s & \citep{ma_learning_2023} \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\raggedright\footnotesize
+n/r = not reported.\quad
+$^\dagger$ authors' own test set of the same distribution (small differences
+$\sim$0.01 are not meaningful).\quad
+$^\ddagger$ measured on 2{,}000 instances (11m / 17m, as re-reported by
+\citet{ma_learning_2022}); the 10k column scales this by~5.\quad
+$^\S$ L2I is the reverse case: its original paper reports time \emph{per single
+instance} (read from its runtime figure; $\approx$17m / $\approx$24m), and the 10k
+column is the extrapolation --- \citet{ma_learning_2022} estimate $\approx$167 days for
+the full 10{,}000-instance CVRP100 set.
+\end{table}
+
+\paragraph{Gap-only results.}
+Recent generalisation-focused papers report optimality gaps instead of lengths, and only
+for $n\ge100$: BQ-NCO reaches $0.61\%$ above LKH-3 on uniform CVRP100 (beam 16)
+\citep{drakulic_bq-nco_2023}; LEHD reaches $0.27\%$ with 100 RRC iterations and beats
+LKH-3 with larger budgets \citep{luo_neural_2023}; the self-improvement variant of BQ
+reaches $1.72\%$ above HGS on CVRP100 (beam 16) versus $1.22\%$ for supervised BQ
+\citep{pirnay_self-improvement_2024}.
+
+\paragraph{Reading the table.}
+Three observations recur across these papers. (i) Construction methods (POMO family)
+dominate the speed--quality trade-off at small budgets, while learned local search
+(DACT, NeuOpt) and hybrid search (EAS, SGBS) close the gap to LKH-3/HGS at large budgets.
+(ii) Every method above is trained and tested on the \emph{same} uniform distribution;
+performance degrades sharply on Set X-style structured instances, which is exactly what
+the XE/XML100/XL benchmarks were designed to expose. (iii) L2I's 15.57 and NeuOpt's
+15.579 on CVRP100 are the strongest published learned-search results on this benchmark,
+but L2I needs tens of minutes \emph{per instance} and NeuOpt several days for the full
+test set, whereas HGS attains 15.563 as a mature standalone heuristic.
+
+\bibliographystyle{plainnat}
+\bibliography{ref}
+
+\end{document}
