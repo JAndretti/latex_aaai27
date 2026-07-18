@@ -1,5 +1,11 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{31}
 \providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Accorsi and Vigo(2021)}]{accorsi_fast_2021}
+Accorsi, L.; and Vigo, D. 2021.
+\newblock A {Fast} and {Scalable} {Heuristic} for the {Solution} of
+  {Large}-{Scale} {Capacitated} {Vehicle} {Routing} {Problems}.
+\newblock \emph{Transportation Science}, 55(4): 832--856.
 
 \bibitem[{Andretti, Cabessa, and Strozecki(2026)}]{AndrettiEtAl26}
 Andretti, J.; Cabessa, J.; and Strozecki, Y. 2026.
@@ -8,6 +14,35 @@ Andretti, J.; Cabessa, J.; and Strozecki, Y. 2026.
 \newblock In \emph{Proceedings of the {International} {Conference} on
   {Automated} {Planning} and {Scheduling}}, volume~36. AAAI Press.
 
+\bibitem[{Bui and Mai(2023)}]{bui_imitation_2023}
+Bui, V.; and Mai, T. 2023.
+\newblock Imitation {Improvement} {Learning} for {Large}-{Scale} {Capacitated}
+  {Vehicle} {Routing} {Problems}.
+\newblock \emph{Proceedings of the International Conference on Automated
+  Planning and Scheduling}, 33: 551--559.
+
+\bibitem[{Chen and Tian(2019)}]{chen_learning_2019}
+Chen, X.; and Tian, Y. 2019.
+\newblock Learning to {Perform} {Local} {Rewriting} for {Combinatorial}
+  {Optimization}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~32. Curran Associates, Inc.
+
+\bibitem[{Choo et~al.(2022)Choo, Kwon, Kim, Jae, Hottung, Tierney, and
+  Gwon}]{choo_simulation-guided_2022}
+Choo, J.; Kwon, Y.-D.; Kim, J.; Jae, J.; Hottung, A.; Tierney, K.; and Gwon, Y.
+  2022.
+\newblock Simulation-guided {Beam} {Search} for {Neural} {Combinatorial}
+  {Optimization}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~35, 8760--8772. Curran Associates, Inc.
+
+\bibitem[{Clarke and Wright(1964)}]{clarke_scheduling_1964}
+Clarke, G.; and Wright, J.~W. 1964.
+\newblock Scheduling of {Vehicles} from a {Central} {Depot} to a {Number} of
+  {Delivery} {Points}.
+\newblock \emph{Operations Research}, 12(4): 568--581.
+
 \bibitem[{Correia, Worrall, and Bondesan(2023)}]{correia_neural_2023}
 Correia, A. H.~C.; Worrall, D.~E.; and Bondesan, R. 2023.
 \newblock Neural {Simulated} {Annealing}.
@@ -15,14 +50,98 @@ Correia, A. H.~C.; Worrall, D.~E.; and Bondesan, R. 2023.
   {Artificial} {Intelligence} and {Statistics}}, 4946--4962. PMLR.
 \newblock ISSN: 2640-3498.
 
+\bibitem[{Dantzig and Ramser(1959)}]{dantzig_truck_1959}
+Dantzig, G.~B.; and Ramser, J.~H. 1959.
+\newblock The {Truck} {Dispatching} {Problem}.
+\newblock \emph{Management Science}, 6(1): 80--91.
+
+\bibitem[{Drakulic et~al.(2023)Drakulic, Michel, Mai, Sors, and
+  Andreoli}]{drakulic_bq-nco_2023}
+Drakulic, D.; Michel, S.; Mai, F.; Sors, A.; and Andreoli, J.-M. 2023.
+\newblock {BQ}-{NCO}: {Bisimulation} {Quotienting} for {Efficient} {Neural}
+  {Combinatorial} {Optimization}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~36, 77416--77429. Curran Associates, Inc.
+
 \bibitem[{Furnon and Perron(2024)}]{ortools_routing}
 Furnon, V.; and Perron, L. 2024.
 \newblock OR-Tools Routing Library.
+
+\bibitem[{García-Torres et~al.(2022)García-Torres, Macias-Infante,
+  Conant-Pablos, Ortiz-Bayliss, and
+  Terashima-Marín}]{garcia-torres_combining_2022}
+García-Torres, R.; Macias-Infante, A.~A.; Conant-Pablos, S.~E.; Ortiz-Bayliss,
+  J.~C.; and Terashima-Marín, H. 2022.
+\newblock Combining {Constructive} and {Perturbative} {Deep} {Learning}
+  {Algorithms} for the {Capacitated} {Vehicle} {Routing} {Problem}.
+\newblock ArXiv:2211.13922 [cs].
+
+\bibitem[{Helsgaun(2017)}]{helsgaun_extension_2017}
+Helsgaun, K. 2017.
+\newblock An {Extension} of the {Lin}-{Kernighan}-{Helsgaun} {TSP} {Solver} for
+  {Constrained} {Traveling} {Salesman} and {Vehicle} {Routing} {Problems}.
+\newblock Publisher: 398.
+
+\bibitem[{Hottung, Kwon, and Tierney(2021)}]{hottung_efficient_2021}
+Hottung, A.; Kwon, Y.-D.; and Tierney, K. 2021.
+\newblock Efficient {Active} {Search} for {Combinatorial} {Optimization}
+  {Problems}.
+
+\bibitem[{Hottung and Tierney(2022)}]{hottung_neural_2022}
+Hottung, A.; and Tierney, K. 2022.
+\newblock Neural large neighborhood search for routing problems.
+\newblock \emph{Artificial Intelligence}, 313: 103786.
+
+\bibitem[{Kim, Park, and Kim(2021)}]{kim_learning_2021}
+Kim, M.; Park, J.; and Kim, J. 2021.
+\newblock Learning {Collaborative} {Policies} to {Solve} {NP}-hard {Routing}
+  {Problems}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~34, 10418--10430. Curran Associates, Inc.
+
+\bibitem[{Kirkpatrick, Gelatt, and
+  Vecchi(1983)}]{kirkpatrick_optimization_1983}
+Kirkpatrick, S.; Gelatt, C.~D.; and Vecchi, M.~P. 1983.
+\newblock Optimization by {Simulated} {Annealing}.
+\newblock 220.
 
 \bibitem[{Kool, van Hoof, and Welling(2019)}]{kool_attention_2019}
 Kool, W.; van Hoof, H.; and Welling, M. 2019.
 \newblock Attention, Learn to Solve Routing Problems!
 \newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Kwon et~al.(2021)Kwon, Choo, Kim, Yoon, Gwon, and
+  Min}]{kwon_pomo_2021}
+Kwon, Y.-D.; Choo, J.; Kim, B.; Yoon, I.; Gwon, Y.; and Min, S. 2021.
+\newblock {POMO}: {Policy} {Optimization} with {Multiple} {Optima} for
+  {Reinforcement} {Learning}.
+\newblock ArXiv:2010.16011 [cs].
+
+\bibitem[{Liu et~al.(2023)Liu, Lu, Gui, Zhang, Tong, and
+  Yuan}]{liu_heuristics_2023}
+Liu, F.; Lu, C.; Gui, L.; Zhang, Q.; Tong, X.; and Yuan, M. 2023.
+\newblock Heuristics for {Vehicle} {Routing} {Problem}: {A} {Survey} and
+  {Recent} {Advances}.
+\newblock Version Number: 1.
+
+\bibitem[{Lu, Zhang, and Yang(2020)}]{lu_learning_2020}
+Lu, H.; Zhang, X.; and Yang, S. 2020.
+\newblock A {Learning}-based {Iterative} {Method} for {Solving} {Vehicle}
+  {Routing} {Problems}.
+\newblock In \emph{International {Conference} on {Learning} {Representations}}.
+
+\bibitem[{Luo et~al.(2023)Luo, Lin, Liu, Zhang, and Wang}]{luo_neural_2023}
+Luo, F.; Lin, X.; Liu, F.; Zhang, Q.; and Wang, Z. 2023.
+\newblock Neural {Combinatorial} {Optimization} with {Heavy} {Decoder}:
+  {Toward} {Large} {Scale} {Generalization}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~36, 8845--8864. Curran Associates, Inc.
+
+\bibitem[{Ma, Cao, and Chee(2023)}]{ma_learning_2023}
+Ma, Y.; Cao, Z.; and Chee, Y.~M. 2023.
+\newblock Learning to {Search} {Feasible} and {Infeasible} {Regions} of
+  {Routing} {Problems} with {Flexible} {Neural} k-{Opt}.
+\newblock ArXiv:2310.18264 [cs].
 
 \bibitem[{Ma et~al.(2021)Ma, Li, Cao, Song, Zhang, Chen, and
   Tang}]{ma_learning_2021}
@@ -46,10 +165,43 @@ Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and Klimov, O. 2017.
 \newblock Proximal {Policy} {Optimization} {Algorithms}.
 \newblock ArXiv:1707.06347 [cs].
 
+\bibitem[{Toth and Vigo(2002)}]{toth_vehicle_2002}
+Toth, P.; and Vigo, D., eds. 2002.
+\newblock \emph{The vehicle routing problem}.
+\newblock {SIAM} monographs on discrete mathematics and applications.
+  Philadelphia, Pa: Society for Industrial and Applied Mathematics.
+\newblock ISBN 978-0-89871-498-2 978-0-89871-579-8.
+
 \bibitem[{Vidal(2016)}]{vidal_technical_2016}
 Vidal, T. 2016.
 \newblock Technical note: {Split} algorithm in {O}(n) for the capacitated
   vehicle routing problem.
 \newblock \emph{Computers \& Operations Research}, 69: 40--47.
+
+\bibitem[{Vidal(2022)}]{vidal_hybrid_2022}
+Vidal, T. 2022.
+\newblock Hybrid genetic search for the {CVRP}: {Open}-source implementation
+  and {SWAP}* neighborhood.
+\newblock \emph{Computers \& Operations Research}, 140: 105643.
+
+\bibitem[{Vinyals, Fortunato, and Jaitly(2015)}]{vinyals_pointer_2015}
+Vinyals, O.; Fortunato, M.; and Jaitly, N. 2015.
+\newblock Pointer {Networks}.
+\newblock In \emph{Advances in {Neural} {Information} {Processing} {Systems}},
+  volume~28. Curran Associates, Inc.
+
+\bibitem[{Wu et~al.(2024)Wu, Wang, Wen, Xiao, Wu, Wu, Yu, Maskell, and
+  Zhou}]{wu_neural_survey_2024}
+Wu, X.; Wang, D.; Wen, L.; Xiao, Y.; Wu, C.; Wu, Y.; Yu, C.; Maskell, D.~L.;
+  and Zhou, Y. 2024.
+\newblock Neural {Combinatorial} {Optimization} {Algorithms} for {Solving}
+  {Vehicle} {Routing} {Problems}: {A} {Comprehensive} {Survey} with
+  {Perspectives}.
+\newblock ArXiv:2406.00415.
+
+\bibitem[{Wu et~al.(2022)Wu, Song, Cao, Zhang, and Lim}]{wu_learning_2022}
+Wu, Y.; Song, W.; Cao, Z.; Zhang, J.; and Lim, A. 2022.
+\newblock Learning Improvement Heuristics for Solving Routing Problems.
+\newblock \emph{{IEEE} Trans. Neural Networks Learn. Syst.}, 33(9): 5057--5069.
 
 \end{thebibliography}
