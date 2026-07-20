@@ -7,45 +7,45 @@ Warning--entry type for "ortools_routing" isn't style-file defined
 --line 54 of file bib.bib
 Warning--empty journal in helsgaun_extension_2017
 Warning--empty journal in kirkpatrick_optimization_1983
-You've used 31 entries,
+You've used 36 entries,
             2840 wiz_defined-function locations,
-            749 strings with 10529 characters,
-and the built_in function-call counts, 21414 in all, are:
-= -- 1710
-> -- 1198
+            772 strings with 11681 characters,
+and the built_in function-call counts, 25023 in all, are:
+= -- 1987
+> -- 1424
 < -- 9
-+ -- 439
-- -- 399
-* -- 1546
-:= -- 3452
-add.period$ -- 135
-call.type$ -- 31
-change.case$ -- 266
-chr.to.int$ -- 32
-cite$ -- 33
-duplicate$ -- 1447
-empty$ -- 1369
-format.name$ -- 482
-if$ -- 4155
++ -- 523
+- -- 476
+* -- 1813
+:= -- 4045
+add.period$ -- 156
+call.type$ -- 36
+change.case$ -- 315
+chr.to.int$ -- 37
+cite$ -- 38
+duplicate$ -- 1686
+empty$ -- 1595
+format.name$ -- 574
+if$ -- 4848
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 331
-newline$ -- 159
-num.names$ -- 125
-pop$ -- 776
+missing$ -- 385
+newline$ -- 184
+num.names$ -- 145
+pop$ -- 906
 preamble$ -- 1
-purify$ -- 234
+purify$ -- 276
 quote$ -- 0
-skip$ -- 653
+skip$ -- 760
 stack$ -- 0
-substring$ -- 811
-swap$ -- 767
+substring$ -- 927
+swap$ -- 890
 text.length$ -- 9
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 276
+type$ -- 321
 warning$ -- 2
-while$ -- 156
+while$ -- 181
 width$ -- 0
-write$ -- 409
+write$ -- 472
 (There were 3 warnings)
