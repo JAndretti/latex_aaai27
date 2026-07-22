@@ -1,15 +1,14 @@
 # Fdb version 4
-["bibtex LGSA"] 1784625800.59386 "LGSA.aux" "LGSA.bbl" "LGSA" 1784626513.30048 0
+["bibtex LGSA"] 1784728140.19568 "LGSA.aux" "LGSA.bbl" "LGSA" 1784728215.47001 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
   "./bib.bib" 1784541016.05233 59978 cb68a2ce91c0f2525c0799a4cabbeec7 ""
-  "LGSA.aux" 1784626513.17433 7881 ba33f9f422d2d46d3a65f4671b7f5475 "pdflatex"
+  "LGSA.aux" 1784728215.32066 8666 175343a4f32d63eb3e0e04b45a83054f "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1784626511.73378 "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" "LGSA.pdf" "LGSA" 1784626513.30058 0
+["pdflatex"] 1784728213.91877 "LGSA.tex" "LGSA.pdf" "LGSA" 1784728215.47016 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/jules/Documents/LGSA-CVRP/latex_aaai27/paper/LGSA.tex" 1784626511.59364 160002 f7340c4c678fbbfef51526cd68b172c2 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -202,6 +201,7 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1775556116.32262 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1775556136 8213252 271ef74e4fe00124d89521022441020f ""
+  "Figures/frontier_100.pdf" 1784728091.99059 19888 b14698b1de545475f06b232e7c68b109 ""
   "Figures/v1_cost_vs_time.png" 1783613394.39246 67901 50e1d3371c9c197cd4e36519cb65b3c9 ""
   "Figures/v1_heatmap_cost.png" 1783613394.39127 60846 b8e67292aa787d7749d5f56e6bbf40d3 ""
   "Figures/v1_seed_spread_top.png" 1783613394.39289 23512 8b10328f5f0e738cb82ccfc578bcb35a ""
@@ -221,9 +221,9 @@
   "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
   "Figures/v8_init_grid.png" 1783875258.91561 80223 73310ba0535fcdb05175cb5bf155760e ""
   "Figures/v8_init_slices.png" 1783875258.91609 74565 47b3ab874d3c8ba7a608e80e58ecf862 ""
-  "LGSA.aux" 1784626513.17433 7881 ba33f9f422d2d46d3a65f4671b7f5475 "pdflatex"
-  "LGSA.bbl" 1784625800.63919 10877 8c99bd7a68477c89004758737cbaa57e "bibtex LGSA"
-  "LGSA.tex" 1784626511.59364 160002 f7340c4c678fbbfef51526cd68b172c2 ""
+  "LGSA.aux" 1784728215.32066 8666 175343a4f32d63eb3e0e04b45a83054f "pdflatex"
+  "LGSA.bbl" 1784728140.25595 10757 47a1b280a2f2d8f41df05816e864e6d8 "bibtex LGSA"
+  "LGSA.tex" 1784728181.92384 173096 553618e508799669868da4593b8001bf ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"

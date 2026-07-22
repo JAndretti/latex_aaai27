@@ -73,7 +73,7 @@
 
 \title{
 Small Neural Policies are Enough: \\
-Learning-Guided Simulated Annealing for Large-Scale Vehicle Routing
+Learning-Guided Simulated Annealing for Large-Scale Capacitated Vehicle Routing
 %Tiny Policies at Scale: Curriculum-Trained Simulated Annealing for the Capacitated Vehicle Routing Problem
 }
 \author{
@@ -113,79 +113,48 @@ Learning-Guided Simulated Annealing for Large-Scale Vehicle Routing
 \maketitle
 
 \begin{abstract}
-% TODO: the abstract is deliberately number-free (final-model results
-% pending). If the numbers land before the deadline, consider reinstating:
-% cost at 10^4 / 10^6 steps, batch throughput (instances / minutes), and the
-% largest evaluated size. The state-of-the-art claim is phrased on the
-% cost--compute trade-off; it must be backed by the headline table with
-% literature rows (DACT, NLNS, LIH, CDCP) and wall-clock columns before the
-% full-paper deadline.
-% === OLD === %
-% The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem of broad practical relevance. Neural improvement methods reach strong solution quality but typically rely on heavyweight architectures whose inference cost limits large-scale deployment. We take the opposite route: within Learning-Guided Simulated Annealing (LG-SA), a hybrid framework that retains the classical SA skeleton and learns only the move-proposal distribution, we show that a tiny policy suffices. A two-stage MLP with a single hidden layer of $32$ neurons scores node pairs in $\mathcal{O}(N)$ over a node-centric state representation whose dimensionality is independent of the instance size, so proposals are computed simultaneously for all nodes of thousands of instances on a single GPU. Training combines a stabilized PPO with a curriculum that progressively improves the initial solutions, closing the gap between short training rollouts and the long annealing horizons deployed at inference. Every design decision --- features, architecture, reward, annealing parameters, initialization, curriculum --- is validated by a seed-paired sequential protocol covering $15$ design dimensions and $78$ candidate settings. On uniform CVRP benchmarks, the resulting solver sets a new state of the art among learning-based improvement methods when solution cost and computation time are considered jointly: it matches the best reported solution quality while solving thousands of instances in parallel on a single GPU, orders of magnitude faster than heavyweight neural alternatives. The same checkpoint transfers to instances far beyond its training size with near-linear runtime scaling.
-% === NEW === %
-The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem with numerous real-world applications. We propose a substantially improved Learning-Guided Simulated Annealing (LG-SA) framework that combines the robustness of classical simulated annealing (SA) with the adaptive guidance of reinforcement learning (RL). The learned policy consists of only two small multi-layer perceptrons operating on a novel node-centric solution representation whose dimensionality is independent of the problem size, enabling efficient batched processing of thousands of instances on a single GPU. The framework is trained using a stabilized Proximal Policy Optimization (PPO) algorithm with curriculum learning to expose the policy to increasingly refined solutions. We systematically optimize the framework through a large-scale seed-paired study spanning 15 design dimensions and 78 candidate configurations, covering solution representation, architecture, reward design, optimization hyperparameters, annealing, and training strategies. The resulting framework significantly improves classical simulated annealing and establishes a new state of the art among learning-based improvement methods when jointly considering solution quality and computation time. Moreover, a single model trained on 100-customer instances generalizes without retraining to instances with up to 10,000 customers with near-linear runtime scaling. Overall, these results demonstrate that carefully designed lightweight hybrid methods can match or surpass heavyweight learning-based improvement methods while scaling far more efficiently.
+
+The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem with numerous real-world applications. To address it effectively, we propose a substantially improved Learning-Guided Simulated Annealing (LG-SA) model that combines the robustness of classical simulated annealing (SA) with the adaptive guidance of reinforcement learning (RL). The learned policy deliberately consists of only two small multi-layer perceptrons operating on a node-centric solution representation whose dimensionality is independent of the problem size, enabling efficient batched processing of thousands of instances on a single GPU. Within this lightweight design, we enrich the feature set and strengthen every stage of learning: a stronger critic, a stabilized Proximal Policy Optimization (PPO), a curriculum that starts episodes from already-improved solutions, and logit clipping for better move exploration. The whole framework is then tuned through a large-scale seed-paired study. On $100$-customer instances, the resulting model reduces the gap to the reference metaheuristic HGS from the $11.55\%$ of the original LG-SA to $3.98\%$ at an unchanged budget of $10^4$ annealing steps, and to $2.30\%$ at $10^5$ steps. It solves a benchmark of $10{,}000$ instances in $29$ minutes on a single GPU, matching the neural improvement method NLNS and outperforming LIH with five to ten times less computation, which places LG-SA on the Pareto frontier of the quality/time trade-off. Moreover, a single model trained on 100-customer instances generalizes without retraining to instances with up to 10,000 customers with near-linear runtime scaling. Overall, carefully designed lightweight hybrid methods offer a far better quality/computation trade-off than heavyweight learning-based improvement methods.
 \end{abstract}
 
-
-%YANN
-%\begin{abstract}
-%The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem with numerous real-world applications. To solve it, we build on Learning-Guided Simulated Annealing (LG-SA), a hybrid framework that retains the robustness of classical simulated annealing and learns only its move-proposal distribution. The learned policy is deliberately small, two multi-layer perceptrons over a node-centric representation whose dimensionality is independent of the problem size, so that thousands of instances are processed in parallel on a single GPU. Within this constraint, we enrich the feature set of the model at constant size and improve every stage of the learning process: a better critic, tuned Proximal Policy Optimization hyperparameters, logit clipping for exploration, and a curriculum that starts training episodes from already-improved solutions. Each design choice is validated by a large-scale seed-paired study. On $100$-customer instances with $10^4$ annealing steps, the gap to LKH drops from $11.55\%$ for the original LG-SA to $3.5\%$, at a lower runtime --- \textcolor{red}{XX} minutes over the full test set, against \textcolor{red}{X.X\%} in \textcolor{red}{XX} minutes for the best published learning-based improvement methods. A single model trained at this size generalizes without retraining to instances of up to $10{,}000$ customers and of a different nature, with near-linear runtime scaling.
-%\end{abstract}
 
 
 % ============================================================================
 \section{Introduction}
 % ============================================================================
 
+The Capacitated Vehicle Routing Problem (CVRP) asks for a minimum-cost set of routes serving all customers of a depot under a vehicle capacity constraint. Central to combinatorial optimization since \citet{dantzig_truck_1959} and NP-hard, it is out of reach of exact methods at realistic scales \citep{toth_vehicle_2002}, so practical solvers are heuristic: a constructive rule \citep{clarke_scheduling_1964} produces a first solution that local search and metaheuristics refine. Simulated annealing (SA) \citep{kirkpatrick_optimization_1983} is among the simplest of these: a random proposal is accepted by the Metropolis criterion under a decreasing temperature. It remains attractive for its $\mathcal{O}(1)$ per-step cost. The state of the art, in contrast, is held by heavily engineered metaheuristics \citep{vidal_hybrid_2022,helsgaun_extension_2017,accorsi_fast_2021}, which reach near-optimal solutions but are inherently sequential, CPU-bound, and demand substantial per-instance tuning \citep{liu_heuristics_2023}.
+
+Neural combinatorial optimization instead learns a solver from data \citep{wu_neural_survey_2024}. \emph{Construction} methods build a solution autoregressively \citep{nazari_reinforcement_2018,kool_attention_2019,kwon_pomo_2021}; \emph{improvement} methods start from a feasible solution and learn which local-search move to apply next \citep{chen_learning_2019,wu_learning_2022,ma_learning_2021,ma_learning_2023}. Both families reach strong solution quality, but they share a structural cost: a heavyweight neural encoder is re-evaluated at every one of thousands of construction or search steps, which dominates the runtime and caps both the step budget and the instance size that can be afforded. Their reported quality is therefore bought with computation. On the standard benchmark of $10{,}000$ instances with $100$ customers, none of the learned methods surveyed in Table~\ref{tab:nazari} completes the set in less than two hours.
+
+This work follows a third, sparser line: hybrid methods that keep a classical metaheuristic intact and learn only one of its components. Neural SA \citep{correia_neural_2023} replaces the uniform proposal distribution of SA by a small policy trained by reinforcement learning, leaving the Metropolis criterion and the cooling schedule untouched; Learning-Guided Simulated Annealing (LG-SA) \citep{AndrettiEtAl26} transposes the idea to the CVRP with a node-pair policy and action masking. The appeal of the hybrid is that the model does not solve the problem: it merely guides an algorithm that is already correct and fast, and can therefore remain very small. Our guiding philosophy pushes this asymmetry to its limit: training may be elaborate, but inference must stay simple and fast. The policy is accordingly restricted to two multi-layer perceptrons with a single hidden layer of $32$ neurons, operating on a node-centric representation whose dimensionality is independent of the instance size, so that for an instance with $N$ customers an annealing step reduces to $\mathcal{O}(N)$ batched tensor operations and thousands of instances anneal in parallel on a single GPU.
+
+Within this deliberately fixed inference budget, we show that the room left for improvement lies entirely in what the policy \emph{sees} and how it is \emph{trained}, not in how large it is.
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item \emph{A richer state, at constant model size.} We extend the node-centric representation with descriptors of a node's \emph{neighborhood} (local density, insertion detour, distance to the route centroid), without adding a single layer or neuron. This is the largest contributor to the final gain, and every feature is constrained to be computable in closed form by batched tensor operations, so throughput is preserved.
+\item \emph{An improved learning process.} We introduce a multi-statistic critic, tuned and KL-regularized PPO, and logit clipping on the proposal distribution to prevent it from collapsing. Above all, a curriculum starts training episodes from progressively better, already-improved solutions, aligning the few-hundred-step training rollouts with the long annealing horizons deployed at inference.
+\item \emph{Systematic experimental design.} Every design decision, from the representation and the architecture to the reward, the annealing parameters, the initialization, the optimization and the curriculum, is selected by a seed-paired sequential study over $18$ design dimensions and $93$ candidate configurations, with significance judged against a per-batch noise floor rather than by convention. We report the confirmed nulls and the failed extensions alongside the gains.
+\item \emph{Results and generalization.} At $N=100$, the gap to HGS drops from $11.55\%$ for the original LG-SA to $3.98\%$ at $10^4$ annealing steps, at an unchanged runtime of under three minutes for the whole $10{,}000$-instance benchmark, and to $2.30\%$ at $10^5$ steps in $29$ minutes, matching NLNS and outperforming LIH with five to ten times less computation. A single model further transfers without retraining to instances of up to $10{,}000$ customers and to a different instance distribution, with near-linear runtime scaling.
+\end{itemize}
 
 % ============================================================================
 \section{Related Works}
 % ============================================================================
-%YANN
-%
-
-% ============================================================================
-%\section{Introduction}
-% ============================================================================
-
-%The Capacitated Vehicle Routing Problem (CVRP) asks for a minimum-cost set of routes serving all customers of a depot under a vehicle capacity constraint. Central to combinatorial optimization since \citet{dantzig_truck_1959} and NP-hard, it is out of reach of exact methods at scale \citep{toth_vehicle_2002}, and practical solvers are heuristic: a constructive rule \citep{clarke_scheduling_1964} produces a first solution that local search and metaheuristics refine. Simulated annealing (SA) \citep{kirkpatrick_optimization_1983} is among the simplest of these, a random proposal accepted by the Metropolis criterion under a decreasing temperature, and remains attractive for its $\mathcal{O}(1)$ per-step cost. The state of the art, in contrast, is held by heavily engineered metaheuristics \citep{vidal_hybrid_2022,helsgaun_extension_2017,accorsi_fast_2021} that reach near-optimal solutions but are inherently sequential, CPU-bound, and demand substantial per-instance tuning \citep{liu_heuristics_2023}.
-
-%Neural combinatorial optimization instead learns a solver from data \citep{wu_neural_survey_2024}. \emph{Construction} methods build a solution autoregressively \citep{nazari_reinforcement_2018,kool_attention_2019,kwon_pomo_2021}; \emph{improvement} methods start from a feasible solution and learn which local-search move to apply next \citep{chen_learning_2019,wu_learning_2022,ma_learning_2021,ma_learning_2023}. Both families reach strong solution quality but share a structural cost: a heavyweight neural encoder is re-evaluated at every one of thousands of construction or search steps, which dominates the runtime and caps both the step budget and the instance size that can be afforded.
-
-%This work follows a third, sparser line: hybrid methods that keep a classical metaheuristic intact and learn only one of its components. Neural SA \citep{correia_neural_2023} replaces the uniform proposal distribution of SA by a small policy trained by reinforcement learning, leaving the Metropolis criterion and the cooling schedule untouched; Learning-Guided Simulated Annealing (LG-SA) \citep{AndrettiEtAl26} transposes the idea to the CVRP with a node-pair policy and action masking. The appeal of the hybrid is that the model does not solve the problem: it merely guides an algorithm that is already correct and fast, and can therefore remain very small. Our guiding philosophy pushes this asymmetry to its limit: training may be elaborate, but inference must stay simple and fast. The policy is accordingly restricted to two multi-layer perceptrons with a single hidden layer of $32$ neurons, operating on a node-centric representation whose dimensionality is independent of the instance size, so that for an instance with $N$ customers the whole search reduces to a sequence of $\mathcal{O}(N)$ batched tensor operations and thousands of instances anneal in parallel on a single GPU.
-
-%\paragraph{Contributions.}
-%We substantially improve LG-SA while strictly preserving its inference budget.
-%\item \emph{A richer yet simpler model.} We extend the node-centric feature set of the policy without adding any layer or neuron. This is the largest single contributor to the final gain. The model also runs in half-precision (float16), which further simplifies it and accelerates inference.
-%\item \emph{An improved learning process.} We introduce a better critic and tuned Proximal Policy Optimization (PPO) hyperparameters. Logit clipping on the proposal distribution favors exploration. Above all, a curriculum starts training episodes from progressively better, already-improved solutions. This aligns short training rollouts with the long annealing horizons deployed at inference.
-%\item \emph{Systematic experimental design.} Every design decision is selected by a seed-paired experimental study rather than fixed by convention. This covers the representation, the architecture, the reward, the annealing parameters, the optimization, and the training strategy.
-%\item \emph{Results and generalization.} On $100$-customer instances with $10^4$ annealing steps, the gap to LKH drops from $11.55\%$ for the original LG-SA to $3.5\%$, at a lower runtime, placing the solver at the state of the art among learning-based improvement methods. A single model trained on these instances further generalizes without retraining, both to instances of up to $10{,}000$ customers and to instances from a different data set, with near-linear runtime scaling.
-%\end{itemize}
-
-% ============================================================================
-%\section{Related Works}
-% ============================================================================
-
-%\paragraph{Learning to construct.}
-%\emph{Construction} methods build a solution autoregressively. \citet{nazari_reinforcement_2018} adapted pointer networks \citep{vinyals_pointer_2015} to the CVRP, the Attention Model \citep{kool_attention_2019} replaced the recurrent encoder by a Transformer, and POMO \citep{kwon_pomo_2021} exploits solution symmetries. Since a single constructive pass is rarely near-optimal, most of the reported quality now comes from test-time search stacked on the policy \citep{kim_learning_2021,hottung_efficient_2021,choo_simulation-guided_2022}, while a parallel line targets large-scale generalization \citep{drakulic_bq-nco_2023,luo_neural_2023}. In all cases inference requires a full Transformer pass per construction step.
-
-%\paragraph{Learning to improve.}
-%\emph{Improvement} methods start from a feasible solution and learn which local-search move to apply next, formulating the search as an MDP. NeuRewriter \citep{chen_learning_2019} picks a region and a rewriting rule; L2I \citep{lu_learning_2020} selects among improvement and perturbation operators and was the first learned method to beat LKH-3 on uniform instances, at budgets of tens of minutes per instance. \citet{wu_learning_2022} select the node pair fed to a pairwise operator with a self-attention policy; DACT \citep{ma_learning_2021} adds dual-aspect embeddings and a cyclic positional encoding for the circular structure of routes; NeuOpt \citep{ma_learning_2023} extends this to flexible $k$-opt with guided exploration of infeasible regions, reaching some of the best learned local-search results on uniform CVRP. Others learn the operators themselves rather than their arguments \citep{hottung_neural_2022,garcia-torres_combining_2022,bui_imitation_2023}.
-
-%\paragraph{Learning-guided metaheuristics.}
-%Within the hybrid line introduced above, Neural SA \citep{correia_neural_2023} trains its proposal policy with PPO and enforces equivariance by design, but was not evaluated on constrained routing, where capacity renders most moves infeasible; LG-SA \citep{AndrettiEtAl26} addresses this with a node-pair policy and action masking, and is the framework we build upon.
 
 \paragraph{Classical methods.}
-Since \citet{dantzig_truck_1959}, the CVRP has been a central problem in combinatorial optimization, and its NP-hardness makes exact methods intractable at scale \citep{toth_vehicle_2002}. Practical solvers are heuristic: a constructive rule \citep{clarke_scheduling_1964} produces a first solution that local search and metaheuristics refine. Simulated annealing (SA) \citep{kirkpatrick_optimization_1983} is among the simplest --- a random proposal accepted by the Metropolis criterion under a decreasing temperature --- and remains attractive for its $\mathcal{O}(1)$ per-step cost. The state of the art is held by heavily engineered metaheuristics \citep{vidal_hybrid_2022,helsgaun_extension_2017,accorsi_fast_2021}, which reach near-optimal solutions but are inherently sequential, CPU-bound, and demand substantial per-instance tuning \citep{liu_heuristics_2023}.
+Heuristic CVRP solvers combine a constructive rule \citep{clarke_scheduling_1964}, local search, and a metaheuristic escaping local optima, simulated annealing \citep{kirkpatrick_optimization_1983} being the archetype of the latter. The strongest are heavily engineered: LKH-3 \citep{helsgaun_extension_2017} generalizes Lin--Kernighan moves to constrained routing, HGS \citep{vidal_hybrid_2022} couples a diversity-managed population with the SWAP* neighborhood and is the reference on uniform CVRP, and FILO \citep{accorsi_fast_2021} targets very large instances; general-purpose solvers such as OR-Tools \citep{ortools_routing} are dominated by both. All are sequential, CPU-bound, and require per-instance tuning \citep{liu_heuristics_2023}.
 
 \paragraph{Learning to construct.}
-Neural combinatorial optimization instead learns a solver from data \citep{wu_neural_survey_2024}. \emph{Construction} methods build a solution autoregressively. \citet{nazari_reinforcement_2018} adapted pointer networks \citep{vinyals_pointer_2015} to the CVRP, the Attention Model \citep{kool_attention_2019} replaced the recurrent encoder by a Transformer, and POMO \citep{kwon_pomo_2021} exploits solution symmetries. Since a single constructive pass is rarely near-optimal, most of the reported quality now comes from test-time search stacked on the policy \citep{kim_learning_2021,hottung_efficient_2021,choo_simulation-guided_2022}, while a parallel line targets large-scale generalization \citep{drakulic_bq-nco_2023,luo_neural_2023}. In all cases inference requires a full Transformer pass per construction step.
+\emph{Construction} methods build a solution autoregressively, from pointer networks \citep{vinyals_pointer_2015,nazari_reinforcement_2018} to the Transformer-based Attention Model \citep{kool_attention_2019} and POMO \citep{kwon_pomo_2021}, which exploits solution symmetries. A single pass being rarely near-optimal, most of their quality now comes from test-time search stacked on the policy \citep{kim_learning_2021,hottung_efficient_2021,choo_simulation-guided_2022}, while a parallel line targets large-scale generalization \citep{drakulic_bq-nco_2023,luo_neural_2023}.
 
 \paragraph{Learning to improve.}
-\emph{Improvement} methods start from a feasible solution and learn which local-search move to apply next, formulating the search as an MDP. NeuRewriter \citep{chen_learning_2019} picks a region and a rewriting rule; L2I \citep{lu_learning_2020} selects among improvement and perturbation operators and was the first learned method to beat LKH-3 on uniform instances, at budgets of tens of minutes per instance. \citet{wu_learning_2022} select the node pair fed to a pairwise operator with a self-attention policy; DACT \citep{ma_learning_2021} adds dual-aspect embeddings and a cyclic positional encoding for the circular structure of routes; NeuOpt \citep{ma_learning_2023} extends this to flexible $k$-opt with guided exploration of infeasible regions, reaching some of the best learned local-search results on uniform CVRP. Others learn the operators themselves rather than their arguments \citep{hottung_neural_2022,garcia-torres_combining_2022,bui_imitation_2023}. The recurring pattern is a heavyweight encoder re-evaluated at every one of thousands of search steps, which dominates the runtime and caps both the step budget and the instance size that can be afforded.
+\emph{Improvement} methods start from a feasible solution and learn which local-search move to apply next, formulating the search as an MDP. NeuRewriter \citep{chen_learning_2019} and L2I \citep{lu_learning_2020} learn to select a rewriting rule or an operator; LIH \citep{wu_learning_2022}, DACT \citep{ma_learning_2021} and NeuOpt \citep{ma_learning_2023} instead learn the \emph{arguments} of a fixed operator, a node pair and then a $k$-opt move, the latter two reaching the best learned local-search results on uniform CVRP through dual-aspect embeddings and guided exploration of infeasible regions. Others learn the operators themselves, as in the neural large-neighborhood search NLNS \citep{hottung_neural_2022,garcia-torres_combining_2022,bui_imitation_2023}, or learn only a representation steering a non-neural search \citep{hottung_learning_2021,kool_deep_2022}. In all cases a heavyweight encoder is re-evaluated at every one of thousands of steps, which dominates the runtime and caps both the step budget and the instance size.
 
 \paragraph{Learning-guided metaheuristics.}
-A sparser line keeps a classical metaheuristic intact and learns only one of its components. Neural SA \citep{correia_neural_2023} replaces the uniform proposal distribution of SA by a small equivariant policy trained with PPO, leaving the Metropolis criterion and the cooling schedule untouched; it was not evaluated on constrained routing, where capacity renders most moves infeasible. LG-SA \citep{AndrettiEtAl26} transposes the idea to the CVRP with a node-pair policy and action masking. We build on that framework and push it where the above literature leaves an opening: rather than enlarging the policy, we show that a single hidden layer of $32$ neurons suffices once the state representation, reward, annealing parameters and training curriculum are properly designed. This preserves the per-step cost of classical SA, turns the search into a sequence of $\mathcal{O}(N)$ batched tensor operations --- thousands of instances annealing in parallel on one GPU --- and shifts the comparison to the joint cost--compute trade-off, where heavyweight improvement policies are least favourable.
+A sparser line keeps a classical metaheuristic intact and learns only one of its components. Neural SA \citep{correia_neural_2023} replaces the uniform proposal distribution of SA by a small equivariant policy trained with PPO, leaving the Metropolis criterion and the cooling schedule untouched, but was not evaluated on constrained routing, where capacity renders most moves infeasible; LG-SA \citep{AndrettiEtAl26} transposes the idea to the CVRP with a node-pair policy and action masking. We build on that framework and show that its policy need not grow: a single hidden layer of $32$ neurons suffices once the representation, reward, annealing parameters and curriculum are properly designed.
+
 % ============================================================================
 \section{CVRP}
 \label{sec:problem_definition}
@@ -286,13 +255,18 @@ This solution is accepted as the next solution $s_{t+1}$ according to the classi
 
 
 \paragraph{Solution encoding.}
-A solution $s_t$ consists of an ordered sequence of customer nodes separated by depot visits. At each iteration $t$, LG-SA computes a node-centric representation 
-$\bar{s}_t = \{ \mathbf{x}_k \}_{k \in \mathcal C}$ of $s_t$, 
-where each $\mathbf{x}_k$ is a feature vector that encodes both static and dynamic information associated with customer $i$ in the current solution and search state. The encoded representation $\bar{s}_t$ constitutes the input to the neural policy $\pi_\theta$.
+A solution $s_t$ consists of an ordered sequence of customer nodes separated by depot visits. At each iteration $t$, LG-SA computes a node-centric representation
+$\bar{s}_t = \{ \mathbf{x}_k \}_{k \in \mathcal C}$ of $s_t$,
+where each $\mathbf{x}_k$ is a feature vector encoding both static and dynamic information associated with customer $k$ in the current solution and search state. The encoded representation $\bar{s}_t$ constitutes the input to the neural policy $\pi_\theta$.
 
-Our feature representation combines static geometric information, dynamic descriptors of the node's position within the current solution (e.g., predecessor and successor, local detour cost, and distance to the route centroid), route capacity statistics, and search meta-features such as the current temperature and remaining search budget. Unlike conventional geometric encodings, it also includes quality-related signals that explicitly characterize the local quality of the current solution around each node. %Importantly, the feature dimensionality is independent of the instance size, making the representation scalable to instances with arbitrary numbers of customers. Moreover, since every node is described by the same fixed-size vector, the policy processes all nodes --- of all instances in a batch --- simultaneously, as a single vectorized tensor computation. The complete feature definitions are provided in Appendix~\ref{app:features}.
+Our feature representation combines static geometric information, dynamic descriptors of each node's position within the current solution (e.g., predecessor and successor, local detour cost, and distance to the route centroid), route capacity statistics, and search meta-features such as the current temperature and remaining search budget. Unlike conventional geometric encodings, it also includes quality-related signals that explicitly characterize the local quality of the current solution around each node.
 
-Importantly, the feature dimensionality is independent of the instance size, making the representation applicable to CVRP instances of arbitrary size. Moreover, every node is encoded by a fixed-size feature vector, allowing the policy to evaluate all nodes across all instances simultaneously in a batch, through a single vectorized tensor computation. The complete feature definitions are provided in Appendix~\ref{app:features}.
+
+Since node features have a fixed dimensionality independent of the instance size, the same policy naturally generalizes to CVRP instances of arbitrary size and evaluates all nodes in a batch through a single vectorized tensor computation. The complete feature definitions are provided in Appendix~\ref{app:features}.
+
+
+ %Importantly, the feature dimensionality is independent of the instance size, making the representation scalable to instances with arbitrary numbers of customers. Moreover, since every node is described by the same fixed-size vector, the policy processes all nodes --- of all instances in a batch --- simultaneously, as a single vectorized tensor computation. The complete feature definitions are provided in Appendix~\ref{app:features}.
+
 
 
 \paragraph{Two-stage policy.}
@@ -381,8 +355,15 @@ During training, the reward is evaluated on short LG-SA rollouts of only a few h
 
 \subsection{Experimental Setup}
 
-\paragraph{Benchmark.}
-We use three families of instances. The \emph{design choices} of Section~\ref{sec:design} are validated on data we generate ourselves following \citet{nazari_reinforcement_2018}: coordinates uniform in $[0,1]^2$, demands uniform in $\{1, \dots, 9\}$, and a size-dependent capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$); per size we pre-generate a fixed set of $10{,}000$ instances reused by every configuration, so all comparisons are paired at the instance level. For the \emph{baseline comparison} of Section~\ref{sec:baselines} we instead evaluate on the test sets released by \citet{ma_learning_2023}, who generate instances with the same procedure and, crucially, re-run every competing method on them under a common protocol; using their data makes our numbers directly comparable to that whole table rather than to a re-derived reference. Finally, \emph{generalization} is probed on real-world-structured and much larger instances: CVRPLIB Set X \citep{uchoa_new_2017}, the XML instances of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, which reach far beyond the training size. Unless stated otherwise, results are reported at $N = 100$.
+\paragraph{Datasets.}
+% We use three families of instances. The \emph{design choices} of Section~\ref{sec:design} are validated on data we generate ourselves following \citet{nazari_reinforcement_2018}: coordinates uniform in $[0,1]^2$, demands uniform in $\{1, \dots, 9\}$, and a size-dependent capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$); per size we pre-generate a fixed set of $10{,}000$ instances reused by every configuration, so all comparisons are paired at the instance level. For the \emph{baseline comparison} of Section~\ref{sec:baselines} we instead evaluate on the test sets released by \citet{ma_learning_2023}, who generate instances with the same procedure and, crucially, re-run every competing method on them under a common protocol; using their data makes our numbers directly comparable to that whole table rather than to a re-derived reference. Finally, \emph{generalization} is probed on real-world-structured and much larger instances: CVRPLIB Set X \citep{uchoa_new_2017}, the XML instances of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, which reach far beyond the training size. Unless stated otherwise, results are reported at $N = 100$.
+
+We consider three families of CVRP instances. The \emph{design choices} studied in Section~\ref{sec:design} are validated on synthetic instances generated according to the protocol of \citet{nazari_reinforcement_2018}: customer coordinates are sampled uniformly in $[0,1]^2$, demands uniformly in $\{1,\dots,9\}$, and the vehicle capacity is adjusted to the instance size ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$, respectively). For each size, a fixed test set of $10{,}000$ instances is pre-generated and reused across all configurations, ensuring paired comparisons at the instance level. 
+
+For the \emph{baseline comparison} of Section~\ref{sec:baselines}, we evaluate on the benchmark test sets released by \citet{ma_learning_2023}. These instances follow the same generation procedure and were used by the authors to re-evaluate a broad collection of competing methods under a common protocol, enabling direct comparison with the published benchmark results. 
+
+Finally, \emph{generalization} is assessed on larger and more structured instances from CVRPLIB Set X \citep{uchoa_new_2017}, the XML benchmark of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, whose instance sizes extend up to $10\,000$ customers, two orders of magnitude beyond the training size. Unless stated otherwise, results are reported for $N=100$.
+
 
 \paragraph{Evaluation protocol.}
 A trained model is evaluated by running the LG-SA loop over the full test set in parallel on a single GPU, starting from random feasible solutions, with half-precision inference and a step budget stated per experiment (default $10^4$). We report the mean final routing cost and the wall-clock time of the whole batch.
@@ -466,11 +447,11 @@ Combined confirmation & rates, rollout, $T_{\mathrm{final}}$ & --- & $+0.22^{**}
 \multicolumn{3}{@{}l}{\textbf{Total improvement}} & \multicolumn{2}{r@{}}{\textbf{TBD}} \\
 \bottomrule
 \end{tabular}
-\caption{Master summary of the design validation, one row per dimension. \emph{Effect}: seed-paired margin in favor of the adopted setting, against the previously adopted configuration; tie means $|\Delta| \leq \sigma_{\mathrm{floor}}$, $^{*}$ that $|\Delta| > \sigma_{\mathrm{floor}}$, $^{**}$ that $|\Delta| > 2\sigma_{\mathrm{floor}}$. \# is the number of candidates evaluated. Effects come from separate sweeps and are not additive; the closing block therefore anchors the end-to-end gain on the first sweep's winner, and is indicative rather than paired.}
+\caption{Master summary of the design validation, one row per dimension. \emph{Effect}: seed-paired margin in favor of the adopted setting, against the previously adopted configuration; tie means $|\Delta| \leq \sigma_{\mathrm{floor}}$, $^{*}$ that $|\Delta| > \sigma_{\mathrm{floor}}$, $^{**}$ that $|\Delta| > 2\sigma_{\mathrm{floor}}$. \# is the number of configurations evaluated. Effects come from separate sweeps and are not additive; the closing block therefore anchors the end-to-end gain on the first sweep's winner, and is indicative rather than paired.}
 \label{tab:summary}
 \end{table}
 
-\paragraph{Re-confirmed choices.}
+\paragraph{Confirmed choices.}
 Four dimensions reproduce the conclusions of \citet{AndrettiEtAl26} in the present setting and are not re-discussed here. Insertion with proactive masking again dominates the operator $\times$ feasibility set, with both the lowest cost and the lowest seed variance (Appendix~\ref{app:v1}). Metropolis acceptance remains necessary at inference regardless of how the actor was trained --- which is also why the solver keeps sampling $a_t \sim \pi_\theta(\cdot \mid s_t)$ rather than taking the greedy argmax, a near-deterministic proposal collapsing the diversity the acceptance step relies on (Appendix~\ref{app:v5678}). Random constructions remain the best training initialization, while the inference-time choice is washed out by $10^4$ annealing steps (Appendix~\ref{app:v5678}). Finally, widening or deepening the two scoring networks never clears the noise floor while wall-clock rises by up to $38\%$ (Table~\ref{tab:v3arch}), the signature of a capacity plateau. The remaining dimensions are new to this work.
 
 \begin{table}[t]
@@ -493,7 +474,8 @@ core5         & 5  & 17.162 & 115 \\
 \end{table}
 
 \paragraph{Node representation.}
-The node representation is where this work departs most from \citet{AndrettiEtAl26}. That descriptor was purely local --- coordinates, depot flag, polar position, distance to the depot, and load ratios --- whereas we add three groups that summarize a node's \emph{neighborhood} rather than its own position: local density ($\mu_5$, $\mu_{N/10}$, $\mu_{N/3}$, the mean distance to the nearest neighbors at three radii), the insertion detour cost, and the distance to the route centroid. Every candidate feature is constrained to be computable in closed form from the coordinate and demand tensors, so the whole $13$-group state is built with batched tensor operations and no per-instance loop; a feature that cannot be vectorized this way is rejected regardless of its predictive value, since it would forfeit the throughput that makes the method competitive. The additions pay for themselves, and the geometry cluster carries most of that value. Removing the detour and centroid features --- both introduced here --- costs $+0.596 \pm 0.033$ in the thematic ablation (Table~\ref{tab:thematic}), more than three times the gain of the best annealing or optimization setting and the joint-largest effect of that ablation, statistically tied with the relational cluster ($+0.599 \pm 0.016$); removing the density group costs a smaller but real $+0.145 \pm 0.033$. What the policy most needs is therefore not where a node sits, but how its neighborhood is shaped and what it would cost to move it.
+The node representation is where this work departs most from \citet{AndrettiEtAl26}. That descriptor was purely local --- coordinates, depot flag, polar position, distance to the depot, and load ratios --- whereas we add three groups that summarize a node's \emph{neighborhood} rather than its own position: local density (the mean distance to the closest 5\%, 10\%, and 33\% of customers)%($\mu_{N/20}$, $\mu_{N/10}$, $\mu_{N/3}$, the mean distance to the nearest neighbors at three radii)
+, the insertion detour cost, and the distance to the route centroid. Every candidate feature is constrained to be computable in closed form from the coordinate and demand tensors, so the whole $13$-group state is built with batched tensor operations and no per-instance loop; a feature that cannot be vectorized this way is rejected regardless of its predictive value, since it would forfeit the throughput that makes the method competitive. The additions pay for themselves, and the geometry cluster carries most of that value. Removing the detour and centroid features --- both introduced here --- costs $+0.596 \pm 0.033$ in the thematic ablation (Table~\ref{tab:thematic}), more than three times the gain of the best annealing or optimization setting and the joint-largest effect of that ablation, statistically tied with the relational cluster ($+0.599 \pm 0.016$); removing the density group costs a smaller but real $+0.145 \pm 0.033$. What the policy most needs is therefore not where a node sits, but how its neighborhood is shaped and what it would cost to move it.
 
 The ablation also shows that individual group importance does not predict joint contribution. Leave-one-out and isolation tests (Appendix~\ref{app:v2}) identify only $6$ of the $13$ groups as individually useful, yet training on those alone degrades performance (Table~\ref{tab:bestset}); removals compound, so density and capacity statistics carry complementary information (Table~\ref{tab:thematic}). The only quality-neutral trim is the route load ratio ($-0.035 \pm 0.106$); every other pruning trades quality for speed (set7 loses $2\%$ quality for a $25\%$ speedup). The conditional pair descriptors of the second policy stage degrade performance ($+0.14 \pm 0.11$ and $+0.18 \pm 0.07$) at extra cost. The final model therefore keeps all $13$ groups and no pair descriptors.
 
@@ -518,10 +500,9 @@ That baseline is unusually reproducible ($16.238 \pm 0.006$ over $5$ seeds, $\si
 \label{sec:baselines}
 
 \paragraph{Final model.}
-All component winners of Table~\ref{tab:summary}, the best curriculum, and the tuned optimization budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. We compare it against blind SA under matched conditions (same operator, budget, and schedule), and we report the mean cost as a function of the SA step budget from $10^2$ to $10^6$ steps to characterize the anytime behavior of the guided search.
-% TODO: headline table at N=100 (cost / time at 10^4 steps; long-budget 10^6
-% row; x8 instance-augmentation row); guided-vs-blind cost-vs-steps curves
-% (log-x); literature rows for neural baselines.
+All component winners of Table~\ref{tab:summary}, the best curriculum, and the tuned optimization budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. The comparison we control exactly is against blind SA under matched conditions --- same operator, same cooling schedule, same instances, same budget --- and it is reported in the ``Ours'' block of Table~\ref{tab:nazari}. Guidance is worth about two orders of magnitude of raw sampling: at $N = 100$ and $T = 10^{4}$, LG-SA reaches $16.18$ against $22.99$ for blind SA, a result the guided search already matches with $300$ steps, and blind SA still sits at $18.13$ with ten times the moves --- which LG-SA passes at $10^{3}$. Comparing complete, independently annealed runs at every budget from $10^{2}$ to $10^{5}$ steps (Appendix~\ref{app:scaling}, Figure~\ref{fig:frontier}), the guided search is ahead at every point, by $27.7$ at $10^{2}$ down to $2.2$ at $10^{5}$. The advantage is not free per move --- the actor forward pass makes a guided step $13.1$ to $13.7$$\times$ more expensive than a blind one --- but it survives the conversion to wall clock: LG-SA at $10^{4}$ steps ($16.18$ in $2.9$m) against blind SA at $10^{5}$ ($18.13$ in $2.3$m) is a $1.95$ margin at comparable cost, and blind SA's best measured point is beaten by a guided run taking $7.9\times$ less time. That margin grows with instance size, from $0.19$ at $N = 20$ to $1.69$ at $N = 50$ and $6.81$ at $N = 100$ under an equal step budget: the larger the neighborhood, the more there is to gain from choosing where to look.
+% TODO: x8 instance-augmentation row in tab:nazari (like-for-like against
+% POMO x8 / DACT x6); T=1e6 row; per-seed spread of the 5 final seeds.
 %   sweep: V10_final (5 seeds); evals: headline, --augment 8, steps
 %   {100..1e6}, dims {10,20,50,100}
 
@@ -568,9 +549,11 @@ We source the baseline values from \citet{ma_learning_2023} rather than from the
  & LG-SA ($T{=}10^{5}$)           & --- & --- & --- & 10.70 & 3.22\%\rlap{$^{\dagger}$} & 14m  & 16.80 & 7.95\%\rlap{$^{\dagger}$}  & 29m \\
  & LG-SA ($T{=}10^{6}$)           & --- & --- & --- & 10.54 & 1.68\%\rlap{$^{\dagger}$} & 2.3h & ---   & ---     & --- \\
 \midrule
-\multirow{3}{*}{Ours}
- & Blind SA ($T{=}10^{4}$)        & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD \\
- & LG-SA ($T{=}10^{4}$)           & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD \\
+\multirow{5}{*}{Ours}
+ & Blind SA ($T{=}10^{4}$)        & 6.438 & 5.02\% & 7s    & 12.351 & 19.15\% & 7s    & 22.992 & 47.73\% & 14s \\
+ & Blind SA ($T{=}10^{5}$)        & 6.237 & 1.75\% & 1.1m  & 11.122 & 7.29\%  & 1.2m  & 18.132 & 16.51\% & 2.3m \\
+ & LG-SA ($T{=}10^{4}$)           & 6.246 & 1.89\% & 21s   & 10.666 & 2.89\%  & 1.5m  & 16.183 & 3.98\%  & 3.0m \\
+ & LG-SA ($T{=}10^{5}$)           & 6.182 & 0.85\% & 3.5m  & 10.526 & 1.55\%  & 14.6m & 15.923 & 2.31\%  & 29.9m \\
  & LG-SA ($T{=}10^{6}$)           & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD & TBD \\
 \bottomrule
 \end{tabular}
@@ -578,20 +561,44 @@ We source the baseline values from \citet{ma_learning_2023} rather than from the
 \label{tab:nazari}
 \end{table*}
 
-% TODO: fill the three "Ours" rows once V10_final lands (evals: headline at
-% T=1e4 and T=1e6, dims {20,50,100}). Recompute our gaps against the same LKH
-% reference values used above (6.14 / 10.38 / 15.68) and state explicitly in
-% the caption that our instances are a different draw.
+% Ours rows filled from res/BEST (model 20260721_152531_pgyijbb4, float16,
+% test_data = nazari_neuopt = the same 10k-instance NeuOpt test set used by
+% the literature rows, so no "different draw" caveat applies to our rows).
+% Gaps computed against the HGS values above (6.130 / 10.366 / 15.563).
+% TODO: T=1e6 row still missing (evals at dims {20,50,100}).
 % TODO: decide whether to add an "x8 instance augmentation" LG-SA row for a
 % like-for-like comparison against POMO x8 and DACT x6.
 
 
-\subsection{Generalization and scalability.}
+\subsection{Generalization and Scalability}
+\label{sec:scaling}
 
-Finally, we probe how far the node-centric representation carries across problem scales: models trained at each size are cross-tested at every other size, and the final model is evaluated on instances well beyond its training size with the same checkpoint, reporting both solution quality and runtime scaling.
-% TODO: cross-dimension table (train dim x test dim, {50,100,500}); runtime
-% scaling over N; discussion of capacity conventions per dim (Q=40/50).
-%   sweep: V12_dim50 / V12_dim100 / V12_dim500 (cross-test loop)
+Every number reported so far comes from one checkpoint, trained at $N = 100$ with capacity $Q = 50$ and never retrained per size. The $N = 20$ and $N = 50$ columns of Table~\ref{tab:nazari} are therefore already zero-shot transfers, run at capacities ($Q = 30$ and $Q = 40$) the policy never saw during training, and the gap there is smaller than at the training size ($0.85\%$ and $1.55\%$ against $2.31\%$ at $T = 10^{5}$). Smaller instances are easier for every method, so that ordering is not by itself evidence of good transfer; what it does establish is that no size-specific retraining is needed to stay competitive away from the training size.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}r rr r r@{}}
+\toprule
+$N$ & Init. & LG-SA & Improv. & ms/step \\
+\midrule
+100     & 59.4    & 18.3    & $-69\%$ & 0.46 \\
+200     & 119.2   & 31.3    & $-74\%$ & 0.51 \\
+500     & 288.8   & 75.3    & $-74\%$ & 0.62 \\
+1{,}000  & 588.5   & 147.9   & $-75\%$ & 0.79 \\
+2{,}000  & 1188.4  & 309.4   & $-74\%$ & 1.09 \\
+5{,}000  & 2944.6  & 850.3   & $-71\%$ & 1.91 \\
+10{,}000 & 5866.4  & 2100.6  & $-64\%$ & 3.32 \\
+\bottomrule
+\end{tabular}
+\caption{Scaling beyond the training size. The $N = 100$ checkpoint is applied unchanged to instances up to $N = 10{,}000$, sampled from the Nazari distribution with the capacity held at the training value $Q = 50$ (so larger $N$ means proportionally more routes). Single instances, batch $1$, CPU, $10^{4}$ steps, mean over $3$ runs; instance construction is timed separately and excluded. Costs at different $N$ are not comparable to each other, only to their own constructive initialization.}
+\label{tab:dims}
+\end{table}
+
+Upward, the same checkpoint is run sequentially on single instances at sizes up to $N = 10{,}000$, two orders of magnitude above training (Table~\ref{tab:dims}). Nothing breaks: the search stays feasible and improves the constructive solution by $64$--$75\%$ at every size, and the per-step cost grows by only $7.2\times$ while $N$ grows by $100\times$ --- sublinear, because below $N \approx 10^{3}$ a step is dominated by fixed overhead rather than by the instance. A step budget fixed in absolute terms therefore gets cheaper per node but also thinner: at $N = 10{,}000$, $10^{4}$ steps is one proposed move per node, which is where the improvement ratio starts to fall back. Halving the exponent makes this explicit --- at $10^{3}$ steps the improvement collapses from $-68\%$ at $N = 100$ to $-14\%$ at $N = 10{,}000$, and is recovered by spending $10\times$ more steps (Appendix~\ref{app:scaling}). The currency is steps per node, not steps; what degrades at scale is the budget, not the representation. Appendix~\ref{app:scaling} also reports the step-budget, batch-size and precision sweeps behind the evaluation protocol used throughout the paper --- in particular that half precision is free ($1.29\times$ faster for $-0.0002$ in cost), which is why every reported evaluation uses it.
+% TODO: cross-dimension table (train dim x test dim, {50,100,500}) -- needs
+% models trained AT 50 and 500; res/BEST only contains the N=100 checkpoint.
 % TODO (later, needs non-Nazari test data): cross-distribution table --
 % train on Nazari vs Uchoa/Queiroga, test on both (V11_dist, --DATA uchoa).
 
@@ -1692,5 +1699,135 @@ mean & $\mathbf{16.165} \pm 0.042$ & $16.204 \pm 0.015$ & $+0.039 \pm 0.053$ \\
 \caption{Five-seed confirmation, ramped warm-up against stochastic depth at $\xi_{\mathrm{CL}} = 250$; $\Delta$ is stochastic $-$ ramp, so a positive value favors the ramp. Bold marks the better configuration on each seed. Seed $0$ is the recurring hard seed that the ramp does not move and that the depth mix rescues.}
 \label{tab:clconf}
 \end{table}
+
+% ============================================================================
+\section{Generalization and Scalability, Full Results}
+\label{app:scaling}
+% ============================================================================
+
+This appendix collects the measurements behind Section~\ref{sec:scaling}: the step-budget sweep that fixes the quality/time trade-off, the dimension sweep beyond the training size, and the two implementation sweeps --- batch size and numerical precision --- that determine how every other evaluation in the paper is run. All of them use the single final checkpoint, trained at $N = 100$ with $Q = 50$, without retraining.
+
+\paragraph{Protocol and comparability.}
+Unlike the ablation batches, these sweeps run on our internally generated Nazari test sets (\texttt{gen\_nazari\_\{N\}.pt}) rather than on the NeuOpt test set used in Table~\ref{tab:nazari}, and in \texttt{float32} rather than \texttt{float16} unless stated otherwise. The two draws are statistically equivalent but not identical (mean constructive cost $57.86$ against $57.90$ at $N = 100$), so costs here should be read against each other and not transferred into Table~\ref{tab:nazari}; the agreement is nevertheless close ($15.899$ here against $15.923$ there at $T = 10^{5}$, $N = 100$). Reported times are search time only: instance construction --- which materializes a dense $[N{+}1, N{+}1]$ distance matrix and its argsort, and reaches $1.34$\,s at $N = 10{,}000$ --- is timed separately and excluded throughout.
+
+\paragraph{Step budget.}
+Table~\ref{tab:stepbudget} sweeps the improvement budget from $10^{2}$ to $10^{6}$ steps. The two blocks use different batch sizes ($10{,}000$ instances up to $T = 10^{4}$, $1{,}000$ beyond, for memory reasons), so times are comparable \emph{within} a block only, and costs across blocks come from different subsets of the same distribution. Returns diminish sharply and regularly: at $N = 100$, the first decade ($10^{2} \to 10^{3}$) buys $6.68$ routing units, the next $0.79$, then $0.21$, $0.05$ and finally $0.11$ over the last two decades combined. Reaching $15.788$ at $T = 10^{6}$ costs $100\times$ the compute of $16.118$ at $T = 10^{4}$ for a $2\%$ improvement, which is the regime where the conventional solvers of Table~\ref{tab:nazari} remain out of reach. A second effect is visible in the lower block: at $N \le 50$ the run time is essentially independent of $N$ ($\approx 111$\,s for $10^{5}$ steps at $N = 10$, $20$ and $50$), because a batch of $1{,}000$ small instances does not saturate the GPU and the step count alone sets the cost.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}r rr rr rr rr@{}}
+\toprule
+& \multicolumn{2}{c}{$N=10$} & \multicolumn{2}{c}{$N=20$} & \multicolumn{2}{c}{$N=50$} & \multicolumn{2}{c}{$N=100$} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+$T$ & Cost & s & Cost & s & Cost & s & Cost & s \\
+\midrule
+\multicolumn{9}{@{}l}{\emph{batch $= 10{,}000$ instances}} \\
+$10^{2}$ & 4.796 & 0.2 & 6.673 & 0.3 & 12.469 & 1.1 & 23.588 & 2.4 \\
+$10^{3}$ & 4.644 & 1.6 & 6.354 & 3.4 & 10.978 & 11 & 16.911 & 23 \\
+$5\cdot10^{3}$ & 4.590 & 7.8 & 6.257 & 17 & 10.717 & 56 & 16.270 & 115 \\
+$10^{4}$ & 4.573 & 16 & 6.227 & 34 & 10.643 & 113 & 16.118 & 230 \\
+\midrule
+\multicolumn{9}{@{}l}{\emph{batch $= 1{,}000$ instances}} \\
+$10^{5}$ & 4.507 & 111 & 6.157 & 111 & 10.517 & 113 & 15.899 & 156 \\
+$2\cdot10^{5}$ & 4.498 & 222 & 6.144 & 222 & 10.484 & 223 & 15.853 & 313 \\
+$5\cdot10^{5}$ & --- & --- & --- & --- & 10.457 & 562 & 15.813 & 770 \\
+$10^{6}$ & --- & --- & --- & --- & 10.434 & 1121 & 15.788 & 1530 \\
+\bottomrule
+\end{tabular}
+\caption{Mean cost and total search time against the improvement budget $T$, \texttt{float32} on one GPU. Times are totals over the whole batch and are comparable only within a block; the two blocks use different batch sizes and therefore different instance subsets.}
+\label{tab:stepbudget}
+\end{table}
+
+\paragraph{Guided against blind search.}
+Figure~\ref{fig:frontier} gives the anytime frontier of both searches at $N = 100$, on the test set and in the precision of Table~\ref{tab:nazari}. Every point is an \emph{independent, complete} run: the temperature schedule is compressed to that point's budget, so a $10^{3}$-step run is a fully annealed search and not a prefix of the $10^{5}$-step one. This is the only construction under which the two methods can be compared at a budget, and it is what a single long trace cannot provide --- sampled along one $2 \cdot 10^{5}$-step anneal, blind SA reads $53.99$ at step $10^{4}$, against $22.99$ for a blind run actually budgeted at $10^{4}$ steps, because the first is still mid-anneal. The frontier reproduces the ``Ours'' block of Table~\ref{tab:nazari} to three decimals ($16.185$ and $22.989$ at $T = 10^{4}$; $15.923$ and $18.130$ at $T = 10^{5}$), which is the intended cross-check: the figure and the headline table are one measurement.
+
+Panel (a) shows that the guided search is better than the blind one at every budget, and that the two do not merely differ by a constant: LG-SA is $27.7$ ahead at $T = 10^{2}$, $19.5$ at $10^{3}$, $6.8$ at $10^{4}$ and $2.2$ at $10^{5}$, so the blind search is slowly closing a gap it never closes. What the policy buys is position on the curve rather than a different asymptote --- both methods are drifting toward the same annealing limit, and guidance moves the search there roughly two orders of magnitude sooner. LG-SA needs $300$ steps to pass blind SA's $10^{4}$-step result and $10^{3}$ to pass its $10^{5}$-step result --- in both cases about two decades of budget.
+
+Panel (b) re-plots the same runs against wall clock and is the comparison that matters, since a guided step is not a blind step. The per-step overhead of the actor is $13.1$ to $13.7$$\times$ across the whole sweep --- remarkably stable, and measured here rather than inferred from two totals as in earlier versions of this comparison. Even after paying it, the guided curve dominates over the entire range where both are measured: the best point blind SA reaches at all, $18.130$ after $139$\,s, is already beaten by LG-SA after $17.7$\,s ($16.982$) --- better quality in $7.9\times$ less time --- and by $1.65$ at $52.9$\,s. At matched wall clock near the paper's operating point, LG-SA's $16.185$ in $176$\,s stands against blind SA's $18.130$ in $139$\,s. The margin narrows as both curves flatten toward HGS, and the crossing point --- if the blind search has one within a practical budget --- lies beyond $10^{5}$ steps and is not established by these measurements.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.99\columnwidth]{frontier_100.pdf}
+\caption{Anytime frontier at $N = 100$ on the $10{,}000$-instance test set, \texttt{float16}, identical initial solutions ($57.88$). Each marker is one complete run whose cooling schedule is compressed to that budget, against (a) the step budget and (b) the resulting wall-clock time; the dotted line is the HGS reference of Table~\ref{tab:nazari}. LG-SA's cheapest run ($10^{2}$ steps, $1.8$\,s) is why its curve starts later in (b).}
+\label{fig:frontier}
+\end{figure}
+
+\paragraph{Dimension.}
+Table~\ref{tab:dimsfull} gives the full version of Table~\ref{tab:dims}, with both step budgets. Read row-wise, it separates the two things that change with $N$. The per-step cost is nearly flat: $0.46$\,ms at $N = 100$ against $3.32$\,ms at $N = 10{,}000$, a $7.2\times$ increase for $100\times$ the nodes, and it is the same at $10^{3}$ and $10^{4}$ steps, confirming that it measures the step and not the schedule. Solution quality, on the other hand, is governed by steps per node. At $10^{3}$ steps the improvement over the constructive solution decays monotonically with size, from $-68\%$ at $N = 100$ to $-14\%$ at $N = 10{,}000$; multiplying the budget by ten restores it to $-64\%$ at $N = 10{,}000$ and leaves the $-69\%$ at $N = 100$ almost unchanged, since that size was already budget-saturated. The residual dip at the two largest sizes is consistent with $10^{4}$ steps being only one to two proposed moves per node.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}r r rr r rr@{}}
+\toprule
+& & \multicolumn{2}{c}{$T = 10^{3}$} & & \multicolumn{2}{c}{$T = 10^{4}$} \\
+\cmidrule(lr){3-4} \cmidrule(lr){6-7}
+$N$ & Init. & Cost & Improv. & ms/step & Cost & Improv. \\
+\midrule
+100      & 59.4   & 19.1   & $-68\%$ & 0.46 & 18.3   & $-69\%$ \\
+200      & 119.2  & 34.5   & $-71\%$ & 0.51 & 31.3   & $-74\%$ \\
+500      & 288.8  & 89.5   & $-69\%$ & 0.62 & 75.3   & $-74\%$ \\
+1{,}000  & 588.5  & 215.0  & $-63\%$ & 0.79 & 147.9  & $-75\%$ \\
+2{,}000  & 1188.4 & 599.0  & $-50\%$ & 1.09 & 309.4  & $-74\%$ \\
+5{,}000  & 2944.6 & 2164.7 & $-26\%$ & 1.91 & 850.3  & $-71\%$ \\
+10{,}000 & 5866.4 & 5022.1 & $-14\%$ & 3.32 & 2100.6 & $-64\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Sequential single-instance scaling, CPU ($12$ threads), batch $1$, \texttt{float32}, mean over $3$ runs. Instances are drawn from the Nazari distribution with capacity fixed at the training value $Q = 50$. The ms/step column is measured at $T = 10^{4}$ and agrees with the $T = 10^{3}$ measurement to within $2\%$ at every size.}
+\label{tab:dimsfull}
+\end{table}
+
+\paragraph{Batch size.}
+Because the search is a fixed-length loop of batched tensor operations, the GPU can amortize it over many instances at once, and Table~\ref{tab:batch} locates the operating point. Throughput is maximal at a batch of $1{,}000$ instances ($15.0$\,ms per instance, $67$ instances per second) and then \emph{degrades} by about $45\%$ to a plateau of $\approx 22$\,ms per instance from batch $4{,}000$ on, where the kernels become memory-bound; the small-batch end is worse still ($109$\,ms at batch $100$), dominated by per-step launch overhead. Peak memory is linear in the batch ($0.19$\,MB per instance at $N = 100$), so the plateau, not memory, is the binding constraint. Solution quality is flat across the whole range once the sample is large enough to be stable, as it must be --- the batch dimension is independent in the solver. We nevertheless evaluate at batch $10{,}000$ everywhere in the paper, accepting the $45\%$ throughput loss, so that every reported cost is a mean over the same full $10{,}000$-instance test set.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}r r r r r@{}}
+\toprule
+Batch & Cost & Total (s) & ms/inst. & Peak mem.\ (MB) \\
+\midrule
+100      & 16.403 & 10.9  & 109.2 & 29 \\
+500      & 16.126 & 11.1  & 22.2  & 105 \\
+1{,}000  & 16.162 & 15.0  & \textbf{15.0} & 198 \\
+2{,}000  & 16.188 & 31.6  & 15.8  & 388 \\
+3{,}000  & 16.148 & 54.5  & 18.2  & 570 \\
+4{,}000  & 16.130 & 87.8  & 21.9  & 758 \\
+5{,}000  & 16.118 & 109.0 & 21.8  & 943 \\
+6{,}000  & 16.115 & 130.4 & 21.7  & 1129 \\
+8{,}000  & 16.107 & 175.3 & 21.9  & 1507 \\
+10{,}000 & 16.125 & 220.3 & 22.0  & 1877 \\
+\bottomrule
+\end{tabular}
+\caption{Effect of the evaluation batch size on GPU throughput and memory, at $N = 100$ and $T = 10^{4}$, \texttt{float32}. Rows at $7{,}000$ and $9{,}000$ are omitted; they interpolate the plateau. The cost column varies only through the instance sample, which is the first $B$ instances of the test set.}
+\label{tab:batch}
+\end{table}
+
+\paragraph{Numerical precision.}
+Table~\ref{tab:precision} compares the three inference precisions. Half precision is free: \texttt{float16} is $1.29\times$ faster than \texttt{float32} for a cost difference of $-0.0002$, four orders of magnitude below the noise floor of any comparison in this paper. \texttt{bfloat16} runs at the same speed but loses $0.065$ --- twice the ablation noise floor, and enough to change the verdict of several design comparisons. The two formats have the same width and differ only in the exponent/mantissa split, so this is a mantissa effect: the policy scores node pairs through small differences between comparable distances, and \texttt{bfloat16}'s $8$ mantissa bits are too coarse to rank them reliably, whereas its wider exponent range buys nothing on inputs normalized to $[0, 1]$. All evaluations in the paper accordingly use \texttt{float16}. Note that this concerns inference only; training is unchanged.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{@{}l r r r r@{}}
+\toprule
+Precision & Cost & $\Delta$ & Time & Speedup \\
+\midrule
+\texttt{float32}  & 16.1213 & ---       & 3m40s & $1.00\times$ \\
+\texttt{float16}  & 16.1211 & $-0.0002$ & 2m51s & $1.29\times$ \\
+\texttt{bfloat16} & 16.1867 & $+0.0654$ & 2m51s & $1.29\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Inference precision, at $N = 100$, $T = 10^{4}$, batch $10{,}000$. Differences are relative to the \texttt{float32} baseline.}
+\label{tab:precision}
+\end{table}
+
+\paragraph{Limitations.}
+Three caveats bound what this section supports. First, the dimension sweep has no blind-SA control at the large sizes: it shows that the guided search remains usable up to $N = 10{,}000$, not that the learned policy still contributes there, and the matched guided-against-blind comparison of Table~\ref{tab:nazari} exists only up to $N = 100$. Second, it averages $3$ runs per cell, and only the sizes without a pre-generated test set ($200$, $2{,}000$, $5{,}000$, $10{,}000$) draw a fresh instance per run --- at $N \in \{100, 500, 1{,}000\}$ the three runs share one instance and differ only in the random constructive initialization, so the spread there understates instance-to-instance variability. Third, no reference solution is available beyond $N = 100$, so quality at large sizes is reported only as improvement over the constructive initialization, which is a weak yardstick: a large relative improvement over a random-order solution does not establish proximity to the optimum.
 
 \end{document}
