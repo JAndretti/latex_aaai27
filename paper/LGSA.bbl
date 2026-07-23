@@ -1,4 +1,4 @@
-\begin{thebibliography}{36}
+\begin{thebibliography}{37}
 \providecommand{\natexlab}[1]{#1}
 
 \bibitem[{Accorsi and Vigo(2021)}]{accorsi_fast_2021}
@@ -180,5 +180,9 @@ Wu, X.; Wang, D.; Wen, L.; Xiao, Y.; Wu, C.; Wu, Y.; Yu, C.; Maskell, D.~L.; and
 Wu, Y.; Song, W.; Cao, Z.; Zhang, J.; and Lim, A. 2022.
 \newblock Learning Improvement Heuristics for Solving Routing Problems.
 \newblock \emph{{IEEE} Trans. Neural Networks Learn. Syst.}, 33(9): 5057--5069.
+
+\bibitem[{Zhu, Zhang, and Cao(2025)}]{zhu_refining_2025}
+Zhu, R.; Zhang, C.; and Cao, Z. 2025.
+\newblock Refining {Hybrid} {Genetic} {Search} for {CVRP} via {Reinforcement} {Learning}-{Finetuned} {LLM}.
 
 \end{thebibliography}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.4.7)  22 JUL 2026 15:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.4.7)  23 JUL 2026 14:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -331,6 +331,10 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 ))
+(/usr/share/texlive/texmf-dist/tex/latex/complexity/complexity.sty
+Package: complexity 09/16/17  v0.81a
+
+(/usr/share/texlive/texmf-dist/tex/latex/complexity/mycomplexity.sty))
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
 (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
@@ -690,20 +694,20 @@ LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
 (Font)              scaled to size 9.0pt on input line 113.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
 (Font)              scaled to size 10.0pt on input line 115.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 117
+LaTeX Font Info:    Trying to load font information for U+msa on input line 125
 .
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 117
+LaTeX Font Info:    Trying to load font information for U+msb on input line 125
 .
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 10.0pt on input line 128.
+(Font)              scaled to size 10.0pt on input line 143.
 
 Underfull \vbox (badness 1400) has occurred while \output is active []
 
@@ -714,39 +718,26 @@ Underfull \vbox (badness 1400) has occurred while \output is active []
 
 ]
 LaTeX Font Info:    Trying to load font information for TS1+ntxtlf on input lin
-e 136.
+e 151.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/ts1ntxtlf.fd
 File: ts1ntxtlf.fd 2015/01/18 v1.0 fd file for TS1/ntxtlf
 )
 LaTeX Font Info:    Font shape `TS1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.0pt on input line 136.
+(Font)              scaled to size 10.0pt on input line 151.
  [2{/usr/share/texmf/fonts/enc/dvips/tex-gyre/q-ts1.enc}]
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 9.0pt on input line 246.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[3]
+(Font)              scaled to size 9.0pt on input line 335.
+ [3]
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 7.0pt on input line 310.
-LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 5.0pt on input line 310.
-
-Overfull \hbox (7.12466pt too wide) in paragraph at lines 328--329
- [][] 
- []
-
-LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.95pt on input line 356.
+(Font)              scaled to size 10.95pt on input line 445.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 10.95pt on input line 356.
-[4]
+(Font)              scaled to size 10.95pt on input line 445.
+ [4]
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 9.0pt on input line 444.
+(Font)              scaled to size 9.0pt on input line 585.
 
-Overfull \hbox (8.30339pt too wide) in paragraph at lines 409--450
+Overfull \hbox (1.73679pt too wide) in paragraph at lines 550--597
  [][] 
  []
 
@@ -762,217 +753,235 @@ Overfull \hbox (8.30339pt too wide) in paragraph at lines 409--450
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
+LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
+(Font)              scaled to size 7.0pt on input line 1016.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 7.0pt on input line 857.
+(Font)              scaled to size 7.0pt on input line 1016.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [12]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
+LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
+(Font)              scaled to size 5.0pt on input line 1105.
  [13]
-Underfull \hbox (badness 1490) in paragraph at lines 992--992
-[]\T1/ntxtlf/m/n/10 Figure 5: |Cur-ricu-lum ramp. Be-fore each experience-
+Underfull \hbox (badness 1490) in paragraph at lines 1151--1151
+[]\T1/ntxtlf/m/n/10 Figure 4: |Cur-ricu-lum ramp. Be-fore each experience-
  []
 
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 10
-00.
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 11
+59.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 ) [14{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}]
-<Figures/v1_heatmap_cost.png, id=75, 493.845pt x 389.2944pt>
+<Figures/v1_heatmap_cost.png, id=76, 493.845pt x 389.2944pt>
 File: Figures/v1_heatmap_cost.png Graphic file (type png)
 <use Figures/v1_heatmap_cost.png>
-Package pdftex.def Info: Figures/v1_heatmap_cost.png  used on input line 1074.
+Package pdftex.def Info: Figures/v1_heatmap_cost.png  used on input line 1233.
 (pdftex.def)             Requested size: 227.42392pt x 179.27362pt.
-<Figures/v1_cost_vs_time.png, id=77, 534.3162pt x 389.2944pt>
+<Figures/v1_cost_vs_time.png, id=78, 534.3162pt x 389.2944pt>
 File: Figures/v1_cost_vs_time.png Graphic file (type png)
 <use Figures/v1_cost_vs_time.png>
-Package pdftex.def Info: Figures/v1_cost_vs_time.png  used on input line 1081.
+Package pdftex.def Info: Figures/v1_cost_vs_time.png  used on input line 1240.
 (pdftex.def)             Requested size: 227.42392pt x 165.69444pt.
-<Figures/v1_seed_spread_top.png, id=78, 569.9694pt x 354.123pt>
+<Figures/v1_seed_spread_top.png, id=79, 569.9694pt x 354.123pt>
 File: Figures/v1_seed_spread_top.png Graphic file (type png)
 <use Figures/v1_seed_spread_top.png>
-Package pdftex.def Info: Figures/v1_seed_spread_top.png  used on input line 108
-8.
+Package pdftex.def Info: Figures/v1_seed_spread_top.png  used on input line 124
+7.
 (pdftex.def)             Requested size: 215.45348pt x 133.86028pt.
  [15 <./Figures/v1_heatmap_cost.png>]
-<Figures/v2_ranking_all_configs.png, id=83, 642.2394pt x 714.5094pt>
+<Figures/v2_ranking_all_configs.png, id=84, 642.2394pt x 714.5094pt>
 File: Figures/v2_ranking_all_configs.png Graphic file (type png)
 <use Figures/v2_ranking_all_configs.png>
 Package pdftex.def Info: Figures/v2_ranking_all_configs.png  used on input line
- 1133.
+ 1292.
 (pdftex.def)             Requested size: 455.2979pt x 506.54205pt.
-<Figures/v2_seed_spread.png, id=84, 498.1812pt x 352.6776pt>
+<Figures/v2_seed_spread.png, id=85, 498.1812pt x 352.6776pt>
 File: Figures/v2_seed_spread.png Graphic file (type png)
 <use Figures/v2_seed_spread.png>
-Package pdftex.def Info: Figures/v2_seed_spread.png  used on input line 1140.
+Package pdftex.def Info: Figures/v2_seed_spread.png  used on input line 1299.
 (pdftex.def)             Requested size: 203.48668pt x 144.05522pt.
-<Figures/v2_thematic_ablation.png, id=85, 570.4512pt x 315.579pt>
+<Figures/v2_thematic_ablation.png, id=86, 570.4512pt x 315.579pt>
 File: Figures/v2_thematic_ablation.png Graphic file (type png)
 <use Figures/v2_thematic_ablation.png>
 Package pdftex.def Info: Figures/v2_thematic_ablation.png  used on input line 1
-168.
+327.
 (pdftex.def)             Requested size: 215.45348pt x 119.18933pt.
-<Figures/v2_best_seed_spread.png, id=86, 859.5312pt x 352.6776pt>
+<Figures/v2_best_seed_spread.png, id=87, 859.5312pt x 352.6776pt>
 File: Figures/v2_best_seed_spread.png Graphic file (type png)
 <use Figures/v2_best_seed_spread.png>
-Package pdftex.def Info: Figures/v2_best_seed_spread.png  used on input line 11
-78.
+Package pdftex.def Info: Figures/v2_best_seed_spread.png  used on input line 13
+37.
 (pdftex.def)             Requested size: 455.2979pt x 186.82137pt.
 
 Underfull \vbox (badness 1237) has occurred while \output is active []
 
  [16 <./Figures/v1_cost_vs_time.png> <./Figures/v1_seed_spread_top.png>]
-Overfull \hbox (8.6019pt too wide) in paragraph at lines 1190--1199
+Overfull \hbox (8.6019pt too wide) in paragraph at lines 1349--1358
  [][] 
  []
 
-<Figures/v2_refine_comparison.png, id=92, 859.5312pt x 337.26pt>
+<Figures/v2_refine_comparison.png, id=93, 859.5312pt x 337.26pt>
 File: Figures/v2_refine_comparison.png Graphic file (type png)
 <use Figures/v2_refine_comparison.png>
 Package pdftex.def Info: Figures/v2_refine_comparison.png  used on input line 1
-205.
+364.
 (pdftex.def)             Requested size: 455.2979pt x 178.65431pt.
-<Figures/v2_cond_analysis.png, id=93, 860.013pt x 352.1958pt>
+<Figures/v2_cond_analysis.png, id=94, 860.013pt x 352.1958pt>
 File: Figures/v2_cond_analysis.png Graphic file (type png)
 <use Figures/v2_cond_analysis.png>
-Package pdftex.def Info: Figures/v2_cond_analysis.png  used on input line 1215.
+Package pdftex.def Info: Figures/v2_cond_analysis.png  used on input line 1374.
 
 (pdftex.def)             Requested size: 455.2979pt x 186.4533pt.
-<Figures/v3_arch_grid.png, id=94, 896.148pt x 352.1958pt>
+<Figures/v3_arch_grid.png, id=95, 896.148pt x 352.1958pt>
 File: Figures/v3_arch_grid.png Graphic file (type png)
 <use Figures/v3_arch_grid.png>
-Package pdftex.def Info: Figures/v3_arch_grid.png  used on input line 1268.
+Package pdftex.def Info: Figures/v3_arch_grid.png  used on input line 1427.
 (pdftex.def)             Requested size: 455.2979pt x 178.94035pt.
-<Figures/v3_arch_pareto.png, id=95, 533.8344pt x 389.2944pt>
+<Figures/v3_arch_pareto.png, id=96, 533.8344pt x 389.2944pt>
 File: Figures/v3_arch_pareto.png Graphic file (type png)
 <use Figures/v3_arch_pareto.png>
-Package pdftex.def Info: Figures/v3_arch_pareto.png  used on input line 1275.
+Package pdftex.def Info: Figures/v3_arch_pareto.png  used on input line 1434.
 (pdftex.def)             Requested size: 215.45348pt x 157.11687pt.
-<Figures/v3_ctx_compare.png, id=96, 823.3962pt x 337.26pt>
+<Figures/v3_ctx_compare.png, id=97, 823.3962pt x 337.26pt>
 File: Figures/v3_ctx_compare.png Graphic file (type png)
 <use Figures/v3_ctx_compare.png>
-Package pdftex.def Info: Figures/v3_ctx_compare.png  used on input line 1285.
+Package pdftex.def Info: Figures/v3_ctx_compare.png  used on input line 1444.
 (pdftex.def)             Requested size: 430.00958pt x 176.13269pt.
 [17]
-<Figures/v3_shared_compare.png, id=100, 896.6298pt x 357.9774pt>
+<Figures/v3_shared_compare.png, id=101, 896.6298pt x 357.9774pt>
 File: Figures/v3_shared_compare.png Graphic file (type png)
 <use Figures/v3_shared_compare.png>
-Package pdftex.def Info: Figures/v3_shared_compare.png  used on input line 1346
+Package pdftex.def Info: Figures/v3_shared_compare.png  used on input line 1505
 .
 (pdftex.def)             Requested size: 455.2979pt x 181.77402pt.
-<Figures/v3_stab_compare.png, id=101, 895.6662pt x 352.1958pt>
+<Figures/v3_stab_compare.png, id=102, 895.6662pt x 352.1958pt>
 File: Figures/v3_stab_compare.png Graphic file (type png)
 <use Figures/v3_stab_compare.png>
-Package pdftex.def Info: Figures/v3_stab_compare.png  used on input line 1374.
+Package pdftex.def Info: Figures/v3_stab_compare.png  used on input line 1533.
 (pdftex.def)             Requested size: 455.2979pt x 179.03171pt.
 
-Underfull \hbox (badness 1142) in paragraph at lines 1386--1387
+Underfull \hbox (badness 1142) in paragraph at lines 1545--1546
 \T1/ntxtlf/m/n/10 = the fixed mix-ture ($\OML/cmm/m/it/10  \OT1/cmr/m/n/10 = 0
 \OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5$\T1/ntxtlf/m/n/10 ), \T1/pcr/m/n/10 curricu
 lum \T1/ntxtlf/m/n/10 and
  []
 
 
-Underfull \hbox (badness 1248) in paragraph at lines 1386--1387
+Underfull \hbox (badness 1248) in paragraph at lines 1545--1546
 \T1/pcr/m/n/10 curriculum_terminal \T1/ntxtlf/m/n/10 = the sched-uled in-ter-po
 -la-
  []
 
-<Figures/v5_reward_cluster.png, id=102, 823.3962pt x 339.669pt>
+<Figures/v5_reward_cluster.png, id=103, 823.3962pt x 339.669pt>
 File: Figures/v5_reward_cluster.png Graphic file (type png)
 <use Figures/v5_reward_cluster.png>
-Package pdftex.def Info: Figures/v5_reward_cluster.png  used on input line 1415
+Package pdftex.def Info: Figures/v5_reward_cluster.png  used on input line 1574
 .
 (pdftex.def)             Requested size: 430.00958pt x 177.39078pt.
 [18]
-<Figures/v6_sched_compare.png, id=106, 823.3962pt x 337.26pt>
+<Figures/v6_sched_compare.png, id=107, 823.3962pt x 337.26pt>
 File: Figures/v6_sched_compare.png Graphic file (type png)
 <use Figures/v6_sched_compare.png>
-Package pdftex.def Info: Figures/v6_sched_compare.png  used on input line 1441.
+Package pdftex.def Info: Figures/v6_sched_compare.png  used on input line 1600.
 
 (pdftex.def)             Requested size: 430.00958pt x 176.13269pt.
-<Figures/v7_metro_cross.png, id=107, 968.418pt x 322.806pt>
+<Figures/v7_metro_cross.png, id=108, 968.418pt x 322.806pt>
 File: Figures/v7_metro_cross.png Graphic file (type png)
 <use Figures/v7_metro_cross.png>
-Package pdftex.def Info: Figures/v7_metro_cross.png  used on input line 1466.
+Package pdftex.def Info: Figures/v7_metro_cross.png  used on input line 1625.
 (pdftex.def)             Requested size: 480.59395pt x 160.19582pt.
-<Figures/v8_init_grid.png, id=108, 586.3506pt x 370.5042pt>
+<Figures/v8_init_grid.png, id=109, 586.3506pt x 370.5042pt>
 File: Figures/v8_init_grid.png Graphic file (type png)
 <use Figures/v8_init_grid.png>
-Package pdftex.def Info: Figures/v8_init_grid.png  used on input line 1495.
+Package pdftex.def Info: Figures/v8_init_grid.png  used on input line 1654.
 (pdftex.def)             Requested size: 364.24141pt x 230.15685pt.
-<Figures/v8_init_slices.png, id=109, 859.5312pt x 340.1508pt>
+<Figures/v8_init_slices.png, id=110, 859.5312pt x 340.1508pt>
 File: Figures/v8_init_slices.png Graphic file (type png)
 <use Figures/v8_init_slices.png>
-Package pdftex.def Info: Figures/v8_init_slices.png  used on input line 1502.
+Package pdftex.def Info: Figures/v8_init_slices.png  used on input line 1661.
 (pdftex.def)             Requested size: 480.59395pt x 190.19249pt.
  [19] [20] [21]
-Underfull \hbox (badness 5189) in paragraph at lines 1656--1656
+Underfull \hbox (badness 5189) in paragraph at lines 1815--1815
 []\T1/ntxtlf/m/n/10 Table 25: |All stochastic-depth and persistent-chain
  []
 
 
-Underfull \hbox (badness 3612) in paragraph at lines 1656--1656
+Underfull \hbox (badness 3612) in paragraph at lines 1815--1815
 \T1/ntxtlf/m/n/10 arms ($\OT1/cmr/m/n/10 3$ \T1/ntxtlf/m/n/10 seeds each, $\OT1
 /cmr/m/n/10 18$ \T1/ntxtlf/m/n/10 runs), or-dered by ef-fec-
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1656--1656
+Underfull \hbox (badness 2027) in paragraph at lines 1815--1815
 \T1/ntxtlf/m/n/10 tive pre-optimization depth in SA steps ($\OML/cmm/m/it/10 ^^
 X[]=\OT1/cmr/m/n/10 2$ \T1/ntxtlf/m/n/10 for
  []
 
-[22]
-Overfull \hbox (18.32779pt too wide) in paragraph at lines 1720--1739
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [22]
+Overfull \hbox (18.32779pt too wide) in paragraph at lines 1879--1898
  [][] 
  []
 
-<Figures/frontier_100.pdf, id=123, 252.945pt x 318.96515pt>
+[23]
+<Figures/frontier_100.pdf, id=127, 252.945pt x 318.96515pt>
 File: Figures/frontier_100.pdf Graphic file (type pdf)
 <use Figures/frontier_100.pdf>
-Package pdftex.def Info: Figures/frontier_100.pdf  used on input line 1752.
+Package pdftex.def Info: Figures/frontier_100.pdf  used on input line 1911.
 (pdftex.def)             Requested size: 237.00174pt x 298.86847pt.
 
-Underfull \hbox (badness 1019) in paragraph at lines 1753--1753
+Underfull \hbox (badness 1019) in paragraph at lines 1912--1912
 \T1/ntxtlf/m/n/10 instance test set, \T1/pcr/m/n/10 float16\T1/ntxtlf/m/n/10 , 
 iden-ti-cal ini-tial so-lu-tions
  []
 
-[23] [24] [25 <./Figures/v2_ranking_all_configs.png>] [26
+
+Underfull \hbox (badness 3375) in paragraph at lines 1990--2005
+ \T1/ntxtlf/b/n/10 Struc-tured out-of-distribution in-stances (XML100).
+ []
+
+[24]
+<Figures/multistart_100.pdf, id=131, 484.17888pt x 187.90675pt>
+File: Figures/multistart_100.pdf Graphic file (type pdf)
+<use Figures/multistart_100.pdf>
+Package pdftex.def Info: Figures/multistart_100.pdf  used on input line 2075.
+(pdftex.def)             Requested size: 465.41786pt x 180.63213pt.
+ [25] [26 <./Figures/v2_ranking_all_configs.png>] [27
 
 
- <./Figures/v2_seed_spread.png> <./Figures/v2_thematic_ablation.png>] [27 <./Fi
-gures/v2_best_seed_spread.png> <./Figures/v2_refine_comparison.png>] [28 <./Fig
-ures/v2_cond_analysis.png> <./Figures/v3_arch_grid.png>] [29
+ <./Figures/v2_seed_spread.png> <./Figures/v2_thematic_ablation.png>] [28 <./Fi
+gures/v2_best_seed_spread.png> <./Figures/v2_refine_comparison.png>] [29 <./Fig
+ures/v2_cond_analysis.png> <./Figures/v3_arch_grid.png>] [30
 
 
- <./Figures/v3_arch_pareto.png>] [30
+ <./Figures/v3_arch_pareto.png>] [31
 
- <./Figures/v3_ctx_compare.png>] [31 <./Figures/v3_shared_compare.png> <./Figur
-es/v3_stab_compare.png>] [32 <./Figures/v5_reward_cluster.png> <./Figures/v6_sc
-hed_compare.png>] [33 <./Figures/v7_metro_cross.png> <./Figures/v8_init_grid.pn
+ <./Figures/v3_ctx_compare.png>] [32 <./Figures/v3_shared_compare.png> <./Figur
+es/v3_stab_compare.png>] [33 <./Figures/v5_reward_cluster.png> <./Figures/v6_sc
+hed_compare.png>] [34 <./Figures/v7_metro_cross.png> <./Figures/v8_init_grid.pn
 g>]
-[34 <./Figures/v8_init_slices.png>] [35
+[35 <./Figures/v8_init_slices.png>] [36
 
 
- <./Figures/frontier_100.pdf>]
-(./LGSA.aux)
+ <./Figures/frontier_100.pdf>] [37 <./Figures/multistart_100.pdf>] (./LGSA.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2020/03/25>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 19619 strings out of 474222
- 384009 string characters out of 5748734
- 1974975 words of memory out of 5000000
- 41509 multiletter control sequences out of 15000+600000
- 611691 words of font info for 88 fonts, out of 8000000 for 9000
+ 20038 strings out of 474222
+ 387133 string characters out of 5748734
+ 1973975 words of memory out of 5000000
+ 41918 multiletter control sequences out of 15000+600000
+ 613846 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 95i,16n,117p,2003b,870s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 95i,13n,117p,2548b,870s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy6.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy9.pfb>
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/
@@ -989,18 +998,19 @@ cmmib9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.
 pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/
 texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmsy9.pfb></usr/share/texmf/fonts/type1/public/tex-gyre/q
-tmr.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr
-/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmb.pfb></usr/share/texlive
-/texmf-dist/fonts/type1/public/newtx/ztmr.pfb></usr/share/texlive/texmf-dist/fo
-nts/type1/public/newtx/ztmri.pfb>
-Output written on LGSA.pdf (35 pages, 1511949 bytes).
+texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmsy9.pfb></usr/share/texmf/fonts/type1/public/tex-gyre/qtmr.pf
+b></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/newtx/ztmb.pfb></usr/share/texlive/texmf
+-dist/fonts/type1/public/newtx/ztmr.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/public/newtx/ztmri.pfb>
+Output written on LGSA.pdf (37 pages, 1540742 bytes).
 PDF statistics:
- 343 PDF objects out of 1000 (max. 8388607)
- 172 compressed objects within 2 object streams
+ 400 PDF objects out of 1000 (max. 8388607)
+ 187 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 113 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 118 words of extra memory for PDF output out of 10000 (max. 10000000)
 

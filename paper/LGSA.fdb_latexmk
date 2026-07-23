@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex LGSA"] 1784728140.19568 "LGSA.aux" "LGSA.bbl" "LGSA" 1784728215.47001 0
+["bibtex LGSA"] 1784810937.86707 "LGSA.aux" "LGSA.bbl" "LGSA" 1784811169.4973 0
   "./aaai2027.bst" 1783608818.74727 30207 bd248dfe461b9b2fc7481a44feafe197 ""
-  "./bib.bib" 1784541016.05233 59978 cb68a2ce91c0f2525c0799a4cabbeec7 ""
-  "LGSA.aux" 1784728215.32066 8666 175343a4f32d63eb3e0e04b45a83054f "pdflatex"
+  "./bib.bib" 1784800526.25306 60317 920822e28c67e7e45dd545dc68a10c87 ""
+  "LGSA.aux" 1784811169.35417 9198 bfc766c6d0f27b6aaab64be83fcf9ec5 "pdflatex"
   (generated)
   "LGSA.bbl"
   "LGSA.blg"
   (rewritten before read)
-["pdflatex"] 1784728213.91877 "LGSA.tex" "LGSA.pdf" "LGSA" 1784728215.47016 0
+["pdflatex"] 1784811167.96254 "LGSA.tex" "LGSA.pdf" "LGSA" 1784811169.49741 0
   "/etc/texmf/web2c/texmf.cnf" 1775556106.93253 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -38,6 +38,9 @@
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmmi9.tfm" 1136768653 1524 d89e2d087a9828407a196f428428ef4a ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr6.tfm" 1136768653 1300 b62933e007d01cfd073f79b963c01526 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr9.tfm" 1136768653 1292 6b21b9c2c7bebb38aa2273f7ca0fb3af ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmss10.tfm" 1136768653 1316 b636689f1933f24d1294acdf6041daaa ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmss8.tfm" 1136768653 1296 d77f431d10d47c8ea2cc18cf45346274 ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmss9.tfm" 1136768653 1320 49357c421c0d469f88b867dd0c3d10e8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmsy6.tfm" 1136768653 1116 933a60c408fc0a863a92debe84b2d294 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmsy9.tfm" 1136768653 1116 25a7bf822c58caf309a702ef79f4afbb ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm" 1698694482 11576 2c5382fb8ab907c80b8ce60923e4c09a ""
@@ -57,6 +60,7 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb" 1248133631 32734 69e00a6b65cedb993666e42eedb3d48f ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb" 1248133631 32762 224316ccc9ad3ca0423a14971cfa7fc1 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1248133631 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb" 1248133631 24457 5cbb7bdf209d5d1ce9892a9b80a307cc ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb" 1248133631 32587 1788b0c1c5b39540c96f5e42ccd6dae8 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1248133631 32716 08e384dc442464e7285e891af9f45947 ""
@@ -154,6 +158,8 @@
   "/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty" 1696191071 56128 c2ccf1a29d78c33bc553880402e4fb9a ""
   "/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty" 1696191071 72619 ee90b6612147680fd73c3b1406a74245 ""
   "/usr/share/texlive/texmf-dist/tex/latex/carlisle/scalefnt.sty" 1137109962 1360 df2086bf924b14b72d6121fe9502fcdb ""
+  "/usr/share/texlive/texmf-dist/tex/latex/complexity/complexity.sty" 1505594840 26143 7d572ae81bd3f5cfbfb151760bf949c4 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/complexity/mycomplexity.sty" 1195210373 493 940abec71250a8c7129fe57eea5f60b6 ""
   "/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty" 1579991033 13886 d1306dcf79a944f6988e688c1785f9ce ""
   "/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty" 1601931149 46845 3b58f70c6e861a13d927bff09d35ecbc ""
   "/usr/share/texlive/texmf-dist/tex/latex/float/float.sty" 1137110151 6749 16d2656a1984957e674b149555f1ea1d ""
@@ -202,6 +208,7 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1775556116.32262 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1775556136 8213252 271ef74e4fe00124d89521022441020f ""
   "Figures/frontier_100.pdf" 1784728091.99059 19888 b14698b1de545475f06b232e7c68b109 ""
+  "Figures/multistart_100.pdf" 1784809602.88967 18846 60a05b9fa3b3a4d593b0510447a1330c ""
   "Figures/v1_cost_vs_time.png" 1783613394.39246 67901 50e1d3371c9c197cd4e36519cb65b3c9 ""
   "Figures/v1_heatmap_cost.png" 1783613394.39127 60846 b8e67292aa787d7749d5f56e6bbf40d3 ""
   "Figures/v1_seed_spread_top.png" 1783613394.39289 23512 8b10328f5f0e738cb82ccfc578bcb35a ""
@@ -221,9 +228,9 @@
   "Figures/v7_metro_cross.png" 1783721004.49648 60378 3d73ee4ddf8c0520a3fd0b38bbcbb04c ""
   "Figures/v8_init_grid.png" 1783875258.91561 80223 73310ba0535fcdb05175cb5bf155760e ""
   "Figures/v8_init_slices.png" 1783875258.91609 74565 47b3ab874d3c8ba7a608e80e58ecf862 ""
-  "LGSA.aux" 1784728215.32066 8666 175343a4f32d63eb3e0e04b45a83054f "pdflatex"
-  "LGSA.bbl" 1784728140.25595 10757 47a1b280a2f2d8f41df05816e864e6d8 "bibtex LGSA"
-  "LGSA.tex" 1784728181.92384 173096 553618e508799669868da4593b8001bf ""
+  "LGSA.aux" 1784811169.35417 9198 bfc766c6d0f27b6aaab64be83fcf9ec5 "pdflatex"
+  "LGSA.bbl" 1784810937.90859 10961 2fc5448554c06906e039f3d18c25015e "bibtex LGSA"
+  "LGSA.tex" 1784811154.86618 192233 e02a4bad4133f3fe2fe51b9ec801dc9c ""
   "aaai2027.sty" 1783608818.74727 16915 1b1c792e2acfbbd8b672259e267b95d8 ""
   (generated)
   "LGSA.aux"
