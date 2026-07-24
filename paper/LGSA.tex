@@ -121,8 +121,7 @@ Learning-Guided Simulated Annealing for Large-Scale Capacitated Vehicle Routing
 % Remarque:
 % Finalement, je pense que l’endroit où on doit décrire (un peu en détails) les différences entre notre modèle et le vieux LG-SA est la section "Related Works": cette section est exactement prévue pour cela. Dans le reste du papier (intro, model), peut-être mieux vaut décrire factuellement ce qu’on fait ici, sans historique de quoi que ce soit.
 
-
-The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem with numerous real-world applications. We propose a substantially improved Learning-Guided Simulated Annealing (LG-SA) model that combines the robustness of classical simulated annealing (SA) with the adaptive guidance of reinforcement learning (RL). The learned policy is parameterized by only two small multi-layer perceptrons operating on a node-centric solution representation whose dimensionality is independent of the problem size. As a result, thousands of instances can be processed efficiently in parallel on a single GPU. The framework combines an enriched node representation, a stronger critic, stabilized Proximal Policy Optimization (PPO), curriculum learning, and logit clipping for improved exploration. The framework is systematically optimized through a large-scale seed-paired study evaluating a broad range of design choices. The resulting model significantly improves the original LG-SA, reducing the gap to the reference metaheuristic HGS to $2.30\%$ using a budget of $10^5$ annealing steps. Moreover, the model solves a benchmark of $10{,}000$ instances in $29$ minutes on a single GPU, matching or outperforming the leading learning-based improvement methods NLNS and LIH at five to ten times lower computational cost. Finally, a single model trained on $100$-customer instances generalizes without retraining to instances containing up to $10,000$ customers with near-linear runtime scaling. Overall, these results demonstrate that carefully designed lightweight hybrid methods can achieve a substantially better quality/computation trade-off than state-of-the-art learning-based improvement methods.
+To solve the Capacitated Vehicle Routing Problem (CVRP), we propose a substantially improved Learning-Guided Simulated Annealing (LG-SA) model that combines the robustness of classical simulated annealing (SA) with the adaptive guidance of reinforcement learning (RL). The learned policy is parameterized by only two small multi-layer perceptrons operating on a node-centric solution representation whose dimensionality is independent of the problem size. As a result, thousands of instances can be processed efficiently in parallel on a single GPU. The framework combines an enriched node representation, a stronger critic, stabilized Proximal Policy Optimization (PPO), curriculum learning, and logit clipping for improved exploration. The framework is systematically optimized through a large-scale seed-paired study evaluating a broad range of design choices. The resulting model significantly improves the original LG-SA, reducing the gap to the reference metaheuristic HGS to $2.30\%$ using a budget of $10^5$ annealing steps. Moreover, the model solves a benchmark of $10{,}000$ instances in $29$ minutes on a single GPU, matching or outperforming the leading learning-based improvement methods NLNS and LIH at five to ten times lower computational cost. Finally, the model trained on $100$ customers generalizes without retraining to instances with up to $10{,}000$ customers, with near-linear runtime scaling. Overall, these results demonstrate that carefully designed lightweight hybrid methods can achieve a substantially better quality/computation trade-off than state-of-the-art learning-based improvement methods.
 
 % OLD
 % The Capacitated Vehicle Routing Problem (CVRP) is a fundamental NP-hard optimization problem with numerous real-world applications. To address it effectively, we propose a substantially improved Learning-Guided Simulated Annealing (LG-SA) model that combines the robustness of classical simulated annealing (SA) with the adaptive guidance of reinforcement learning (RL). The learned policy deliberately consists of only two small multi-layer perceptrons operating on a node-centric solution representation whose dimensionality is independent of the problem size, enabling efficient batched processing of thousands of instances on a single GPU. Within this lightweight design, we enrich the feature set and strengthen every stage of learning: a stronger critic, a stabilized Proximal Policy Optimization (PPO), a curriculum that starts episodes from already-improved solutions, and logit clipping for better move exploration. The whole framework is then tuned through a large-scale seed-paired study. On $100$-customer instances, the resulting model reduces the gap to the reference metaheuristic HGS from the $11.55\%$ of the original LG-SA to $3.98\%$ at an unchanged budget of $10^4$ annealing steps, and to $2.30\%$ at $10^5$ steps. It solves a benchmark of $10{,}000$ instances in $29$ minutes on a single GPU, matching the neural improvement method NLNS and outperforming LIH with five to ten times less computation, which places LG-SA on the Pareto frontier of the quality/time trade-off. Moreover, a single model trained on 100-customer instances generalizes without retraining to instances with up to 10,000 customers with near-linear runtime scaling. Overall, carefully designed lightweight hybrid methods offer a far better quality/computation trade-off than heavyweight learning-based improvement methods.
@@ -444,48 +443,12 @@ During training, the reward is evaluated on short LG-SA rollouts of only a few h
 
 \subsection{Experimental Setup}
 
-\paragraph{Datasets.}
-% We use three families of instances. The \emph{design choices} of Section~\ref{sec:design} are validated on data we generate ourselves following \citet{nazari_reinforcement_2018}: coordinates uniform in $[0,1]^2$, demands uniform in $\{1, \dots, 9\}$, and a size-dependent capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$); per size we pre-generate a fixed set of $10{,}000$ instances reused by every configuration, so all comparisons are paired at the instance level. For the \emph{baseline comparison} of Section~\ref{sec:baselines} we instead evaluate on the test sets released by \citet{ma_learning_2023}, who generate instances with the same procedure and, crucially, re-run every competing method on them under a common protocol; using their data makes our numbers directly comparable to that whole table rather than to a re-derived reference. Finally, \emph{generalization} is probed on real-world-structured and much larger instances: CVRPLIB Set X \citep{uchoa_new_2017}, the XML instances of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, which reach far beyond the training size. Unless stated otherwise, results are reported at $N = 100$.
+\paragraph{Datasets and evaluation protocol.}
+We consider three families of CVRP instances. The \emph{design choices} of Section~\ref{sec:design} are validated on synthetic instances generated following \citet{nazari_reinforcement_2018}: customer's coordinates uniform in $[0,1]^2$, demands uniform in $\{1,\dots,9\}$, and a size-dependent capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$). For each size, a fixed test set of $10{,}000$ instances is pre-generated and reused by every configuration, so all comparisons are paired at the instance level. The \emph{baseline comparison} of Section~\ref{sec:baselines} uses the test sets released by \citet{ma_learning_2023}, generated with the same procedure; since the authors re-ran a broad collection of competing methods on them under a common protocol, our numbers are directly comparable to theirs. Finally, \emph{generalization} is assessed on larger, real-world-structured instances: CVRPLIB Set X \citep{uchoa_new_2017}, the XML benchmark of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, reaching $10{,}000$ customers---two orders of magnitude beyond the training size. Unless stated otherwise, results are reported for $N=100$. 
 
-We consider three families of CVRP instances. The \emph{design choices} of
-Section~\ref{sec:design} are validated on synthetic instances generated
-following \citet{nazari_reinforcement_2018}: customer's coordinates uniform in $[0,1]^2$, demands uniform in $\{1,\dots,9\}$, and a size-dependent
-capacity ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$). For each size,
-a fixed test set of $10{,}000$ instances is pre-generated and reused by
-every configuration, so all comparisons are paired at the instance level.
-
-The \emph{baseline comparison} of Section~\ref{sec:baselines} uses the
-test sets released by \citet{ma_learning_2023}, generated with the same
-procedure; since the authors re-ran a broad collection of competing
-methods on them under a common protocol, our numbers are directly
-comparable to theirs. 
-
-Finally, \emph{generalization} is assessed on
-larger, real-world-structured instances: CVRPLIB Set X
-\citep{uchoa_new_2017}, the XML benchmark of \citet{queiroga_10000_nodate},
-and Set XL \citep{queiroga_xl_2026}, reaching $10{,}000$ customers---two
-orders of magnitude beyond the training size. Unless stated otherwise,
-results are reported for $N=100$.
+To evaluate a trained model, we run the LG-SA loop over the full test set in parallel on a single GPU (NVIDIA RTX 5070), starting from random feasible solutions. We use half-precision inference and a per-experiment step budget (default $10^4$), reporting the mean final routing cost and the wall-clock time of the whole batch. All experiments are fully reproducible via the source code provided on GitHub.
 
 
-
-
-
-%We consider three families of CVRP instances. The \emph{design choices} studied in Section~\ref{sec:design} are validated on synthetic instances generated according to the protocol of \citet{nazari_reinforcement_2018}: customer coordinates are sampled uniformly in $[0,1]^2$, demands uniformly in $\{1,\dots,9\}$, and the vehicle capacity is adjusted to the instance size ($Q = 20, 30, 40, 50$ for $N = 10, 20, 50, 100$, respectively). For each size, a fixed test set of $10{,}000$ instances is pre-generated and reused across all configurations, ensuring paired comparisons at the instance level. 
-
-%For the \emph{baseline comparison} of Section~\ref{sec:baselines}, we evaluate on the benchmark test sets released by \citet{ma_learning_2023}. These instances follow the same generation procedure and were used by the authors to re-evaluate a broad collection of competing methods under a common protocol, enabling direct comparison with the published benchmark results. 
-
-%Finally, \emph{generalization} is assessed on larger and more structured instances from CVRPLIB Set X \citep{uchoa_new_2017}, the XML benchmark of \citet{queiroga_10000_nodate}, and Set XL \citep{queiroga_xl_2026}, whose instance sizes extend up to $10\,000$ customers, two orders of magnitude beyond the training size. Unless stated otherwise, results are reported for $N=100$.
-
-
-\paragraph{Evaluation protocol.}
-
-
-A trained model is evaluated by running the LG-SA loop over the full test
-set in parallel on a single GPU, starting from random feasible solutions,
-with half-precision inference and a per-experiment step budget (default
-$10^4$). We report the mean final routing cost and the wall-clock time of
-the whole batch.
 
 %\paragraph{Statistical protocol.}
 %Every configuration is trained under $3$ random seeds ($5$ for confirmations and headline runs). The objective is the mean final cost over the test set, averaged over seeds and denoted $\bar c$. Comparisons between configurations are \emph{seed-paired}: competing configurations are trained with the same random seeds, and we report the mean and standard deviation of the resulting per-seed differences $\Delta = \bar c(\text{variant}) - \bar c(\text{reference})$, together with their sign consistency. Significance is assessed relative to a per-batch \emph{noise floor} $\sigma_{\mathrm{floor}}$, estimated from the seed-to-seed variability of the stable configurations. Effects satisfying $|\Delta| > \sigma_{\mathrm{floor}}$ are considered significant; otherwise, they are reported as ties.
@@ -534,13 +497,13 @@ the per-seed cost differences $\Delta$. A margin is significant when
 $|\Delta|$ exceeds a per-batch noise floor $\sigma_{\mathrm{floor}}$,
 estimated from the seed-to-seed variability of stable configurations;
 otherwise the sweep is a tie, resolved in favor of the most stable
-candidate across seeds. The winning configuration is finally retrained
+candidate across seeds. The winning configuration is then retrained
 from scratch on $5$ seeds for confirmation. Table~\ref{tab:summary}
-summarizes the study---$93$ candidates across the $18$ dimensions. The
-following paragraphs discuss the most influential design choices;
-Appendices~\ref{app:v1}--\ref{app:xknobs} define every candidate and
-report per-candidate, per-seed results.
-
+summarizes the study---$93$ candidates across the $18$ dimensions; note
+that the largest margins there are losses avoided by keeping an existing
+design, not improvements over it. The following paragraphs discuss the
+most influential design choices; Appendices~\ref{app:v1}--\ref{app:xknobs}
+define every candidate and report per-candidate, per-seed results.
 
 
 \begin{table}[t]
@@ -551,65 +514,71 @@ report per-candidate, per-seed results.
 \toprule
 \textbf{Dimension} & \textbf{Adopted setting} & \textbf{\#} & \textbf{Effect} & \textbf{App.} \\
 \midrule
-Operator $\times$ feasibility & \textbf{insertion $+$ masking} & 9 & $+0.29^{**}$ & \ref{app:v1} \\
-Feature set & \textbf{all 13 groups} & 6 & $+0.34^{**}$ & \ref{app:v2} \\
-Pair descriptors & \textbf{none} & 4 & $+0.14^{*}$ & \ref{app:v2} \\
-Critic & \textbf{multi-statistic} & 2 & $+0.06^{**}$ & \ref{app:v3} \\
+Operator $\times$ feasibility & \textbf{insertion $+$ masking} & 9 & $+0.29$ & \ref{app:v1} \\
+Feature set & \textbf{all 13 groups} & 6 & $+0.34$ & \ref{app:v2} \\
+Pair descriptors & \textbf{none} & 4 & $+0.14$ & \ref{app:v2} \\
+Critic & \textbf{multi-statistic} & 2 & $+0.06$ & \ref{app:v3} \\
 Actor architecture & \textbf{\boldmath$32 \times 1$} & 6 & tie & \ref{app:v3} \\
-Actor structure & \textbf{indep.\ scorers} & 4 & $+3.20^{**}$ & \ref{app:v3} \\
-Global context & \textbf{off} & 2 & $+0.51^{*}$ & \ref{app:v3} \\
-Distribution shaping & \textbf{\boldmath logit clip $C{=}10$} & 4 & $+0.17^{**}$ & \ref{app:v3} \\
+Actor structure & \textbf{indep.\ scorers} & 4 & $+3.20$ & \ref{app:v3} \\
+Global context & \textbf{off} & 2 & $+0.51$ & \ref{app:v3} \\
+Distribution shaping & \textbf{\boldmath logit clip $C{=}10$} & 4 & $+0.17$ & \ref{app:v3} \\
 Reward & \textbf{immediate} & 9 & tie & \ref{app:v5678} \\
-Learning rates & \textbf{\boldmath$3{\times}10^{-4}$ / $10^{-3}$} & 9 & $+0.05^{*}$ & \ref{app:xknobs} \\
-Entropy coefficient & \textbf{\boldmath$0.01$} & 3 & $+0.13^{**}$ & \ref{app:xknobs} \\
+Learning rates & \textbf{\boldmath$3{\times}10^{-4}$ / $10^{-3}$} & 9 & $+0.05$ & \ref{app:xknobs} \\
+Entropy coefficient & \textbf{\boldmath$0.01$} & 3 & $+0.13$ & \ref{app:xknobs} \\
 Rollout length & \textbf{\boldmath$200$} & 3 & tie & \ref{app:xknobs} \\
 PPO passes per batch & \textbf{\boldmath$5$} & 5 & tie & \ref{app:xknobs} \\
 Cooling shape & \textbf{geometric} & 2 & tie & \ref{app:v5678} \\
-Temperature range & \textbf{\boldmath$T_0{=}1$, $T_{\mathrm{final}}{=}0.01$} & 6 & $+0.17^{**}$ & \ref{app:v5678} \\
-Metropolis & \textbf{on (train $+$ test)} & 4 & $+0.12^{**}$ & \ref{app:v5678} \\
-Training construction & \textbf{random} & 5 & $+0.22^{**}$ & \ref{app:v5678} \\
-Curriculum & \textbf{ramped warm-up} & 10 & $+0.07^{**}$ & \ref{app:cl} \\
-% TODO: fill the end-to-end block with V10_final's cost. The 16.68 anchor
-% is the operator-sweep winner (Table 5, 3 seeds) and sits in a different
-% batch than V10_final (5 seeds), so the delta is indicative, not paired.
-% To make it paired, re-run the operator-winner config alongside V10_final
-% on the same seeds -- one extra config, and the claim becomes airtight.
+Temperature range & \textbf{\boldmath$T_0{=}1$, $T_{\mathrm{final}}{=}0.01$} & 6 & $+0.17$ & \ref{app:v5678} \\
+Metropolis & \textbf{on (train $+$ test)} & 4 & $+0.12$ & \ref{app:v5678} \\
+Training construction & \textbf{random} & 5 & $+0.22$ & \ref{app:v5678} \\
+Curriculum & \textbf{ramped warm-up} & 10 & $+0.07$ & \ref{app:cl} \\
+% End-to-end block anchored on Table~\ref{tab:nazari}: the true "before" is the
+% original LG-SA of \citet{AndrettiEtAl26} (17.36, 11.55% gap, N=100, T=1e4),
+% not the operator-sweep winner (16.68) -- the sequential protocol fixes every
+% previously adopted choice, so that winner already carries the new features,
+% critic and actor structure, and the large per-row margins are losses avoided,
+% not gains over the prior work. The "after" is the final model = "Ours" LG-SA
+% (T=1e4) row of Table~\ref{tab:nazari} (16.18, 3.98% gap). Total 17.36-16.18
+% = 1.18. This matches the abstract's 11.55% -> 3.98% headline. It is a
+% cross-draw comparison (the prior LG-SA row is marked dagger for a different
+% instance draw), so the delta is indicative, not seed-paired.
 % Do NOT chain the per-dimension appendix
-% costs to fake it: nominally identical configurations re-measure at
-% different levels across sweeps (full set 16.678 vs 16.683; clip-off
-% reference 16.630 vs 16.637), so a running column would imply a single
-% controlled trajectory that the sequential protocol does not provide.
+% costs to fake a running column: nominally identical configurations re-measure
+% at different levels across sweeps (full set 16.678 vs 16.683; clip-off
+% reference 16.630 vs 16.637), so it would imply a single controlled trajectory
+% that the sequential protocol does not provide.
 %\midrule
 %Combined confirmation & rates, rollout, $T_{\mathrm{final}}$ & --- & $+0.22^{**}$ & \ref{app:xknobs} \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{End-to-end effect} ($N{=}100$, $10^4$ steps, cost)} \\
-\multicolumn{3}{@{}l}{Starting point (operator winner, Table~\ref{tab:v1grid})} & \multicolumn{2}{r@{}}{$16.68 \pm 0.03$} \\
-\multicolumn{3}{@{}l}{Final configuration (all winners)} & \multicolumn{2}{r@{}}{TBD} \\
-\multicolumn{3}{@{}l}{\textbf{Total improvement}} & \multicolumn{2}{r@{}}{\textbf{TBD}} \\
+\multicolumn{5}{@{}l}{\emph{End-to-end gain}: $17.36 \to \mathbf{16.18}$ (\textbf{$-1.18$})} \\
+%\multicolumn{5}{@{}l}{\emph{End-to-end effect} (cost, Table~\ref{tab:nazari})} \\
+%\multicolumn{3}{@{}l}{Original LG-SA $\to$ final model} & \multicolumn{2}{r@{}}{$17.36 \to \mathbf{16.18}$ (\textbf{$-1.18$})} \\
+%\multicolumn{5}{@{}l}{\emph{End-to-end effect} ($N{=}100$, $10^4$ steps, cost)} \\
+%\multicolumn{3}{@{}l}{Starting point (original LG-SA, Table~\ref{tab:nazari})} & \multicolumn{2}{r@{}}{$17.36$} \\
+%\multicolumn{3}{@{}l}{Final configuration (all winners, Table~\ref{tab:nazari})} & \multicolumn{2}{r@{}}{$16.18$} \\
+%\multicolumn{3}{@{}l}{\textbf{Total improvement}} & \multicolumn{2}{r@{}}{\textbf{$1.18$}} \\
 \bottomrule
 \end{tabular}
-\caption{Summary of the design study, one row per dimension: adopted
-setting, number of candidates evaluated (\#), and seed-paired margin of
-the adopted setting over the previous incumbent ($^{*}$:
-$|\Delta|>\sigma_{\mathrm{floor}}$; $^{**}$:
-$|\Delta|>2\sigma_{\mathrm{floor}}$). Margins come from separate sweeps and are not additive; the end-to-end block reports the cumulated gain of all design choices over the first sweep's winner.
-%Master summary of the design validation, one row per dimension. \emph{Effect}: seed-paired margin in favor of the adopted setting, against the previously adopted configuration; tie means $|\Delta| \leq \sigma_{\mathrm{floor}}$, $^{*}$ that $|\Delta| > \sigma_{\mathrm{floor}}$, $^{**}$ that $|\Delta| > 2\sigma_{\mathrm{floor}}$. \# is the number of configurations evaluated. Effects come from separate sweeps and are not additive; the closing block therefore anchors the end-to-end gain on the first sweep's winner, and is indicative rather than paired.
+\caption{
+Summary of the design study, one row per dimension: adopted
+setting, number of candidates evaluated (\#), and seed-paired margin
+(\emph{Effect}) of the adopted setting over the previous incumbent. Margins from separate
+sweeps are not additive. The end-to-end gain
+measures the cumulated effect of all adopted settings over the original
+LG-SA.
+%Summary of the design study, one row per dimension: adopted
+%setting, number of candidates evaluated (\#), and seed-paired margin of
+%the adopted setting over the previous incumbent; \emph{tie} marks a margin
+%within the batch noise floor $\sigma_{\mathrm{floor}}$. Every numeric margin
+%clears its own batch's floor; as they come from separate sweeps with
+%different floors, they are neither comparable in magnitude nor additive. The
+%end-to-end block reports the cumulated gain of all design choices over the
+%original LG-SA of \citet{AndrettiEtAl26} (both values from
+%Table~\ref{tab:nazari}). Measured across instance draws, this end-to-end
+%delta is indicative rather than seed-paired.
 }
 \label{tab:summary}
 \end{table}
-
-\paragraph{Confirmed choices.}
-
-Four dimensions reproduce the conclusions of \citet{AndrettiEtAl26} and are
-not re-discussed here: insertion with proactive masking dominates the
-operator $\times$ feasibility set; Metropolis acceptance remains necessary
-at inference; random constructions remain the best training
-initialization; and widening or deepening the scoring networks never
-clears the noise floor, the signature of a capacity plateau
-(Appendices~\ref{app:v1} and~\ref{app:v5678}, Table~\ref{tab:v3arch}).
-The remaining dimensions are new to this work.
-
-Four dimensions reproduce the conclusions of \citet{AndrettiEtAl26} in the present setting and are not re-discussed here. Insertion with proactive masking again dominates the operator $\times$ feasibility set, with both the lowest cost and the lowest seed variance (Appendix~\ref{app:v1}). Metropolis acceptance remains necessary at inference regardless of how the actor was trained --- which is also why the solver keeps sampling $a_t \sim \pi_\theta(\cdot \mid s_t)$ rather than taking the greedy argmax, a near-deterministic proposal collapsing the diversity the acceptance step relies on (Appendix~\ref{app:v5678}). Random constructions remain the best training initialization, while the inference-time choice is washed out by $10^4$ annealing steps (Appendix~\ref{app:v5678}). Finally, widening or deepening the two scoring networks never clears the noise floor while wall-clock rises by up to $38\%$ (Table~\ref{tab:v3arch}), the signature of a capacity plateau. The remaining dimensions are new to this work.
 
 \begin{table}[t]
 \centering
@@ -621,48 +590,154 @@ Four dimensions reproduce the conclusions of \citet{AndrettiEtAl26} in the prese
 full set (adopted) & 13 & $\mathbf{16.683}$ & 173 \\
 no load ratio & 12 & 16.648 & 173 \\
 set7          & 7  & 17.020 & 129 \\
-nodepct6      & 6  & 17.088 & 121 \\
-centroid6     & 6  & 17.100 & 122 \\
 core5         & 5  & 17.162 & 115 \\
 \bottomrule
 \end{tabular}
-\caption{Best-set validation at $5$ seeds, seed-paired against the full set ($\sigma_{\mathrm{floor}} \approx 0.057$). \emph{core5} = static, meta, topology, neighbor ranks, detour; \emph{set7} adds centroid and load share. Every pruned set is significantly worse; the only quality-neutral trim is dropping the load ratio alone. Paired deltas and per-seed views in Appendix~\ref{app:v2}.}
+\caption{Feature-set pruning, seed-paired against the full
+set ($\sigma_{\mathrm{floor}} \approx 0.057$). \emph{set7}: the seven
+strongest groups; \emph{core5}: the five most essential (static, meta, topology, neighbor ranks, detour). Full prune ladder in Appendix~\ref{app:v2}.}
 \label{tab:bestset}
 \end{table}
 
+
+\paragraph{Confirmed choices.}
+Four dimensions reproduce the conclusions of \citet{AndrettiEtAl26} and are
+not re-discussed here: insertion with proactive masking dominates every
+combination of operator and feasibility strategy; Metropolis acceptance
+remains necessary at inference; random constructions remain the best
+training initialization; and widening or deepening the scoring networks
+never clears the noise floor, the signature of a capacity plateau
+(Appendices~\ref{app:v1} and~\ref{app:v5678}, Table~\ref{tab:v3arch}).
+The remaining dimensions are new to this work.
+
+
 \paragraph{Node representation.}
-The node representation is where this work departs most from \citet{AndrettiEtAl26}. That descriptor was purely local --- coordinates, depot flag, polar position, distance to the depot, and load ratios --- whereas we add three groups that summarize a node's \emph{neighborhood} rather than its own position: local density (the mean distance to the closest 5\%, 10\%, and 33\% of customers)%($\mu_{N/20}$, $\mu_{N/10}$, $\mu_{N/3}$, the mean distance to the nearest neighbors at three radii)
-, the insertion detour cost, and the distance to the route centroid. Every candidate feature is constrained to be computable in closed form from the coordinate and demand tensors, so the whole $13$-group state is built with batched tensor operations and no per-instance loop; a feature that cannot be vectorized this way is rejected regardless of its predictive value, since it would forfeit the throughput that makes the method competitive. The additions pay for themselves, and the geometry cluster carries most of that value. Removing the detour and centroid features --- both introduced here --- costs $+0.596 \pm 0.033$ in the thematic ablation (Table~\ref{tab:thematic}), more than three times the gain of the best annealing or optimization setting and the joint-largest effect of that ablation, statistically tied with the relational cluster ($+0.599 \pm 0.016$); removing the density group costs a smaller but real $+0.145 \pm 0.033$. What the policy most needs is therefore not where a node sits, but how its neighborhood is shaped and what it would cost to move it.
+The node representation is where this work departs most from
+\citet{AndrettiEtAl26}. That descriptor was purely local: Euclidean
+coordinates, polar coordinates, depot flag, and load ratios. We add three
+groups that instead summarize a node's \emph{neighborhood}: local density
+(mean distance to the nearest 5\%, 10\%, and 33\% of customers), the
+insertion detour cost, and the distance to the route centroid. Every
+feature must be computable by a constant number of batched, loop-free
+tensor operations; features that cannot are rejected regardless of
+predictive value. The enriched state buys a quality gain at a moderate
+cost: from the smallest set to the full $13$ groups, batch time grows
+from $115$ to $173$ seconds (Table~\ref{tab:bestset}). In exchange,
+removing the detour and centroid features alone is the largest effect of
+the thematic ablation (Appendix~\ref{app:v2}),%, more than three times the gain of the best annealing or optimization setting.
+while the density group also contributes significantly. What the policy most needs is therefore
+not where a node sits, but how its neighborhood is shaped and what it
+would cost to move it.
 
-The ablation also shows that individual group importance does not predict joint contribution. Leave-one-out and isolation tests (Appendix~\ref{app:v2}) identify only $6$ of the $13$ groups as individually useful, yet training on those alone degrades performance (Table~\ref{tab:bestset}); removals compound, so density and capacity statistics carry complementary information (Table~\ref{tab:thematic}). The only quality-neutral trim is the route load ratio ($-0.035 \pm 0.106$); every other pruning trades quality for speed (set7 loses $2\%$ quality for a $25\%$ speedup). The conditional pair descriptors of the second policy stage degrade performance ($+0.14 \pm 0.11$ and $+0.18 \pm 0.07$) at extra cost. The final model therefore keeps all $13$ groups and no pair descriptors.
+Ablations further show that individual importance does not predict joint
+contribution. Only $6$ of the $13$ groups are individually useful, yet
+training on them alone degrades performance (Table~\ref{tab:bestset}):
+removals compound, so the remaining groups carry complementary
+information. The only quality-neutral trim is the route load ratio; every
+other pruning trades quality for speed (Table~\ref{tab:bestset}). Two
+extensions of the state fail. A pooled global instance context appended
+to the node features degrades every seed while adding substantial
+compute (Appendix~\ref{app:v3}). Pair descriptors (Appendix~\ref{app:features}), features of the
+(node, destination) couple computed once the first stage of the policy
+has selected a node, also cost extra time for worse quality. The final model therefore keeps all $13$
+groups and nothing more.
 
-\paragraph{Stabilizing the policy.}
-Rather than enlarging the actor, we stabilize it. Logit clipping at $C=10$ prevents the proposal distribution from collapsing and gives the larger and more consistent gain of the two mechanisms we test, at unchanged inference cost (Table~\ref{tab:v3stab}); a multi-statistic critic improves value estimation for free, since the critic is discarded after training (Table~\ref{tab:v3critic}). Two further extensions fail: a pooled global instance context degrades every seed at $+48\%$ compute, and a shared encoder in place of the independent scorers loses $\approx 3$ routing units in every configuration (Table~\ref{tab:v3shared}). At $N=100$, maintaining proposal diversity and value accuracy matters more than actor capacity.
 
-\paragraph{Reward.}
-Nine shaping variants (Table~\ref{tab:reward}) show that the exact form of the dense signal is secondary --- the six per-step variants fall within a band of $0.07$ --- but that removing intermediate credit is severe: the terminal reward loses $2.95$ and the step-penalty variants $0.7$ to $1.1$, all with unstable training. PPO needs a dense improvement signal across the long annealing horizon.
+%\paragraph{Node representation.}
+%The node representation is where this work departs most from \citet{AndrettiEtAl26}. That descriptor was purely local --- coordinates, depot flag, polar position, distance to the depot, and load ratios --- whereas we add three groups that summarize a node's \emph{neighborhood} rather than its own position: local density (the mean distance to the closest 5\%, 10\%, and 33\% of customers)%($\mu_{N/20}$, $\mu_{N/10}$, $\mu_{N/3}$, the mean distance to the nearest neighbors at three radii)
+%, the insertion detour cost, and the distance to the route centroid. Every candidate feature is constrained to be computable in closed form from the coordinate and demand tensors, so the whole $13$-group state is built with batched tensor operations and no per-instance loop; a feature that cannot be vectorized this way is rejected regardless of its predictive value, since it would forfeit the throughput that makes the method competitive. The additions pay for themselves, and the geometry cluster carries most of that value. Removing the detour and centroid features --- both introduced here --- costs $+0.596 \pm 0.033$ in the thematic ablation (Table~\ref{tab:thematic}), more than three times the gain of the best annealing or optimization setting and the joint-largest effect of that ablation, statistically tied with the relational cluster ($+0.599 \pm 0.016$); removing the density group costs a smaller but real $+0.145 \pm 0.033$. What the policy most needs is therefore not where a node sits, but how its neighborhood is shaped and what it would cost to move it.
 
-\paragraph{Annealing and optimization.}
-The cooling \emph{shape} is inert (geometric against piecewise-constant), but its \emph{range} produces the largest gain of any setting we actually changed (the larger margins in Table~\ref{tab:summary} are losses avoided by \emph{keeping} an existing design, not improvements): every configuration with $T_{\mathrm{final}} = 0.01$ beats every configuration with $T_{\mathrm{final}} = 0.1$, at every starting temperature, while the starting temperature itself does not matter (Table~\ref{tab:temprange}). The low-temperature phase is exactly where the learned proposal does its fine-grained refinement, and a high final temperature truncates it. Among the PPO parameters (Tables~\ref{tab:xlr} and~\ref{tab:xknobs}), the actor learning rate dominates (main effect $\approx 0.05$ against a $0.031$ floor), the entropy coefficient is U-shaped with an optimum at $0.01$, and rollout length is asymmetric: halving it to $50$ hurts clearly, doubling it to $200$ helps only marginally. Retraining all selected modifications jointly adds a further $-0.223 \pm 0.016$ across seeds (Table~\ref{tab:xcombined}). The number of PPO passes taken over each collected batch is the one knob where quality and stability disagree (Table~\ref{tab:xppo}): the mean cost falls monotonically from $1$ to $10$ passes, but the seed spread grows with it, the $5$-to-$10$ gain is inside that batch's $0.051$ floor and sign-split, and at $15$ passes training diverges outright on $2$ of $4$ seeds. Since the number of passes leaves inference cost unchanged, we adopt the tightest competitive setting, $5$.
+%The ablation also shows that individual group importance does not predict joint contribution. Leave-one-out and isolation tests (Appendix~\ref{app:v2}) identify only $6$ of the $13$ groups as individually useful, yet training on those alone degrades performance (Table~\ref{tab:bestset}); removals compound, so density and capacity statistics carry complementary information (Table~\ref{tab:thematic}). The only quality-neutral trim is the route load ratio ($-0.035 \pm 0.106$); every other pruning trades quality for speed (set7 loses $2\%$ quality for a $25\%$ speedup). The conditional pair descriptors of the second policy stage degrade performance ($+0.14 \pm 0.11$ and $+0.18 \pm 0.07$) at extra cost. The final model therefore keeps all $13$ groups and no pair descriptors.
+
+
+\paragraph{Move proposal and acceptance.}
+An annealing step samples a move from the policy, then accepts it by
+the Metropolis rule. Thus, two settings shape the distribution over
+retained moves. On the proposal side, clipping the policy logits bounds
+how peaked the distribution can become, preserving exploration (Appendix~\ref{app:v3}). 
+On the acceptance side, the cooling profile (geometric against piecewise-constant) makes no
+measurable difference, but the temperature range produces the largest
+gain of any setting we actually changed. Only the final temperature
+matters: lowering $T_{\mathrm{final}}$ from $0.1$ to $0.01$ improves
+every configuration, while the starting temperature has no effect. This
+is consistent with the low-temperature phase being where the learned
+proposal performs its fine-grained refinement: a high final temperature
+truncates it (Appendix~\ref{app:v5678}).
+
+
+%Rather than enlarging the actor, we stabilize it. Logit clipping at $C=10$ prevents the proposal distribution from collapsing and gives the larger and more consistent gain of the two mechanisms we test, at unchanged inference cost (Table~\ref{tab:v3stab}); a multi-statistic critic improves value estimation for free, since the critic is discarded after training (Table~\ref{tab:v3critic}). Two further extensions fail: a pooled global instance context degrades every seed at $+48\%$ compute, and a shared encoder in place of the independent scorers loses $\approx 3$ routing units in every configuration (Table~\ref{tab:v3shared}). At $N=100$, maintaining proposal diversity and value accuracy matters more than actor capacity.
+
+
+%Nine shaping variants (Table~\ref{tab:reward}) show that the exact form of the dense signal is secondary --- the six per-step variants fall within a band of $0.07$ --- but that removing intermediate credit is severe: the terminal reward loses $2.95$ and the step-penalty variants $0.7$ to $1.1$, all with unstable training. PPO needs a dense improvement signal across the long annealing horizon.
+
+
+
+\paragraph{Training signal and hyperparameters.}
+The per-step reward measures the cost improvement of the accepted move
+during learning. Nine shaping variants of this signal show that its exact
+form is secondary: the six dense, per-step variants perform within noise
+of one another. Sparse signals, however, fail. A purely terminal reward
+and step-penalty variants lose far more than any shaping gains, with
+unstable training: PPO needs a dense improvement signal across the long
+annealing horizon (Appendix~\ref{app:v5678}). 
+
+The critic, discarded after training, is a performance free lever. A multi-statistic critic improves
+value estimation, while degrading it to a copy of the actor's MLP loses
+far more than any other design choice gains (Appendix~\ref{app:v3}).
+
+Among the hyperparameters of the learning algorithm, the actor learning
+rate dominates, the entropy coefficient shows a clear optimum, and
+rollout length exhibits diminishing returns: halving it clearly hurts,
+doubling it helps only marginally. Retraining all selected settings
+jointly yields a further significant gain. The number of PPO passes per
+batch is the one knob where quality and stability disagree: the mean
+cost keeps falling as passes increase, but the seed spread grows with it
+and training eventually diverges. Since passes leave inference cost
+unchanged, we adopt $5$ passes, the safest competitive setting
+(Appendix~\ref{app:xknobs}).
+
+
+%\paragraph{Annealing and optimization.}
+%The cooling \emph{shape} is inert (geometric against piecewise-constant), but its \emph{range} produces the largest gain of any setting we actually changed (the larger margins in Table~\ref{tab:summary} are losses avoided by \emph{keeping} an existing design, not improvements): every configuration with $T_{\mathrm{final}} = 0.01$ beats every configuration with $T_{\mathrm{final}} = 0.1$, at every starting temperature, while the starting temperature itself does not matter (Table~\ref{tab:temprange}). The low-temperature phase is exactly where the learned proposal does its fine-grained refinement, and a high final temperature truncates it. Among the PPO parameters (Tables~\ref{tab:xlr} and~\ref{tab:xknobs}), the actor learning rate dominates (main effect $\approx 0.05$ against a $0.031$ floor), the entropy coefficient is U-shaped with an optimum at $0.01$, and rollout length is asymmetric: halving it to $50$ hurts clearly, doubling it to $200$ helps only marginally. Retraining all selected modifications jointly adds a further $-0.223 \pm 0.016$ across seeds (Table~\ref{tab:xcombined}). The number of PPO passes taken over each collected batch is the one knob where quality and stability disagree (Table~\ref{tab:xppo}): the mean cost falls monotonically from $1$ to $10$ passes, but the seed spread grows with it, the $5$-to-$10$ gain is inside that batch's $0.051$ floor and sign-split, and at $15$ passes training diverges outright on $2$ of $4$ seeds. Since the number of passes leaves inference cost unchanged, we adopt the tightest competitive setting, $5$.
 
 \paragraph{Curriculum.}
+Training rollouts span only a few hundred steps, far shorter than the
+search budgets used at inference, so a policy trained from random initial
+solutions rarely visits the regime near local optima that
+dominates the end of a long search. Curriculum learning
+\citep{ma_learning_2021} closes this gap by moving the starting point:
+before each collection phase, instances are warmed up, i.e. improved by the current
+policy, for a number of steps that ramps from $0$ to a maximum
+$\xi_{\mathrm{CL}}$ over training, so that early training repairs poor
+solutions and late training refines already-improved ones. 
 
+We test this ramped warm-up against two alternatives: a per-instance \emph{random warm-up
+depth}, which makes a single batch span all warm-up depths, from none to
+the maximum, and \emph{persistent chains}, where instances and their best
+solutions survive across epochs and the search resumes from them. The
+ramp wins and is the setting we adopt: persistent chains are uniformly
+harmful, and the random depth improves on the no-curriculum baseline but
+not on the ramp. 
 
+In all alternatives, performance degrades when starting solutions get more pre-optimized,
+as confirmed by extensive experiments (Appendix~\ref{app:cl}).
+%A budget-matched ablation confirms that what matters is the mean
+%warm-up depth, not the diversity of depths within a batch.
+Warming up helps only in moderation: it exposes the actor to good solutions it can
+still improve, but pushed toward near-optimal ones, improvements become
+too rare and too small to provide a usable reward signal.
 
-Training rewards are evaluated on LG-SA rollouts of only a few hundred steps, far shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. Curriculum learning \citep{ma_learning_2021} closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}, Appendix~\ref{app:curriculum}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation of the winner.
+%Training rewards are evaluated on LG-SA rollouts of only a few hundred steps, far shorter than the search budgets used at inference, so a policy trained only from raw constructive solutions rarely visits the fine-grained regime near local optima that dominates the end of a long search. Curriculum learning \citep{ma_learning_2021} closes this gap by moving the \emph{starting point}: before each collection phase, the batch of instances is first warmed up by the current policy for $t_{\mathrm{init}}$ steps, and $t_{\mathrm{init}}$ ramps over training from $0$ to a maximum warm-up strength $\xi_{\mathrm{CL}}$ over $E$ epochs (Figure~\ref{fig:ramp}, Appendix~\ref{app:curriculum}) --- early training repairs poor solutions, late training refines already-improved ones. Two alternative mechanisms place the same idea elsewhere: a per-instance random depth $d_i \sim \mathcal{U}\{0, \dots, t_{\mathrm{init}}\}$, which makes a single batch cover the whole spectrum from raw to deeply improved solutions, and \emph{persistent chains}, where instances and their best solutions survive across epochs and the search resumes from them (a fraction of chains being refreshed with new instances each epoch), obtaining deep starting points at no extra warm-up compute. The three mechanisms are validated against a common $5$-seed no-curriculum baseline that also provides this batch's noise floor, followed by a budget-matched coverage ablation and a $5$-seed confirmation of the winner.
 
-That baseline is unusually reproducible ($16.238 \pm 0.006$ over $5$ seeds, $\sigma_{\mathrm{floor}} = 0.030$), so a few hundredths of a routing unit is already a measurable effect. The ramped warm-up clears the floor by a factor of $2.4$ ($-0.073 \pm 0.043$, improving $4$ seeds out of $5$) and is the setting we adopt. Neither alternative displaces it: persistent chains are uniformly harmful across their nine runs ($+0.25$ to $+0.52$, no seed ever improving) even though they cost nothing, and the random depth is a real but smaller win over the baseline ($-0.034$, unanimous over $5$ seeds) that loses the head-to-head against the ramp on $4$ of $5$ seeds. Both alternatives are monotone in the same underlying quantity --- the deeper the pre-optimization, the worse the policy --- and the budget-matched ablation locates the effect precisely: at equal loop length, drawing depths from $\mathcal{U}\{0, \dots, \xi_{\mathrm{CL}}\}$ beats warming every instance to $\xi_{\mathrm{CL}}$ by $0.261$, but against a \emph{constant} warm-up of the same mean depth the mix is a tie ($-0.016$, below the floor). What the curriculum buys is therefore a moderate warm-up rather than depth diversity per se: the actor learns from states it can still improve, and advancing the trajectory much further starves it of the reward signal it trains on (Appendix~\ref{app:cl}).
+%That baseline is unusually reproducible ($16.238 \pm 0.006$ over $5$ seeds, $\sigma_{\mathrm{floor}} = 0.030$), so a few hundredths of a routing unit is already a measurable effect. The ramped warm-up clears the floor by a factor of $2.4$ ($-0.073 \pm 0.043$, improving $4$ seeds out of $5$) and is the setting we adopt. Neither alternative displaces it: persistent chains are uniformly harmful across their nine runs ($+0.25$ to $+0.52$, no seed ever improving) even though they cost nothing, and the random depth is a real but smaller win over the baseline ($-0.034$, unanimous over $5$ seeds) that loses the head-to-head against the ramp on $4$ of $5$ seeds. Both alternatives are monotone in the same underlying quantity --- the deeper the pre-optimization, the worse the policy --- and the budget-matched ablation locates the effect precisely: at equal loop length, drawing depths from $\mathcal{U}\{0, \dots, \xi_{\mathrm{CL}}\}$ beats warming every instance to $\xi_{\mathrm{CL}}$ by $0.261$, but against a \emph{constant} warm-up of the same mean depth the mix is a tie ($-0.016$, below the floor). What the curriculum buys is therefore a moderate warm-up rather than depth diversity per se: the actor learns from states it can still improve, and advancing the trajectory much further starves it of the reward signal it trains on (Appendix~\ref{app:cl}).
 
 \subsection{Comparison with Baselines}
 \label{sec:baselines}
 
 \paragraph{Final model.}
 All component winners of Table~\ref{tab:summary}, the best curriculum, and the tuned optimization budget are combined into the final model, trained with $5$ seeds; the best checkpoint provides the headline numbers. The comparison we control exactly is against blind SA under matched conditions --- same operator, same cooling schedule, same instances, same budget --- and it is reported in the ``Ours'' block of Table~\ref{tab:nazari}. Guidance is worth about two orders of magnitude of raw sampling: at $N = 100$ and $T = 10^{4}$, LG-SA reaches $16.18$ against $22.99$ for blind SA, a result the guided search already matches with $300$ steps, and blind SA still sits at $18.13$ with ten times the moves --- which LG-SA passes at $10^{3}$. Comparing complete, independently annealed runs at every budget from $10^{2}$ to $10^{5}$ steps (Appendix~\ref{app:scaling}, Figure~\ref{fig:frontier}), the guided search is ahead at every point, by $27.7$ at $10^{2}$ down to $2.2$ at $10^{5}$. The advantage is not free per move --- the actor forward pass makes a guided step $13.1$ to $13.7$$\times$ more expensive than a blind one --- but it survives the conversion to wall clock: LG-SA at $10^{4}$ steps ($16.18$ in $2.9$m) against blind SA at $10^{5}$ ($18.13$ in $2.3$m) is a $1.95$ margin at comparable cost, and blind SA's best measured point is beaten by a guided run taking $7.9\times$ less time. That margin grows with instance size, from $0.19$ at $N = 20$ to $1.69$ at $N = 50$ and $6.81$ at $N = 100$ under an equal step budget: the larger the neighborhood, the more there is to gain from choosing where to look. Test-time augmentation offers a second way to spend compute: running the search over the eight dihedral symmetries of the instance ($A = 8$) and keeping the best frame lowers the $T = 10^{4}$ gap to $0.47\%$, $1.16\%$ and $2.36\%$ at $N = 20$, $50$ and $100$ (Table~\ref{tab:nazari}), matching the ten-times-longer single run at $T = 10^{5}$ on $N = 100$ and beating it on the two smaller sizes, at lower wall-clock cost --- so augmentation and raw budget buy comparable quality, and the choice between them is one of latency against throughput.
-% TODO: x8 instance-augmentation row in tab:nazari (like-for-like against
-% POMO x8 / DACT x6); T=1e6 row; per-seed spread of the 5 final seeds.
-%   sweep: V10_final (5 seeds); evals: headline, --augment 8, steps
-%   {100..1e6}, dims {10,20,50,100}
 
+% reduce using related works
 \paragraph{Literature baselines.}
 Table~\ref{tab:nazari} places LG-SA in the context of the published results on the Nazari benchmark. We group the baselines into four families. \emph{Conventional solvers} --- HGS \citep{vidal_hybrid_2022} and LKH-3 \citep{helsgaun_extension_2017} --- delimit the quality/time frontier reachable without learning. HGS, a hybrid genetic search combining a diversity-managed population with an aggressive local search over the SWAP* neighborhood, is the stronger of the two and is the reference metaheuristic for the CVRP; we therefore report all gaps with respect to it, following \citet{ma_learning_2023}. The general-purpose solver OR-Tools \citep{ortools_routing}, a common reference in earlier comparisons, is not re-run by that source and is omitted here; it is dominated by both HGS and LKH-3 on this distribution. \emph{Construction methods} --- AM \citep{kool_attention_2019} with collaborative policies \citep{kim_learning_2021}, POMO \citep{kwon_pomo_2021}, and its search-augmented variants EAS \citep{hottung_efficient_2021} and SGBS \citep{choo_simulation-guided_2022} --- build a solution autoregressively and obtain most of their quality from test-time sampling, beam search, or instance augmentation. \emph{Improvement methods} --- NLNS \citep{hottung_neural_2022}, NCE \citep{kim_learning_2021}, LIH \citep{wu_learning_2022}, DACT \citep{ma_learning_2021}, and NeuOpt \citep{ma_learning_2023} --- iteratively refine a solution and are the family LG-SA belongs to; for these we report the step budget $T$, which controls the quality/time trade-off. Finally, \emph{hybrid methods} --- DPDP \citep{kool_deep_2022} and CVAE-Opt \citep{hottung_learning_2021} --- couple a learned component with dynamic programming or an evolutionary search.
 
@@ -706,17 +781,18 @@ We source the baseline values from \citet{ma_learning_2023} rather than from the
  & LG-SA ($T{=}10^{5}$)           & --- & --- & --- & 10.70 & 3.22\%\rlap{$^{\dagger}$} & 14m  & 16.80 & 7.95\%\rlap{$^{\dagger}$}  & 29m \\
  & LG-SA ($T{=}10^{6}$)           & --- & --- & --- & 10.54 & 1.68\%\rlap{$^{\dagger}$} & 2.3h & ---   & ---     & --- \\
 \midrule
-\multirow{7}{*}{Ours}
+\multirow{8}{*}{Ours}
  & Blind SA ($T{=}10^{4}$)        & 6.438 & 5.02\% & 7s    & 12.351 & 19.15\% & 7s    & 22.992 & 47.73\% & 14s \\
  & Blind SA ($T{=}10^{5}$)        & 6.237 & 1.75\% & 1.1m  & 11.122 & 7.29\%  & 1.2m  & 18.132 & 16.51\% & 2.3m \\
  & LG-SA ($T{=}10^{4}$)           & 6.246 & 1.89\% & 21s   & 10.666 & 2.89\%  & 1.5m  & 16.183 & 3.98\%  & 3.0m \\
  & LG-SA ($T{=}10^{4}$, C--W)     & 6.213 & 1.36\% & 24s   & 10.617 & 2.42\%  & 1.5m  & 16.117 & 3.56\%  & 3.2m \\
  & LG-SA ($T{=}10^{4}$, $A{=}8$)  & 6.159 & 0.47\% & 2.8m  & 10.487 & 1.16\%  & 11.5m & 15.930 & 2.36\%  & 23m \\
  & LG-SA ($T{=}10^{5}$)           & 6.182 & 0.85\% & 3.5m  & 10.526 & 1.55\%  & 14.6m & 15.923 & 2.31\%  & 29.9m \\
- & LG-SA ($T{=}10^{6}$)           & 6.150 & 0.32\% & 34m   & 10.452 & 0.83\%  & 2.3h  & TBD    & TBD     & TBD \\
+ & LG-SA ($T{=}10^{5}$, C--W)     & 6.173 & 0.70\% & 3.5m  & 10.517 & 1.46\%  & 14.1m & 15.918 & 2.28\%  & 29.0m \\
+ & LG-SA ($T{=}10^{6}$)           & 6.150 & 0.32\% & 34m   & 10.452 & 0.83\%  & 2.3h  & 15.805 & 1.55\%  & 4.8h \\
 \bottomrule
 \end{tabular}
-\caption{Comparison with published baselines on the Nazari CVRP benchmark. Unless marked otherwise, values are taken from \citet{ma_learning_2023}, who re-run every baseline from its public pre-trained model on a common test set of $10{,}000$ instances and common hardware (one GPU for neural methods, one CPU for conventional ones); gaps are relative to HGS, the strongest conventional solver. $^{\ddagger}$Carried over from the original paper rather than re-run, so their objectives are rounded to two decimals and their run times were measured on different hardware. $^{\dagger}$Prior LG-SA values are from \citet{AndrettiEtAl26}, measured on a different draw of the same distribution; their gaps are recomputed against the HGS values above and are therefore indicative only. $A$ and $D$ denote the number of instance augmentations, $T$ the number of improvement steps; all LG-SA rows start from a random construction except ``C--W'', which starts from a Clarke--Wright savings solution (Appendix~\ref{app:v5678}).}
+\caption{Comparison with published baselines on the Nazari CVRP benchmark. Unless marked otherwise, values are taken from \citet{ma_learning_2023}, who re-run every baseline from its public pre-trained model on a common test set of $10{,}000$ instances and common hardware (one GPU for neural methods, one CPU for conventional ones); gaps are relative to HGS, the strongest conventional solver. $^{\ddagger}$Carried over from the original paper rather than re-run, so their objectives are rounded to two decimals and their run times were measured on different hardware. $^{\dagger}$Prior LG-SA values are from \citet{AndrettiEtAl26}, measured on a different draw of the same distribution; their gaps are recomputed against the HGS values above and are therefore indicative only. $A$ and $D$ denote the number of instance augmentations, $T$ the number of improvement steps; all LG-SA rows start from a random construction except the ``C--W'' rows (at both the $T{=}10^{4}$ and $T{=}10^{5}$ budgets), which start from a Clarke--Wright savings solution (Appendix~\ref{app:v5678}).}
 \label{tab:nazari}
 \end{table*}
 
@@ -724,7 +800,8 @@ We source the baseline values from \citet{ma_learning_2023} rather than from the
 % test_data = nazari_neuopt = the same 10k-instance NeuOpt test set used by
 % the literature rows, so no "different draw" caveat applies to our rows).
 % Gaps computed against the HGS values above (6.130 / 10.366 / 15.563).
-% TODO: T=1e6 row still missing (evals at dims {20,50,100}).
+% T=1e6 N=100 filled from res/BEST/res_model_100_5.csv (final_cost 15.80478,
+% time 17166.9s = 4.77h, float16, full 10k NeuOpt test set).
 % TODO: decide whether to add an "x8 instance augmentation" LG-SA row for a
 % like-for-like comparison against POMO x8 and DACT x6.
 
@@ -742,20 +819,20 @@ Every number reported so far comes from one checkpoint, trained at $N = 100$ wit
 \toprule
 $N$ & Init. & LG-SA & Improv. & ms/step \\
 \midrule
-100     & 59.4    & 18.3    & $-69\%$ & 0.46 \\
-200     & 119.2   & 31.3    & $-74\%$ & 0.51 \\
-500     & 288.8   & 75.3    & $-74\%$ & 0.62 \\
-1{,}000  & 588.5   & 147.9   & $-75\%$ & 0.79 \\
-2{,}000  & 1188.4  & 309.4   & $-74\%$ & 1.09 \\
-5{,}000  & 2944.6  & 850.3   & $-71\%$ & 1.91 \\
-10{,}000 & 5866.4  & 2100.6  & $-64\%$ & 3.32 \\
+100     & 58.9    & 16.7    & $-72\%$ & 0.47 \\
+200     & 117.9   & 31.6    & $-73\%$ & 0.50 \\
+500     & 290.2   & 74.5    & $-74\%$ & 0.61 \\
+1{,}000  & 588.8   & 148.3   & $-75\%$ & 0.78 \\
+2{,}000  & 1174.7  & 304.3   & $-74\%$ & 1.12 \\
+5{,}000  & 2939.1  & 842.8   & $-71\%$ & 1.89 \\
+10{,}000 & 5855.2  & 2096.9  & $-64\%$ & 3.22 \\
 \bottomrule
 \end{tabular}
-\caption{Scaling beyond the training size. The $N = 100$ checkpoint is applied unchanged to instances up to $N = 10{,}000$, sampled from the Nazari distribution with the capacity held at the training value $Q = 50$ (so larger $N$ means proportionally more routes). Single instances, batch $1$, CPU, $10^{4}$ steps, mean over $3$ runs; instance construction is timed separately and excluded. Costs at different $N$ are not comparable to each other, only to their own constructive initialization.}
+\caption{Scaling beyond the training size. The $N = 100$ checkpoint is applied unchanged to instances up to $N = 10{,}000$, sampled from the Nazari distribution with the capacity held at the training value $Q = 50$ (so larger $N$ means proportionally more routes). One distinct instance per run, batch $1$, CPU, $10^{4}$ steps, mean over $10$ runs (per-size s.d.\ of the improvement $\le 3$ points; Appendix~\ref{app:scaling}); instance construction is timed separately and excluded. Costs at different $N$ are not comparable to each other, only to their own constructive initialization.}
 \label{tab:dims}
 \end{table}
 
-Upward, the same checkpoint is run sequentially on single instances at sizes up to $N = 10{,}000$, two orders of magnitude above training (Table~\ref{tab:dims}). Nothing breaks: the search stays feasible and improves the constructive solution by $64$--$75\%$ at every size, and the per-step cost grows by only $7.2\times$ while $N$ grows by $100\times$ --- sublinear, because below $N \approx 10^{3}$ a step is dominated by fixed overhead rather than by the instance. A step budget fixed in absolute terms therefore gets cheaper per node but also thinner: at $N = 10{,}000$, $10^{4}$ steps is one proposed move per node, which is where the improvement ratio starts to fall back. Halving the exponent makes this explicit --- at $10^{3}$ steps the improvement collapses from $-68\%$ at $N = 100$ to $-14\%$ at $N = 10{,}000$, and is recovered by spending $10\times$ more steps (Appendix~\ref{app:scaling}). The currency is steps per node, not steps; what degrades at scale is the budget, not the representation. Appendix~\ref{app:scaling} also reports the step-budget, batch-size and precision sweeps behind the evaluation protocol used throughout the paper --- in particular that half precision is free ($1.29\times$ faster for $-0.0002$ in cost), which is why every reported evaluation uses it.
+Upward, the same checkpoint is run sequentially on single instances at sizes up to $N = 10{,}000$, two orders of magnitude above training (Table~\ref{tab:dims}). Nothing breaks: the search stays feasible and improves the constructive solution by $64$--$75\%$ at every size, and the per-step cost grows by only $6.9\times$ while $N$ grows by $100\times$ --- sublinear, because below $N \approx 10^{3}$ a step is dominated by fixed overhead rather than by the instance. A step budget fixed in absolute terms therefore gets cheaper per node but also thinner: at $N = 10{,}000$, $10^{4}$ steps is one proposed move per node, which is where the improvement ratio starts to fall back. Halving the exponent makes this explicit --- at $10^{3}$ steps the improvement collapses from $-70\%$ at $N = 100$ to $-14\%$ at $N = 10{,}000$, and is recovered by spending $10\times$ more steps (Appendix~\ref{app:scaling}). The currency is steps per node, not steps; what degrades at scale is the budget, not the representation. Appendix~\ref{app:scaling} also reports the step-budget, batch-size and precision sweeps behind the evaluation protocol used throughout the paper --- in particular that half precision is free ($1.29\times$ faster for $-0.0002$ in cost), which is why every reported evaluation uses it.
 % TODO: cross-dimension table (train dim x test dim, {50,100,500}) -- needs
 % models trained AT 50 and 500; res/BEST only contains the N=100 checkpoint.
 % TODO (later, needs non-Nazari test data): cross-distribution table --
@@ -1899,6 +1976,9 @@ $10^{6}$ & --- & --- & --- & --- & 10.434 & 1121 & 15.788 & 1530 \\
 \label{tab:stepbudget}
 \end{table}
 
+\paragraph{Restart versus a single anneal.}
+A fixed budget can be spent as one continuous anneal or split into successive re-heated searches, each resuming from the incumbent best --- the inference-time analogue of the persistent chains used during training (Appendix~\ref{app:curriculum}). At $N = 100$ on the Table~\ref{tab:nazari} test set (\texttt{float16}, identical random initialization, constructive cost $57.90$), we compare a single $2\cdot10^{4}$-step run against a restart that anneals $10^{4}$ steps, keeps the per-instance best, and re-anneals $10^{4}$ steps from it under a fresh full temperature schedule. The two are indistinguishable: the continuous run reaches $16.079$ ($3.32\%$) and the restart $16.086$ ($3.36\%$), a $0.0065$ difference well inside run-to-run noise, with both improving on the single $10^{4}$-step result ($16.187$). The restart is if anything marginally slower ($350$\,s against $340$\,s) for the re-encoding it repeats. Re-heating therefore recovers nothing that the continuous schedule leaves on the table: the guided search does not settle into a basin that a full re-heat from the incumbent escapes, so at equal budget a single longer anneal is the operating point to beat.
+
 \paragraph{Guided against blind search.}
 Figure~\ref{fig:frontier} gives the anytime frontier of both searches at $N = 100$, on the test set and in the precision of Table~\ref{tab:nazari}. Every point is an \emph{independent, complete} run: the temperature schedule is compressed to that point's budget, so a $10^{3}$-step run is a fully annealed search and not a prefix of the $10^{5}$-step one. This is the only construction under which the two methods can be compared at a budget, and it is what a single long trace cannot provide --- sampled along one $2 \cdot 10^{5}$-step anneal, blind SA reads $53.99$ at step $10^{4}$, against $22.99$ for a blind run actually budgeted at $10^{4}$ steps, because the first is still mid-anneal. The frontier reproduces the ``Ours'' block of Table~\ref{tab:nazari} to three decimals ($16.185$ and $22.989$ at $T = 10^{4}$; $15.923$ and $18.130$ at $T = 10^{5}$), which is the intended cross-check: the figure and the headline table are one measurement.
 
@@ -1914,7 +1994,7 @@ Panel (b) re-plots the same runs against wall clock and is the comparison that m
 \end{figure}
 
 \paragraph{Dimension.}
-Table~\ref{tab:dimsfull} gives the full version of Table~\ref{tab:dims}, with both step budgets. Read row-wise, it separates the two things that change with $N$. The per-step cost is nearly flat: $0.46$\,ms at $N = 100$ against $3.32$\,ms at $N = 10{,}000$, a $7.2\times$ increase for $100\times$ the nodes, and it is the same at $10^{3}$ and $10^{4}$ steps, confirming that it measures the step and not the schedule. Solution quality, on the other hand, is governed by steps per node. At $10^{3}$ steps the improvement over the constructive solution decays monotonically with size, from $-68\%$ at $N = 100$ to $-14\%$ at $N = 10{,}000$; multiplying the budget by ten restores it to $-64\%$ at $N = 10{,}000$ and leaves the $-69\%$ at $N = 100$ almost unchanged, since that size was already budget-saturated. The residual dip at the two largest sizes is consistent with $10^{4}$ steps being only one to two proposed moves per node.
+Table~\ref{tab:dimsfull} gives the full version of Table~\ref{tab:dims}, with both step budgets. Read row-wise, it separates the two things that change with $N$. The per-step cost is nearly flat: $0.47$\,ms at $N = 100$ against $3.22$\,ms at $N = 10{,}000$, a $6.9\times$ increase for $100\times$ the nodes, and it is the same at $10^{3}$ and $10^{4}$ steps, confirming that it measures the step and not the schedule. Solution quality, on the other hand, is governed by steps per node. At $10^{3}$ steps the improvement over the constructive solution stays near $-70\%$ up to $N = 500$ and then decays monotonically with size to $-14\%$ at $N = 10{,}000$; multiplying the budget by ten restores it to $-64\%$ at $N = 10{,}000$ while the $-70\%$ at $N = 100$ barely moves (to $-72\%$), since that size was already budget-saturated. The residual dip at the two largest sizes is consistent with $10^{4}$ steps being only one to two proposed moves per node.
 
 \begin{table}[t]
 \centering
@@ -1926,16 +2006,16 @@ Table~\ref{tab:dimsfull} gives the full version of Table~\ref{tab:dims}, with bo
 \cmidrule(lr){3-4} \cmidrule(lr){6-7}
 $N$ & Init. & Cost & Improv. & ms/step & Cost & Improv. \\
 \midrule
-100      & 59.4   & 19.1   & $-68\%$ & 0.46 & 18.3   & $-69\%$ \\
-200      & 119.2  & 34.5   & $-71\%$ & 0.51 & 31.3   & $-74\%$ \\
-500      & 288.8  & 89.5   & $-69\%$ & 0.62 & 75.3   & $-74\%$ \\
-1{,}000  & 588.5  & 215.0  & $-63\%$ & 0.79 & 147.9  & $-75\%$ \\
-2{,}000  & 1188.4 & 599.0  & $-50\%$ & 1.09 & 309.4  & $-74\%$ \\
-5{,}000  & 2944.6 & 2164.7 & $-26\%$ & 1.91 & 850.3  & $-71\%$ \\
-10{,}000 & 5866.4 & 5022.1 & $-14\%$ & 3.32 & 2100.6 & $-64\%$ \\
+100      & 58.9   & 17.6   & $-70.2 {\pm} 2.7$ & 0.47 & 16.7   & $-71.6 {\pm} 2.8$ \\
+200      & 117.9  & 34.3   & $-71.0 {\pm} 2.2$ & 0.50 & 31.6   & $-73.2 {\pm} 2.2$ \\
+500      & 290.2  & 88.9   & $-69.4 {\pm} 2.6$ & 0.61 & 74.5   & $-74.4 {\pm} 2.5$ \\
+1{,}000  & 588.8  & 215.1  & $-63.5 {\pm} 1.9$ & 0.78 & 148.3  & $-74.9 {\pm} 2.4$ \\
+2{,}000  & 1174.7 & 592.8  & $-49.6 {\pm} 1.2$ & 1.12 & 304.3  & $-74.2 {\pm} 2.3$ \\
+5{,}000  & 2939.1 & 2158.6 & $-26.6 {\pm} 0.6$ & 1.89 & 842.8  & $-71.4 {\pm} 2.3$ \\
+10{,}000 & 5855.2 & 5008.4 & $-14.5 {\pm} 0.3$ & 3.22 & 2096.9 & $-64.2 {\pm} 1.9$ \\
 \bottomrule
 \end{tabular}
-\caption{Sequential single-instance scaling, CPU ($12$ threads), batch $1$, \texttt{float32}, mean over $3$ runs. Instances are drawn from the Nazari distribution with capacity fixed at the training value $Q = 50$. The ms/step column is measured at $T = 10^{4}$ and agrees with the $T = 10^{3}$ measurement to within $2\%$ at every size.}
+\caption{Sequential single-instance scaling, CPU ($12$ threads), batch $1$, \texttt{float32}, mean $\pm$ s.d.\ over $10$ distinct instances per cell, each freshly sampled from the Nazari distribution (capacity fixed at the training value $Q = 50$); the improvement s.d.\ is in percentage points. The ms/step column is measured at $T = 10^{4}$ and agrees with the $T = 10^{3}$ measurement to within $3\%$ at every size.}
 \label{tab:dimsfull}
 \end{table}
 
@@ -1996,12 +2076,16 @@ solved to \emph{proven} optimality by branch-cut-and-price. It is the benchmark
 built to expose the distribution overfitting of learned CVRP solvers, and
 reporting on it yields an \emph{absolute} optimality gap rather than a gap to a
 heuristic reference. We run the $N = 100$ checkpoint unchanged, in
-\texttt{float16}, at $T = 10^{5}$ over the full set in a single GPU batch. LG-SA
+\texttt{float16}, over the full set in a single GPU batch. At $T = 10^{5}$ LG-SA
 reaches a mean optimality gap of $3.78\%$ (median $3.35\%$, three quarters of
 instances within $5\%$, the easiest solved to optimality) in $29$\,min --- only
 $1.5$ points above its $2.31\%$ in-distribution gap to HGS at the same budget
-(Table~\ref{tab:nazari}). The XML100 figure is thus the price of a
-one-distribution shift with no retraining.
+(Table~\ref{tab:nazari}). Spending ten times the budget, $T = 10^{6}$, narrows
+this to a $2.52\%$ mean gap (median $2.18\%$, over nine in ten instances within
+$5\%$) in $4.7$\,h, mirroring the in-distribution improvement over the same
+decade (the gap to HGS falls from $2.31\%$ to $1.55\%$). The XML100 figure is
+thus the price of a one-distribution shift with no retraining, and it shrinks
+predictably with the search budget.
 
 Table~\ref{tab:xml} places this against the eight metaheuristics benchmarked on
 XML100 by \citet{queiroga_xl_2026}. Two things must be read carefully. First,
@@ -2012,7 +2096,8 @@ radically different compute, not a like-for-like race. Second, they are all
 near-optimal (HGS-CVRP, the reference, is within $0.003\%$), so LG-SA is neither
 competitive with them on quality nor meant to be; the point is that a
 lightweight learned policy trained on a different distribution lands a mean
-$3.78\%$ from proven optima on a structured benchmark it never saw. No learned
+$3.78\%$ (falling to $2.52\%$ at $T = 10^{6}$) from proven optima on a
+structured benchmark it never saw. No learned
 method in our comparison set (Table~\ref{tab:nazari}) reports XML100 numbers at
 all, precisely because this is the regime in which such methods are expected to
 break down.
@@ -2035,7 +2120,9 @@ break down.
  & LKH-3     & 0.250 & 0.479 \\
  & OR-Tools  & 1.006 & 1.452 \\
 \midrule
-Learned & LG-SA ($T{=}10^{5}$) & --- & $3.78$ \\
+\multirow{2}{*}{Learned}
+ & LG-SA ($T{=}10^{5}$) & --- & $3.78$ \\
+ & LG-SA ($T{=}10^{6}$) & --- & $2.52$ \\
 \bottomrule
 \end{tabular}
 \caption{Optimality gap (\%) on the $10{,}000$-instance XML100 benchmark
@@ -2044,8 +2131,8 @@ optimality. $^{\ddagger}$Metaheuristic rows are from \citet{queiroga_xl_2026}
 (Table~4, overall, averaged over instance attributes), each method given $10$
 runs under a one-minute-per-instance budget; ``Best''/``Mean'' are the best and
 mean over those runs. LG-SA is our $N=100$ checkpoint, run zero-shot in
-\texttt{float16} at $T=10^{5}$ over the whole set in one GPU batch; it is a
-single run, so only a mean is reported.}
+\texttt{float16} at $T=10^{5}$ and $T=10^{6}$ over the whole set in one GPU
+batch; each is a single run, so only a mean is reported.}
 \label{tab:xml}
 \end{table}
 
@@ -2083,6 +2170,6 @@ CV of $3.95\%$ to $1.19\%$ without collapsing to a single solution.}
 \end{figure*}
 
 \paragraph{Limitations.}
-Three caveats bound what this section supports. First, the dimension sweep has no blind-SA control at the large sizes: it shows that the guided search remains usable up to $N = 10{,}000$, not that the learned policy still contributes there, and the matched guided-against-blind comparison of Table~\ref{tab:nazari} exists only up to $N = 100$. Second, it averages $3$ runs per cell, and only the sizes without a pre-generated test set ($200$, $2{,}000$, $5{,}000$, $10{,}000$) draw a fresh instance per run --- at $N \in \{100, 500, 1{,}000\}$ the three runs share one instance and differ only in the random constructive initialization, so the spread there understates instance-to-instance variability. Third, no reference solution is available beyond $N = 100$, so quality at large sizes is reported only as improvement over the constructive initialization, which is a weak yardstick: a large relative improvement over a random-order solution does not establish proximity to the optimum.
+Three caveats bound what this section supports. First, the dimension sweep has no blind-SA control at the large sizes: it shows that the guided search remains usable up to $N = 10{,}000$, not that the learned policy still contributes there, and the matched guided-against-blind comparison of Table~\ref{tab:nazari} exists only up to $N = 100$. Second, it averages $10$ runs per cell, each on a distinct instance freshly sampled from the Nazari distribution at every size, so the reported spread is genuine instance-to-instance variability rather than initialization noise; the per-size s.d.\ of the improvement stays under $3$ points (Table~\ref{tab:dimsfull}). Third, no reference solution is available beyond $N = 100$, so quality at large sizes is reported only as improvement over the constructive initialization, which is a weak yardstick: a large relative improvement over a random-order solution does not establish proximity to the optimum.
 
 \end{document}
